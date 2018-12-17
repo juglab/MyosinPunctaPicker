@@ -5,13 +5,6 @@ The following description will be modified with development in the project.
 How to use this project as a starting point
 ===========================================
 
-Either
-
-* `git clone git://github.com/imagej/example-imagej-command`, or
-* unpack https://github.com/imagej/example-imagej-command/archive/master.zip
-
-Then:
-
 1. Edit the `pom.xml` file. Every entry should be pretty self-explanatory.
    In particular, change
     1. the *artifactId* (**NOTE**: should contain a '_' character)
