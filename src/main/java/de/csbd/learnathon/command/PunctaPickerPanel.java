@@ -265,15 +265,6 @@ public class PunctaPickerPanel {
 		JButton bQuit = new JButton( "Quit" );
 		helper.add( bQuit, gbc18 );
 
-//
-//		JButton bStartPickingPuncta = new JButton( "Start picking puncta to track" );
-//		GridBagConstraints gbc6 = new GridBagConstraints();
-//		gbc6.insets = new Insets( 0, 0, 0, 5 );
-//		gbc6.anchor = GridBagConstraints.CENTER;
-//		gbc6.gridx = 3;
-//		gbc6.gridy = 1;
-//		helper.add( bStartPickingPuncta, gbc6 );
-
 		return helper;
 	}
 
