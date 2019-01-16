@@ -1,14 +1,16 @@
 package de.csbd.learnathon.command;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.logging.Logger;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -22,9 +24,12 @@ import org.scijava.plugin.Parameter;
 import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvHandlePanel;
+import bdv.util.BdvOverlay;
 import ij.ImagePlus;
 import ij.WindowManager;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.RealPoint;
+import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.miginfocom.swing.MigLayout;
 
@@ -38,17 +43,44 @@ public class PunctaPickerPanel {
 
 	public Logger log;
 
-	DefaultListModel< String > model = new DefaultListModel<>();
-
 	private BdvHandlePanel bdv;
 
 	private RandomAccessibleInterval< DoubleType > rawData;
 
+	private JTextField tMoveTime;
+
+	private ArrayList< RealPoint > points = new ArrayList<>();
+
+	private RealPoint pos;
+
+	private PunctaPickerModel model = new PunctaPickerModel();
+
+	private Behaviour pickBehaviour;
+
+//	private Overlay showOverlay = new Overlay( bdv, model );
+//
+//	public Overlay getShowOverlay() {
+//		return showOverlay;
+//	}
+//
+//	public void setShowOverlay( Overlay showOverlay ) {
+//		this.showOverlay = showOverlay;
+//	}
+
+	public Behaviour getPickBehaviour() {
+		return pickBehaviour;
+	}
+
+	public void setPickBehaviour( Behaviour pickBehaviour ) {
+		this.pickBehaviour = pickBehaviour;
+	}
+
+
 	public PunctaPickerPanel( RandomAccessibleInterval< DoubleType > image, Context context ) {
 		this.rawData = image;
 		context.inject( this );
-
 	}
+
 
 	public JPanel getPanel() {
 		final JPanel controls = initControlsPanel();
@@ -70,15 +102,11 @@ public class PunctaPickerPanel {
 		return splitPane;
 	}
 
-
 	private JPanel initControlsPanel() {
 		final MigLayout layout = new MigLayout( "fill", "[grow]", "" );
 		final JPanel controls = new JPanel( layout );
 		JPanel helper = initHelperPanel();
 		controls.add( helper, "h 100%, grow, wrap" );
-
-		JButton bStartSegmentation = new JButton( "start matching with selected template" );
-		controls.add( bStartSegmentation, "growx, gapy 5 0, wrap" );
 		return controls;
 	}
 	
@@ -119,7 +147,7 @@ public class PunctaPickerPanel {
 		JLabel label = new JLabel( "Move to time:" );
 		helper.add( label, gbc3 );
 
-		JTextField tMoveTime = new JTextField();
+		tMoveTime = new JTextField();
 		tMoveTime.setColumns( 4 );
 		tMoveTime.setMinimumSize( tMoveTime.getPreferredSize() );
 		GridBagConstraints gbc4 = new GridBagConstraints();
@@ -129,7 +157,7 @@ public class PunctaPickerPanel {
 		gbc4.gridy = 1;
 		helper.add( tMoveTime, gbc4 );
 
-		JButton bMoveTime = new JButton( "Move" );
+		JButton bMoveTime = initMoveButton();
 		GridBagConstraints gbc5 = new GridBagConstraints();
 		gbc5.insets = new Insets( 0, 0, 0, 5 );
 		gbc5.anchor = GridBagConstraints.NORTHWEST;
@@ -144,7 +172,7 @@ public class PunctaPickerPanel {
 		gbc6.insets = new Insets( 5, 5, 5, 5 );
 		gbc6.gridx = 0;
 		gbc6.gridy = 2;
-		JButton bStartPickingPuncta = new JButton( "Start picking puncta to track" );
+		JButton bStartPickingPuncta = initPunctaPickingButton();
 		helper.add( bStartPickingPuncta, gbc6 );
 
 		GridBagConstraints gbc7 = new GridBagConstraints();
@@ -232,7 +260,7 @@ public class PunctaPickerPanel {
 		gbc15.insets = new Insets( 5, 5, 5, 5 );
 		gbc15.gridx = 0;
 		gbc15.gridy = 7;
-		JButton bPreviousTime = new JButton( "<- Previous time" );
+		JButton bPreviousTime = initPreviousTimeButton();
 		helper.add( bPreviousTime, gbc15 );
 
 		GridBagConstraints gbc16 = new GridBagConstraints();
@@ -242,7 +270,7 @@ public class PunctaPickerPanel {
 		gbc16.insets = new Insets( 5, 5, 5, 5 );
 		gbc16.gridx = 2;
 		gbc16.gridy = 7;
-		JButton bNextTime = new JButton( "Next time ->" );
+		JButton bNextTime = initNextTimeButton();
 		helper.add( bNextTime, gbc16 );
 
 		GridBagConstraints gbc17 = new GridBagConstraints();
@@ -303,8 +331,7 @@ public class PunctaPickerPanel {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				ImagePlus currentImage = WindowManager.getCurrentImage();
-				System.out.println( currentImage.getCurrentSlice() );
+				bdv.getBdvHandle().getViewerPanel().nextTimePoint();
 			}
 		} );
 		return bNextTime;
@@ -317,8 +344,7 @@ public class PunctaPickerPanel {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				ImagePlus currentImage = WindowManager.getCurrentImage();
-				System.out.println( currentImage.getCurrentSlice() );
+				bdv.getBdvHandle().getViewerPanel().previousTimePoint();
 			}
 		} );
 		return bPreviousTime;
@@ -414,21 +440,63 @@ public class PunctaPickerPanel {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				ImagePlus currentImage = WindowManager.getCurrentImage();
-				System.out.println( currentImage.getCurrentSlice() );
+				defineBehavior();
+
 			}
+
+
+
 		} );
 		return bStartPickingPuncta;
 	}
 
+
+	private void defineBehavior() {
+		if ( getPickBehaviour() == null ) {
+			pickBehaviour = new Behaviour( bdv, model );
+			pickBehaviour.mainClick();
+
+		}
+
+	}
+
+	private void overlayPoints( ArrayList< RealPoint > points ) {
+		final BdvOverlay overlay = new BdvOverlay() {
+
+			@Override
+			protected void draw( final Graphics2D g ) {
+
+				final AffineTransform2D t = new AffineTransform2D();
+				getCurrentTransform2D( t );
+
+				g.setColor( Color.RED );
+
+				final double[] lPos = new double[ 2 ];
+				final double[] gPos1 = new double[ 2 ];
+				final double[] gPos2 = new double[ 2 ];
+				for ( int i = 0; i < points.size(); i += 1 ) {
+					points.get( i ).localize( lPos );
+					t.apply( lPos, gPos1 );
+					points.get( i + 1 ).localize( lPos );
+					t.apply( lPos, gPos2 );
+					g.drawOval( ( int ) gPos1[ 0 ], ( int ) gPos1[ 1 ], 10, 10 );
+
+				}
+
+			}
+		};
+
+		BdvFunctions.showOverlay( overlay, "overlay", Bdv.options().addTo( bdv ) );
+
+	}
 	private JButton initMoveButton() {
 		final JButton bMoveTime = new JButton( "Move" );
 		bMoveTime.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				ImagePlus currentImage = WindowManager.getCurrentImage();
-				System.out.println( currentImage.getCurrentSlice() );
+				bdv.getViewerPanel().setTimepoint( Integer.parseInt( tMoveTime.getText() ) );
+
 			}
 		} );
 		return bMoveTime;
@@ -446,5 +514,13 @@ public class PunctaPickerPanel {
 	}
 
 
+
+	public PunctaPickerModel getPunctaPickerModel() {
+		return model;
+	}
+
+	public void setPunctaPickerModel( PunctaPickerModel model ) {
+		this.model = model;
+	}
 
 }
