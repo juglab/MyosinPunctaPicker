@@ -27,4 +27,9 @@ public class PunctaPickerModel {
 		}
 		return queriedTimePunctaList;
 	}
+
+	List< Punctas > removePuncta( Punctas p ) {
+		puncta.remove( p );
+		return puncta;
+	}
 }

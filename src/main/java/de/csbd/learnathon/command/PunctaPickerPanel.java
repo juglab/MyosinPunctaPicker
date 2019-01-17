@@ -9,6 +9,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.JButton;
@@ -57,15 +58,7 @@ public class PunctaPickerPanel {
 
 	private Behaviour pickBehaviour;
 
-//	private Overlay showOverlay = new Overlay( bdv, model );
-//
-//	public Overlay getShowOverlay() {
-//		return showOverlay;
-//	}
-//
-//	public void setShowOverlay( Overlay showOverlay ) {
-//		this.showOverlay = showOverlay;
-//	}
+	private CSVWriter writer;
 
 	public Behaviour getPickBehaviour() {
 		return pickBehaviour;
@@ -167,7 +160,7 @@ public class PunctaPickerPanel {
 
 		GridBagConstraints gbc6 = new GridBagConstraints();
 		gbc6.fill = GridBagConstraints.HORIZONTAL;
-		gbc6.gridwidth = 4;
+		gbc6.gridwidth = 2;
 		gbc6.anchor = GridBagConstraints.NORTHWEST;
 		gbc6.insets = new Insets( 5, 5, 5, 5 );
 		gbc6.gridx = 0;
@@ -177,29 +170,29 @@ public class PunctaPickerPanel {
 
 		GridBagConstraints gbc7 = new GridBagConstraints();
 		gbc7.fill = GridBagConstraints.HORIZONTAL;
-		gbc7.gridwidth = 4;
+		gbc7.gridwidth = 2;
 		gbc7.anchor = GridBagConstraints.NORTHWEST;
 		gbc7.insets = new Insets( 5, 5, 5, 5 );
-		gbc7.gridx = 0;
-		gbc7.gridy = 3;
-		JButton bOverlayAndSave = new JButton( "Overlay picked puncta and save" );
+		gbc7.gridx = 2;
+		gbc7.gridy = 2;
+		JButton bSavePickedPuncta = initSavePickedPuncta();
 
-		helper.add( bOverlayAndSave, gbc7 );
+		helper.add( bSavePickedPuncta, gbc7 );
 
 		GridBagConstraints gbc8 = new GridBagConstraints();
 		gbc8.fill = GridBagConstraints.HORIZONTAL;
-		gbc8.gridwidth = 4;
+		gbc8.gridwidth = 2;
 		gbc8.anchor = GridBagConstraints.CENTER;
 		gbc8.insets = new Insets( 5, 5, 5, 5 );
-		gbc8.gridx = 0;
-		gbc8.gridy = 4;
+		gbc8.gridx = 2;
+		gbc8.gridy = 3;
 		JButton bStartTracking = new JButton( "Start tracking already selected puncta" );
 		helper.add( bStartTracking, gbc8 );
 
 		GridBagConstraints gbc9 = new GridBagConstraints();
 		gbc9.insets = new Insets( 0, 0, 0, 5 );
 		gbc9.gridx = 0;
-		gbc9.gridy = 5;
+		gbc9.gridy = 4;
 		JLabel lRadius = new JLabel( "Tracking uncertainty radius:" );
 		helper.add( lRadius, gbc9 );
 
@@ -210,7 +203,7 @@ public class PunctaPickerPanel {
 		gbc10.anchor = GridBagConstraints.WEST;
 		gbc10.insets = new Insets( 0, 0, 0, 5 );
 		gbc10.gridx = 1;
-		gbc10.gridy = 5;
+		gbc10.gridy = 4;
 		helper.add( tRadius, gbc10 );
 
 		GridBagConstraints gbc11 = new GridBagConstraints();
@@ -219,7 +212,7 @@ public class PunctaPickerPanel {
 		gbc11.anchor = GridBagConstraints.NORTHWEST;
 		gbc11.insets = new Insets( 5, 5, 5, 5 );
 		gbc11.gridx = 2;
-		gbc11.gridy = 5;
+		gbc11.gridy = 4;
 		JButton bDrawCircle = new JButton( "Draw/Update circle" );
 		helper.add( bDrawCircle, gbc11 );
 
@@ -229,7 +222,7 @@ public class PunctaPickerPanel {
 		gbc12.anchor = GridBagConstraints.WEST;
 		gbc12.insets = new Insets( 0, 0, 0, 5 );
 		gbc12.gridx = 3;
-		gbc12.gridy = 5;
+		gbc12.gridy = 4;
 		JButton bConfirmCircle = new JButton( "Confirm circle" );
 		helper.add( bConfirmCircle, gbc12 );
 
@@ -239,7 +232,7 @@ public class PunctaPickerPanel {
 		gbc13.anchor = GridBagConstraints.NORTHWEST;
 		gbc13.insets = new Insets( 5, 5, 5, 5 );
 		gbc13.gridx = 0;
-		gbc13.gridy = 6;
+		gbc13.gridy = 5;
 		JButton bPreviousPuncta = new JButton( "<- Previous puncta" );
 		helper.add( bPreviousPuncta, gbc13 );
 
@@ -249,7 +242,7 @@ public class PunctaPickerPanel {
 		gbc14.anchor = GridBagConstraints.NORTHWEST;
 		gbc14.insets = new Insets( 5, 5, 5, 5 );
 		gbc14.gridx = 2;
-		gbc14.gridy = 6;
+		gbc14.gridy = 5;
 		JButton bNextPuncta = new JButton( "Next puncta ->" );
 		helper.add( bNextPuncta, gbc14 );
 
@@ -259,7 +252,7 @@ public class PunctaPickerPanel {
 		gbc15.anchor = GridBagConstraints.NORTHWEST;
 		gbc15.insets = new Insets( 5, 5, 5, 5 );
 		gbc15.gridx = 0;
-		gbc15.gridy = 7;
+		gbc15.gridy = 6;
 		JButton bPreviousTime = initPreviousTimeButton();
 		helper.add( bPreviousTime, gbc15 );
 
@@ -269,7 +262,7 @@ public class PunctaPickerPanel {
 		gbc16.anchor = GridBagConstraints.NORTHWEST;
 		gbc16.insets = new Insets( 5, 5, 5, 5 );
 		gbc16.gridx = 2;
-		gbc16.gridy = 7;
+		gbc16.gridy = 6;
 		JButton bNextTime = initNextTimeButton();
 		helper.add( bNextTime, gbc16 );
 
@@ -279,7 +272,7 @@ public class PunctaPickerPanel {
 		gbc17.anchor = GridBagConstraints.NORTHWEST;
 		gbc17.insets = new Insets( 5, 5, 5, 5 );
 		gbc17.gridx = 0;
-		gbc17.gridy = 8;
+		gbc17.gridy = 7;
 		JButton bSave = new JButton( "Save" );
 		helper.add( bSave, gbc17 );
 
@@ -289,7 +282,7 @@ public class PunctaPickerPanel {
 		gbc18.anchor = GridBagConstraints.NORTHWEST;
 		gbc18.insets = new Insets( 5, 5, 5, 5 );
 		gbc18.gridx = 2;
-		gbc18.gridy = 8;
+		gbc18.gridy = 7;
 		JButton bQuit = new JButton( "Quit" );
 		helper.add( bQuit, gbc18 );
 
@@ -420,17 +413,24 @@ public class PunctaPickerPanel {
 
 	}
 
-	private JButton initOverlayAndSaveButton() {
-		final JButton bOverlayAndSave = new JButton( "Overlay selected puncta and save" );
-		bOverlayAndSave.addActionListener( new ActionListener() {
+	private JButton initSavePickedPuncta() {
+		final JButton bSavePickedPuncta = new JButton( "Save picked puncta" );
+		bSavePickedPuncta.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				ImagePlus currentImage = WindowManager.getCurrentImage();
-				System.out.println( currentImage.getCurrentSlice() );
+				List< Punctas > allPuncta = model.getPuncta();
+				writeToCSV( allPuncta );
 			}
 		} );
-		return bOverlayAndSave;
+		return bSavePickedPuncta;
+
+	}
+
+
+	protected void writeToCSV( List< Punctas > allPuncta ) {
+		getWriter();
+		CSVWriter.writeCsvFile( "test.csv", allPuncta );
 
 	}
 
@@ -459,6 +459,7 @@ public class PunctaPickerPanel {
 		}
 
 	}
+
 
 	private void overlayPoints( ArrayList< RealPoint > points ) {
 		final BdvOverlay overlay = new BdvOverlay() {
@@ -521,6 +522,14 @@ public class PunctaPickerPanel {
 
 	public void setPunctaPickerModel( PunctaPickerModel model ) {
 		this.model = model;
+	}
+
+	public CSVWriter getWriter() {
+		return writer;
+	}
+
+	public void setWriter( CSVWriter writer ) {
+		this.writer = writer;
 	}
 
 }

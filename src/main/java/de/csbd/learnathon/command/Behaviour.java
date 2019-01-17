@@ -38,6 +38,7 @@ public class Behaviour {
 			System.out.println( "global coordinates: " + Util.printCoordinates( pos ) );
 		}, "print global pos", "P" );
 
+
 	}
 
 
