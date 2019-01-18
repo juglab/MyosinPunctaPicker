@@ -66,7 +66,7 @@ public class FlowGuiCommand implements Command {
 		final ImageJ imageJ = new ImageJ();
 		imageJ.ui().showUI();
 
-		IJ.openImage( "/Users/jug/Desktop/imageForTPS.tif" ).show();
+		IJ.openImage( "/Users/prakash/Desktop/Stack.tif" ).show();
 
 		imageJ.command().run( FlowGuiCommand.class, true );
 	}
