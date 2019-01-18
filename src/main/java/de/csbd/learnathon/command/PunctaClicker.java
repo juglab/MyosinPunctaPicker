@@ -37,7 +37,6 @@ public class PunctaClicker {
 //			overlay = new Overlay( bdv, model );
 			overlay.paintPoint();
 			bdv.getViewerPanel().nextTimePoint();
-			overlay.paintAncestors();
 			System.out.println( "global coordinates: " + Util.printCoordinates( pos ) );
 		}, "print global pos", "button1" );
 
