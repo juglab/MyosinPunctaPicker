@@ -3,6 +3,7 @@ package de.csbd.learnathon.command;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import java.util.List;
 
 import bdv.util.Bdv;
@@ -29,8 +30,6 @@ public class Overlay {
 
 			@Override
 			protected void draw( final Graphics2D g ) {
-
-				System.out.println( "Method1" );
 
 				final AffineTransform2D t = new AffineTransform2D();
 				getCurrentTransform2D( t );
@@ -66,7 +65,8 @@ public class Overlay {
 							RealPoint point2 = new RealPoint( allPuncta.get( i ).getX(), allPuncta.get( i ).getY() );
 							point2.localize( lPos2 );
 							t.apply( lPos2, gPos2 );
-							g.drawLine(
+							drawArrow(
+									g,
 									( int ) gPos1[ 0 ],
 									( int ) gPos1[ 1 ],
 									( int ) gPos2[ 0 ],
@@ -78,6 +78,25 @@ public class Overlay {
 
 
 				}
+			}
+
+			private void drawArrow( Graphics2D g1, int x1, int y1, int x2, int y2 ) {
+				final int ARR_SIZE = 8;
+				Graphics2D g = ( Graphics2D ) g1.create();
+
+				double dx = x2 - x1, dy = y2 - y1;
+				double angle = Math.atan2( dy, dx );
+				int len = ( int ) Math.sqrt( dx * dx + dy * dy );
+				AffineTransform at = AffineTransform.getTranslateInstance( x1, y1 );
+				at.concatenate( AffineTransform.getRotateInstance( angle ) );
+				g.transform( at );
+
+				// Draw horizontal arrow starting in (0, 0)
+				g.drawLine( 0, 0, len, 0 );
+				g.fillPolygon(
+						new int[] { len, len - ARR_SIZE, len - ARR_SIZE, len },
+						new int[] { 0, -ARR_SIZE, ARR_SIZE, 0 },
+						4 );
 			}
 		};
 		BdvFunctions.showOverlay( overlay, "overlay", Bdv.options().addTo( bdv ) );
