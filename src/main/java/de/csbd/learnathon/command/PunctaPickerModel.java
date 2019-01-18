@@ -5,10 +5,17 @@ import java.util.List;
 
 public class PunctaPickerModel {
 
+	private int id = 0;
 	private final List< Punctas > puncta = new ArrayList<>();
 
+	void increaseId() {
+		id = id + 1;
+		System.out.println( id );
+	}
+
+
 	void addPuncta( float x, float y, int t ) {
-		Punctas newPuncta = new Punctas( x, y, t );
+		Punctas newPuncta = new Punctas( x, y, t, id );
 		puncta.add( newPuncta );
 	}
 

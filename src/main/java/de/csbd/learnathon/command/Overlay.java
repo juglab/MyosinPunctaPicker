@@ -52,7 +52,7 @@ public class Overlay {
 						if ( thickness <= 0 ) {
 							thickness = 0;
 						}
-						g.setStroke( new BasicStroke( thickness ) );
+						g.setStroke( new BasicStroke( thickness / 2 ) );
 						RealPoint planarPoint = new RealPoint( allPuncta.get( i ).getX(), allPuncta.get( i ).getY() );
 						planarPoint.localize( lPos );
 						t.apply( lPos, gPos );
@@ -81,7 +81,7 @@ public class Overlay {
 			}
 
 			private void drawArrow( Graphics2D g1, int x1, int y1, int x2, int y2 ) {
-				final int ARR_SIZE = 8;
+				final int ARR_SIZE = 2;
 				Graphics2D g = ( Graphics2D ) g1.create();
 
 				double dx = x2 - x1, dy = y2 - y1;

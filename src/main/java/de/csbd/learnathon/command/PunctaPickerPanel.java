@@ -437,11 +437,12 @@ public class PunctaPickerPanel {
 	}
 
 	private JButton initPunctaPickingButton() {
-		final JButton bStartPickingPuncta = new JButton( "Start picking puncta to track" );
+		final JButton bStartPickingPuncta = new JButton( "Start a tracklet" );
 		bStartPickingPuncta.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
+				model.increaseId();
 				defineBehavior();
 
 			}
