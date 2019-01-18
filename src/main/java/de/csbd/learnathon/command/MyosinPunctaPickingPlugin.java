@@ -56,10 +56,11 @@ public class MyosinPunctaPickingPlugin implements Command {
 	UIService uiService;
 
 
-	public static void main( String[] args ) throws IOException {
+	public static void main( final String[] args ) throws IOException {
 
 		final ImageJ ij = new ImageJ();
 		ij.ui().showUI();
+
 		ij.command().run( MyosinPunctaPickingPlugin.class, true );
 	}
 
@@ -67,7 +68,7 @@ public class MyosinPunctaPickingPlugin implements Command {
 	public void run() {
 		try {
 			punctaPicking();
-		} catch ( Exception e ) {
+		} catch ( final Exception e ) {
 			e.printStackTrace();
 		}
 
@@ -76,13 +77,13 @@ public class MyosinPunctaPickingPlugin implements Command {
 	private < T > void punctaPicking()
 			throws Exception {
 
-		Dataset imagefile = datasetIOService.open( inputImage.getAbsolutePath() );
+		final Dataset imagefile = datasetIOService.open( inputImage.getAbsolutePath() );
 
 
-		File saveDir = saveResultsDir;
+		final File saveDir = saveResultsDir;
 
-		ImgPlus< T > imp = ( ImgPlus< T > ) imagefile.getImgPlus();
-		StatusService statusService = this.statusService;
+		final ImgPlus< T > imp = ( ImgPlus< T > ) imagefile.getImgPlus();
+		final StatusService statusService = this.statusService;
 		uiService.show( imp );
 	}
 }

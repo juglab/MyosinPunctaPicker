@@ -11,6 +11,7 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 
+import ij.IJ;
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
 import net.imglib2.RandomAccessibleInterval;
@@ -45,25 +46,28 @@ public class FlowGuiCommand implements Command {
 		frame.addWindowListener( new WindowAdapter() {
 
 			@Override
-			public void windowClosed( WindowEvent windowEvent ) {
+			public void windowClosed( final WindowEvent windowEvent ) {
 				panel.close();
 			}
 		} );
 
+		frame.setBounds( 100, 100, 1600, 1200 );
 		frame.pack();
-		frame.setSize( 500, 500 );
 		frame.setVisible( true );
 	}
 
-	private RandomAccessibleInterval< DoubleType > toDoubleType( RandomAccessibleInterval< ? extends RealType< ? > > image ) {
+	private RandomAccessibleInterval< DoubleType > toDoubleType( final RandomAccessibleInterval< ? extends RealType< ? > > image ) {
 		if ( Util.getTypeFromInterval( image ) instanceof DoubleType )
 			return ( RandomAccessibleInterval< DoubleType > ) image;
 		return Converters.convert( image, ( i, o ) -> o.setReal( i.getRealDouble() ), new DoubleType() );
 	}
 
-	public static void main( String... args ) {
-		ImageJ imageJ = new ImageJ();
+	public static void main( final String... args ) {
+		final ImageJ imageJ = new ImageJ();
 		imageJ.ui().showUI();
+
+		IJ.openImage( "/Users/jug/Desktop/imageForTPS.tif" ).show();
+
 		imageJ.command().run( FlowGuiCommand.class, true );
 	}
 }
