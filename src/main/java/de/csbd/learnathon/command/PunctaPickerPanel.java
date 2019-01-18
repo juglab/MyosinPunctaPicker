@@ -50,21 +50,17 @@ public class PunctaPickerPanel {
 
 	private JTextField tMoveTime;
 
-	private ArrayList< RealPoint > points = new ArrayList<>();
-
-	private RealPoint pos;
-
 	private PunctaPickerModel model = new PunctaPickerModel();
 
-	private Behaviour pickBehaviour;
+	private PunctaClicker pickBehaviour;
 
 	private CSVWriter writer;
 
-	public Behaviour getPickBehaviour() {
+	public PunctaClicker getPickBehaviour() {
 		return pickBehaviour;
 	}
 
-	public void setPickBehaviour( Behaviour pickBehaviour ) {
+	public void setPickBehaviour( PunctaClicker pickBehaviour ) {
 		this.pickBehaviour = pickBehaviour;
 	}
 
@@ -453,7 +449,7 @@ public class PunctaPickerPanel {
 
 	private void defineBehavior() {
 		if ( getPickBehaviour() == null ) {
-			pickBehaviour = new Behaviour( bdv, model );
+			pickBehaviour = new PunctaClicker( bdv, model );
 			pickBehaviour.mainClick();
 
 		}
@@ -531,5 +527,6 @@ public class PunctaPickerPanel {
 	public void setWriter( CSVWriter writer ) {
 		this.writer = writer;
 	}
+
 
 }
