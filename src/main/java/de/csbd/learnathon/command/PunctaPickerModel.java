@@ -6,11 +6,32 @@ import java.util.List;
 public class PunctaPickerModel {
 
 	private int id = 0;
-	private final List< Punctas > puncta = new ArrayList<>();
+	private List< Punctas > puncta = new ArrayList<>();
+
+	void setPuncta( List< Punctas > loadedPuncta ) {
+
+		puncta = loadedPuncta;
+	}
 
 	void increaseId() {
 		id = id + 1;
+
 		System.out.println( id );
+	}
+
+	void setMaxId() {
+		if ( puncta != null && !puncta.isEmpty() ) {
+			int maxId = 0;
+			for ( int i = 0; i < puncta.size(); i++ ) {
+				int id = puncta.get( i ).getId();
+				if ( id > maxId ) {
+					maxId = id;
+				}
+
+			}
+			id = maxId;
+		}
+
 	}
 
 

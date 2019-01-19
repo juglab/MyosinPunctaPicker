@@ -43,5 +43,9 @@ public class PunctaClicker {
 
 	}
 
+	public void updateOverlay() {
+		overlay.paintPoint();
+	}
+
 
 }

@@ -57,27 +57,32 @@ public class Overlay {
 						planarPoint.localize( lPos );
 						t.apply( lPos, gPos );
 						g.drawOval( ( int ) gPos[ 0 ], ( int ) gPos[ 1 ], 3, 3 );
-						if ( i > 0 ) {
-							RealPoint point1 = new RealPoint( allPuncta.get( i - 1 ).getX(), allPuncta.get( i - 1 ).getY() );
-							point1.localize( lPos1 );
-							t.apply( lPos1, gPos1 );
 
-							RealPoint point2 = new RealPoint( allPuncta.get( i ).getX(), allPuncta.get( i ).getY() );
-							point2.localize( lPos2 );
-							t.apply( lPos2, gPos2 );
-							drawArrow(
-									g,
-									( int ) gPos1[ 0 ],
-									( int ) gPos1[ 1 ],
-									( int ) gPos2[ 0 ],
-									( int ) gPos2[ 1 ] );
+						if ( i >= 1 ) {
+							if ( allPuncta.get( i ).getId() == allPuncta.get( i - 1 ).getId() ) {
+
+								if ( i > 0 ) {
+									RealPoint point1 = new RealPoint( allPuncta.get( i - 1 ).getX(), allPuncta.get( i - 1 ).getY() );
+									point1.localize( lPos1 );
+									t.apply( lPos1, gPos1 );
+
+									RealPoint point2 = new RealPoint( allPuncta.get( i ).getX(), allPuncta.get( i ).getY() );
+									point2.localize( lPos2 );
+									t.apply( lPos2, gPos2 );
+									drawArrow(
+											g,
+											( int ) gPos1[ 0 ],
+											( int ) gPos1[ 1 ],
+											( int ) gPos2[ 0 ],
+											( int ) gPos2[ 1 ] );
+								}
 						}
-//						g.drawOval( ( int ) gPos[ 0 ], ( int ) gPos[ 1 ], 3, 3 );
+						}
 
 					}
 
 
-				}
+			}
 			}
 
 			private void drawArrow( Graphics2D g1, int x1, int y1, int x2, int y2 ) {
