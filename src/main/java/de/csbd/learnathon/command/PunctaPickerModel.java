@@ -3,12 +3,17 @@ package de.csbd.learnathon.command;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
+
 public class PunctaPickerModel {
 
 	private int id = 0;
-	private List< Punctas > puncta = new ArrayList<>();
+	private List< Puncta > puncta = new ArrayList<>();
+	private List< Pair< Puncta, Puncta > > edges = new ArrayList<>();
+	private Puncta latest;
 
-	void setPuncta( List< Punctas > loadedPuncta ) {
+	void setPuncta( List< Puncta > loadedPuncta ) {
 
 		puncta = loadedPuncta;
 	}
@@ -34,21 +39,26 @@ public class PunctaPickerModel {
 
 	}
 
-
-	void addPuncta( float x, float y, int t ) {
-		Punctas newPuncta = new Punctas( x, y, t, id );
+	public Puncta addPuncta( float x, float y, int t ) {
+		Puncta newPuncta = new Puncta( x, y, t, id );
 		puncta.add( newPuncta );
+		this.latest = newPuncta;
+		return newPuncta;
 	}
 
-	List< Punctas > getPuncta() {
+	public void addEdge( Puncta p1, Puncta p2 ) {
+		edges.add( new ValuePair<>( p1, p2 ) );
+	}
+
+	List< Puncta > getPuncta() {
 		return puncta;
 	}
 
-	ArrayList< Punctas > getPunctaAt( int t ) {
-		List< Punctas > allPuncta = getPuncta();
-		ArrayList< Punctas > queriedTimePunctaList = new ArrayList< Punctas >();
+	ArrayList< Puncta > getPunctaAt( int t ) {
+		List< Puncta > allPuncta = getPuncta();
+		ArrayList< Puncta > queriedTimePunctaList = new ArrayList< Puncta >();
 		for ( int i = 0; i < allPuncta.size(); i++ ) {
-			Punctas currentPuncta = allPuncta.get( i );
+			Puncta currentPuncta = allPuncta.get( i );
 			if ( currentPuncta.getT() == t ) {
 				queriedTimePunctaList.add( currentPuncta );
 			}
@@ -56,8 +66,12 @@ public class PunctaPickerModel {
 		return queriedTimePunctaList;
 	}
 
-	List< Punctas > removePuncta( Punctas p ) {
-		puncta.remove( p );
+	List< Puncta > removePunctaAtIndex( int index ) {
+		puncta.remove( index );
 		return puncta;
+	}
+
+	public Puncta getLatestPuncta() {
+		return latest;
 	}
 }

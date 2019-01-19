@@ -8,11 +8,11 @@ import java.util.ArrayList;
 
 public class CSVReader {
 
-	public static ArrayList< Punctas > loadCSV( String filename ) {
+	public static ArrayList< Puncta > loadCSV( String filename ) {
 
 		String COMMA_DELIMITER = ",";
 
-		ArrayList< Punctas > loadedTracklets = new ArrayList< Punctas >();
+		ArrayList< Puncta > loadedTracklets = new ArrayList< Puncta >();
 
 		try (BufferedReader br = new BufferedReader( new FileReader( filename ) )) {
 			String line;
@@ -21,7 +21,7 @@ public class CSVReader {
 				System.out.println( line );
 				String[] values = line.split( COMMA_DELIMITER );
 				System.out.println( values[ 0 ] );
-				Punctas puncta = new Punctas( Float.parseFloat( values[ 0 ] ), Float.parseFloat( values[ 1 ] ), Integer
+				Puncta puncta = new Puncta( Float.parseFloat( values[ 0 ] ), Float.parseFloat( values[ 1 ] ), Integer
 						.parseInt( values[ 2 ] ), Integer.parseInt( values[ 3 ] ) );
 				loadedTracklets.add( puncta );
 			}

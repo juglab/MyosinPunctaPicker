@@ -1,14 +1,14 @@
 package de.csbd.learnathon.command;
 
 
-public class Punctas {
+public class Puncta {
 
 	private float x;
 	private float y;
 	private int t;
 	private int id;
 	
-	public Punctas( float x, float y, int t, int id ) {
+	public Puncta( float x, float y, int t, int id ) {
 		this.x = x;
 		this.y = y;
 		this.t = t;

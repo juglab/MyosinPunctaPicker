@@ -57,6 +57,8 @@ public class PunctaPickerPanel {
 
 	private CSVReader reader;
 
+	private String actionIndicator;
+
 	public CSVReader getReader() {
 		return reader;
 	}
@@ -122,30 +124,40 @@ public class PunctaPickerPanel {
 		final JButton bAddPunctaFromCsv = initLoadTrackelts();
 		helper.add( bAddPunctaFromCsv, gbc1 );
 
-	    final GridBagConstraints gbc3 = new GridBagConstraints();
-		gbc3.insets = new Insets( 0, 0, 0, 5 );
-	    gbc3.gridx = 0;
-		gbc3.gridy = 1;
+		final GridBagConstraints gbc2 = new GridBagConstraints();
+		gbc2.insets = new Insets( 0, 0, 0, 5 );
+		gbc2.gridx = 0;
+		gbc2.gridy = 1;
 		final JLabel label = new JLabel( "Move to time:" );
-		helper.add( label, gbc3 );
+		helper.add( label, gbc2 );
 
 		tMoveTime = new JTextField();
 		tMoveTime.setColumns( 4 );
 		tMoveTime.setMinimumSize( tMoveTime.getPreferredSize() );
-		final GridBagConstraints gbc4 = new GridBagConstraints();
-		gbc4.anchor = GridBagConstraints.WEST;
-		gbc4.insets = new Insets( 0, 0, 0, 5 );
-		gbc4.gridx = 1;
-		gbc4.gridy = 1;
-		helper.add( tMoveTime, gbc4 );
+		final GridBagConstraints gbc3 = new GridBagConstraints();
+		gbc3.anchor = GridBagConstraints.WEST;
+		gbc3.insets = new Insets( 0, 0, 0, 5 );
+		gbc3.gridx = 1;
+		gbc3.gridy = 1;
+		helper.add( tMoveTime, gbc2 );
 
 		final JButton bMoveTime = initMoveButton();
+		final GridBagConstraints gbc4 = new GridBagConstraints();
+		gbc4.insets = new Insets( 0, 0, 0, 5 );
+		gbc4.anchor = GridBagConstraints.NORTHWEST;
+		gbc4.gridx = 2;
+		gbc4.gridy = 1;
+		helper.add( bMoveTime, gbc4 );
+
 		final GridBagConstraints gbc5 = new GridBagConstraints();
-		gbc5.insets = new Insets( 0, 0, 0, 5 );
+		gbc5.fill = GridBagConstraints.HORIZONTAL;
+		gbc5.gridwidth = 2;
 		gbc5.anchor = GridBagConstraints.NORTHWEST;
-		gbc5.gridx = 2;
-		gbc5.gridy = 1;
-		helper.add( bMoveTime, gbc5 );
+		gbc5.insets = new Insets( 5, 5, 5, 5 );
+		gbc5.gridx = 0;
+		gbc5.gridy = 2;
+		final JButton bStartPickingPuncta = initPunctaPickingButton();
+		helper.add( bStartPickingPuncta, gbc5 );
 
 		final GridBagConstraints gbc6 = new GridBagConstraints();
 		gbc6.fill = GridBagConstraints.HORIZONTAL;
@@ -153,43 +165,85 @@ public class PunctaPickerPanel {
 		gbc6.anchor = GridBagConstraints.NORTHWEST;
 		gbc6.insets = new Insets( 5, 5, 5, 5 );
 		gbc6.gridx = 0;
-		gbc6.gridy = 2;
-		final JButton bStartPickingPuncta = initPunctaPickingButton();
-		helper.add( bStartPickingPuncta, gbc6 );
-
-		final GridBagConstraints gbc15 = new GridBagConstraints();
-		gbc15.fill = GridBagConstraints.HORIZONTAL;
-		gbc15.gridwidth = 2;
-		gbc15.anchor = GridBagConstraints.NORTHWEST;
-		gbc15.insets = new Insets( 5, 5, 5, 5 );
-		gbc15.gridx = 0;
-		gbc15.gridy = 6;
+		gbc6.gridy = 6;
 		final JButton bPreviousTime = initPreviousTimeButton();
-		helper.add( bPreviousTime, gbc15 );
+		helper.add( bPreviousTime, gbc6 );
 
-		final GridBagConstraints gbc16 = new GridBagConstraints();
-		gbc16.fill = GridBagConstraints.HORIZONTAL;
-		gbc16.gridwidth = 2;
-		gbc16.anchor = GridBagConstraints.NORTHWEST;
-		gbc16.insets = new Insets( 5, 5, 5, 5 );
-		gbc16.gridx = 2;
-		gbc16.gridy = 6;
+		final GridBagConstraints gbc7 = new GridBagConstraints();
+		gbc7.fill = GridBagConstraints.HORIZONTAL;
+		gbc7.gridwidth = 2;
+		gbc7.anchor = GridBagConstraints.NORTHWEST;
+		gbc7.insets = new Insets( 5, 5, 5, 5 );
+		gbc7.gridx = 2;
+		gbc7.gridy = 6;
 		final JButton bNextTime = initNextTimeButton();
-		helper.add( bNextTime, gbc16 );
+		helper.add( bNextTime, gbc7 );
 
-		final GridBagConstraints gbc17 = new GridBagConstraints();
-		gbc17.fill = GridBagConstraints.HORIZONTAL;
-		gbc17.gridwidth = 2;
-		gbc17.anchor = GridBagConstraints.NORTHWEST;
-		gbc17.insets = new Insets( 5, 5, 5, 5 );
-		gbc17.gridx = 0;
-		gbc17.gridy = 7;
+		final GridBagConstraints gbc9 = new GridBagConstraints();
+		gbc9.fill = GridBagConstraints.HORIZONTAL;
+		gbc9.gridwidth = 2;
+		gbc9.anchor = GridBagConstraints.NORTHWEST;
+		gbc9.insets = new Insets( 5, 5, 5, 5 );
+		gbc9.gridx = 0;
+		gbc9.gridy = 8;
+		final JButton bModify = initModify();
+		helper.add( bModify, gbc9 );
+
+		final GridBagConstraints gbc10 = new GridBagConstraints();
+		gbc10.fill = GridBagConstraints.HORIZONTAL;
+		gbc10.gridwidth = 2;
+		gbc10.anchor = GridBagConstraints.NORTHWEST;
+		gbc10.insets = new Insets( 5, 5, 5, 5 );
+		gbc10.gridx = 0;
+		gbc10.gridy = 9;
+		final JButton bDeleteTracklet = initDelete();
+		helper.add( bDeleteTracklet, gbc10 );
+
+		final GridBagConstraints gbc8 = new GridBagConstraints();
+		gbc8.fill = GridBagConstraints.HORIZONTAL;
+		gbc8.gridwidth = 2;
+		gbc8.anchor = GridBagConstraints.NORTHWEST;
+		gbc8.insets = new Insets( 5, 5, 5, 5 );
+		gbc8.gridx = 0;
+		gbc8.gridy = 7;
 		final JButton bSaveTracklets = initSaveTrackletsButton();
-		helper.add( bSaveTracklets, gbc17 );
+		helper.add( bSaveTracklets, gbc8 );
 
 		return helper;
 	}
 
+
+	private JButton initModify() {
+		final JButton bModifyTracklet = new JButton( "Modify a tracklet" );
+		bModifyTracklet.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( final ActionEvent e ) {
+				actionIndicator = "MODIFY";
+				defineBehavior();
+
+			}
+
+		} );
+		return bModifyTracklet;
+
+	}
+
+	private JButton initDelete() {
+		final JButton bDeleteTracklet = new JButton( "Delete a tracklet" );
+		bDeleteTracklet.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( final ActionEvent e ) {
+				actionIndicator = "DELETE";
+				defineBehavior();
+
+			}
+
+		} );
+		return bDeleteTracklet;
+
+	}
 
 	private JButton initLoadTrackelts() {
 		final JButton bLoadTracklets = new JButton( "Load Tracklets from CSV" );
@@ -212,7 +266,7 @@ public class PunctaPickerPanel {
 
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
-				final List< Punctas > allPuncta = model.getPuncta();
+				final List< Puncta > allPuncta = model.getPuncta();
 				writeToCSV( allPuncta );
 			}
 		} );
@@ -246,7 +300,7 @@ public class PunctaPickerPanel {
 
 	}
 
-	protected void writeToCSV( final List< Punctas > allPuncta ) {
+	protected void writeToCSV( final List< Puncta > allPuncta ) {
 		getWriter();
 		CSVWriter.writeCsvFile( "test2.csv", allPuncta );
 
@@ -259,6 +313,7 @@ public class PunctaPickerPanel {
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
 				model.increaseId();
+				actionIndicator = "TRACK";
 				defineBehavior();
 
 			}
@@ -272,7 +327,7 @@ public class PunctaPickerPanel {
 
 	private void defineBehavior() {
 
-		punctaClicker.mainClick();
+		punctaClicker.mainClick( actionIndicator );
 	}
 
 

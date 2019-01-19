@@ -13,7 +13,7 @@ public class CSVWriter {
 	//CSV file header
 	private static final String FILE_HEADER = "x,y,t,id";
 
-	public static void writeCsvFile( String fileName, List< Punctas > punctaList ) {
+	public static void writeCsvFile( String fileName, List< Puncta > punctaList ) {
 
 		FileWriter fileWriter = null;
 
@@ -27,7 +27,7 @@ public class CSVWriter {
 			fileWriter.append( NEW_LINE_SEPARATOR );
 
 			//Write a new student object list to the CSV file
-			for ( Punctas puncta : punctaList ) {
+			for ( Puncta puncta : punctaList ) {
 				fileWriter.append( String.valueOf( puncta.getX() ) );
 				fileWriter.append( COMMA_DELIMITER );
 				fileWriter.append( String.valueOf( puncta.getY() ) );

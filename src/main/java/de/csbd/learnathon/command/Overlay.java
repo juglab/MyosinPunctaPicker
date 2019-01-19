@@ -3,7 +3,6 @@ package de.csbd.learnathon.command;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.geom.AffineTransform;
 import java.util.List;
 
 import bdv.util.Bdv;
@@ -23,8 +22,8 @@ public class Overlay {
 		this.model = model;
 	}
 
-	public void paintPoint() {
-		List< Punctas > allPuncta = model.getPuncta();
+	public void paint() {
+		List< Puncta > allPuncta = model.getPuncta();
 
 		final BdvOverlay overlay = new BdvOverlay() {
 
@@ -45,6 +44,7 @@ public class Overlay {
 
 				final int start = 0;
 				final int end = allPuncta.size();
+				final int radius = 20;
 
 				for ( int i = start; i < end; i++ ) {
 					if ( allPuncta.get( i ).getT() <= info.getTimePointIndex() ) {
@@ -56,7 +56,11 @@ public class Overlay {
 						RealPoint planarPoint = new RealPoint( allPuncta.get( i ).getX(), allPuncta.get( i ).getY() );
 						planarPoint.localize( lPos );
 						t.apply( lPos, gPos );
-						g.drawOval( ( int ) gPos[ 0 ], ( int ) gPos[ 1 ], 3, 3 );
+						g.drawOval(
+								( int ) ( gPos[ 0 ] - radius ),
+								( int ) ( gPos[ 1 ] - radius ),
+								radius * 2,
+								radius * 2 );
 
 						if ( i >= 1 ) {
 							if ( allPuncta.get( i ).getId() == allPuncta.get( i - 1 ).getId() ) {
@@ -69,12 +73,18 @@ public class Overlay {
 									RealPoint point2 = new RealPoint( allPuncta.get( i ).getX(), allPuncta.get( i ).getY() );
 									point2.localize( lPos2 );
 									t.apply( lPos2, gPos2 );
-									drawArrow(
+									drawPeripheralLine(
 											g,
-											( int ) gPos1[ 0 ],
-											( int ) gPos1[ 1 ],
-											( int ) gPos2[ 0 ],
-											( int ) gPos2[ 1 ] );
+											( float ) gPos1[ 0 ],
+											( float ) gPos1[ 1 ],
+											( float ) gPos2[ 0 ],
+											( float ) gPos2[ 1 ],
+											radius );
+//									g.drawLine(
+//											( int ) gPos1[ 0 ],
+//											( int ) gPos1[ 1 ],
+//											( int ) gPos2[ 0 ],
+//											( int ) gPos2[ 1 ] );
 								}
 						}
 						}
@@ -82,30 +92,53 @@ public class Overlay {
 					}
 
 
-			}
-			}
-
-			private void drawArrow( Graphics2D g1, int x1, int y1, int x2, int y2 ) {
-				final int ARR_SIZE = 2;
-				Graphics2D g = ( Graphics2D ) g1.create();
-
-				double dx = x2 - x1, dy = y2 - y1;
-				double angle = Math.atan2( dy, dx );
-				int len = ( int ) Math.sqrt( dx * dx + dy * dy );
-				AffineTransform at = AffineTransform.getTranslateInstance( x1, y1 );
-				at.concatenate( AffineTransform.getRotateInstance( angle ) );
-				g.transform( at );
-
-				// Draw horizontal arrow starting in (0, 0)
-				g.drawLine( 0, 0, len, 0 );
-				g.fillPolygon(
-						new int[] { len, len - ARR_SIZE, len - ARR_SIZE, len },
-						new int[] { 0, -ARR_SIZE, ARR_SIZE, 0 },
-						4 );
+				}
 			}
 		};
 		BdvFunctions.showOverlay( overlay, "overlay", Bdv.options().addTo( bdv ) );
 
+	}
+
+	protected void drawPeripheralLine( Graphics2D g, float x1, float y1, float x2, float y2, float radius ) {
+
+		float common_factor2 = radius / ( float ) Math.sqrt( 1 + ( ( y2 - y1 ) * ( y2 - y1 ) ) / ( ( x2 - x1 ) * ( x2 - x1 ) ) );
+
+		float x1_prime1 = x1 + common_factor2;
+		float x1_prime2 = x1 - common_factor2;
+		float y1_prime1 = ((y2 -y1)/(x2-x1))*(x1_prime1 - x1) + y1;
+		float y1_prime2 = ((y2 -y1)/(x2-x1))*(x1_prime2 - x1) + y1;
+
+
+		float x2_prime1 = x2 + common_factor2;
+		float x2_prime2 = x2 - common_factor2;
+		float y2_prime1 = ( ( y2 - y1 ) / ( x2 - x1 ) ) * ( x2_prime1 - x1 ) + y1;
+		float y2_prime2 = ( ( y2 - y1 ) / ( x2 - x1 ) ) * ( x2_prime2 - x1 ) + y1;
+
+		float x1_prime, y1_prime, x2_prime, y2_prime;
+
+		float d1 = ( x1_prime1 - x2_prime1 ) * ( x1_prime1 - x2_prime1 ) + ( y1_prime1 - y2_prime1 ) * ( y1_prime1 - y2_prime1 );
+		float d2 = ( x1_prime2 - x2_prime1 ) * ( x1_prime2 - x2_prime1 ) + ( y1_prime2 - y2_prime1 ) * ( y1_prime2 - y2_prime1 );
+
+		if ( d1 <= d2 ) {
+			x1_prime = x1_prime1;
+			y1_prime = y1_prime1;
+		} else {
+			x1_prime = x1_prime2;
+			y1_prime = y1_prime2;
+		}
+		
+		d1 = ( x2_prime1 - x1_prime1 ) * ( x2_prime1 - x1_prime1 ) + ( y2_prime1 - y1_prime1 ) * ( y2_prime1 - y1_prime1 );
+		d2 = ( x2_prime2 - x1_prime1 ) * ( x2_prime2 - x1_prime1 ) + ( y2_prime2 - y1_prime1 ) * ( y2_prime2 - y1_prime1 );
+		
+		if ( d1 <= d2 ) {
+			x2_prime = x2_prime1;
+			y2_prime = y2_prime1;
+		} else {
+			x2_prime = x2_prime2;
+			y2_prime = y2_prime2;
+		}
+		
+		g.drawLine( ( int ) x1_prime, ( int ) y1_prime, ( int ) x2_prime, ( int ) y2_prime );
 	}
 
 
