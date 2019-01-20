@@ -144,7 +144,8 @@ public class Overlay {
 		g.drawLine( ( int ) x1_prime, ( int ) y1_prime, ( int ) x2_prime, ( int ) y2_prime );
 	}
 
-
-
+	public void refreshBdv() {
+		this.paint();
+	}
 
 }

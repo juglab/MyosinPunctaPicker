@@ -22,8 +22,11 @@ public class PunctaClicker {
 		this.overlay = new Overlay( bdv, model );
 	}
 
-	public void mainClick() {
+	public Overlay getOverlay() {
+		return overlay;
+	}
 
+	public void mainClick() {
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
 		behaviours.install( bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
 

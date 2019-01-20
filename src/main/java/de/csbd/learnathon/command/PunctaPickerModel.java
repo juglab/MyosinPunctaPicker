@@ -73,8 +73,8 @@ public class PunctaPickerModel {
 	}
 
 	public void deleteSelectedTracklet() {
-		// TODO Auto-generated method stub
-
+		edges.removeAll( selectedSubgraph.getEdgeList() );
+		puncta.removeAll( selectedSubgraph.getPunctaList() );
 	}
 
 	public void setSelectedPuncta( Puncta p ) {
@@ -84,4 +84,5 @@ public class PunctaPickerModel {
 	public Puncta getSelectedPuncta() {
 		return selectedPuncta;
 	}
+
 }

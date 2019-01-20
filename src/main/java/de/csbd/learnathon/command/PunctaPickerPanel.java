@@ -259,6 +259,9 @@ public class PunctaPickerPanel {
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
 				model.deleteSelectedTracklet();
+				model.setActionIndicator( PunctaPickerModel.ACTION_SELECT );
+				punctaClicker.mainClick();
+				punctaClicker.getOverlay().refreshBdv();
 
 			}
 
