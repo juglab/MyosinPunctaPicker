@@ -228,8 +228,7 @@ public class PunctaPickerPanel {
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
 				model.setActionIndicator( PunctaPickerModel.ACTION_SELECT );
-				punctaClicker.mainClick();
-
+				punctaClicker.getOverlay().refreshBdv();
 			}
 
 		} );
@@ -243,8 +242,6 @@ public class PunctaPickerPanel {
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
 				model.setActionIndicator( PunctaPickerModel.ACTION_MODIFY );
-				punctaClicker.mainClick();
-
 			}
 
 		} );
@@ -260,7 +257,6 @@ public class PunctaPickerPanel {
 			public void actionPerformed( final ActionEvent e ) {
 				model.deleteSelectedTracklet();
 				model.setActionIndicator( PunctaPickerModel.ACTION_SELECT );
-				punctaClicker.mainClick();
 				punctaClicker.getOverlay().refreshBdv();
 
 			}
@@ -337,7 +333,6 @@ public class PunctaPickerPanel {
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
 				model.setActionIndicator( PunctaPickerModel.ACTION_TRACK );
-				punctaClicker.mainClick();
 
 			}
 
@@ -364,6 +359,8 @@ public class PunctaPickerPanel {
 		final BdvHandlePanel bdv = new BdvHandlePanel( null, Bdv.options().is2D() );
 		final BdvSource source = BdvFunctions.show( img, "img", Bdv.options().addTo( bdv ) );
 		punctaClicker = new PunctaClicker( bdv, model );
+		// Initializing the click behaviour without having to click a button
+		punctaClicker.defineClickBehaviour();
 
 		final T min = Util.getTypeFromInterval( img ).createVariable();
 		final T max = Util.getTypeFromInterval( img ).createVariable();

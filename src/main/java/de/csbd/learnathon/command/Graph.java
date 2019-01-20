@@ -33,6 +33,7 @@ public class Graph {
 
 	}
 
+	// To select the subgraph associated with a tracklet
 	public void addEdges( List< Edge > edges ) {
 		edgeList.addAll( edges );
 	}

@@ -7,7 +7,6 @@ import org.scijava.ui.behaviour.util.Behaviours;
 import bdv.util.BdvHandlePanel;
 import bdv.viewer.state.ViewerState;
 import net.imglib2.RealPoint;
-import net.imglib2.util.Util;
 
 public class PunctaClicker {
 
@@ -26,78 +25,93 @@ public class PunctaClicker {
 		return overlay;
 	}
 
-	public void mainClick() {
+	public void defineClickBehaviour() {
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
 		behaviours.install( bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
+			clickAction( x, y );
 
+		}, "print global pos", "button1" );
+
+	}
+
+	private void clickAction( int x, int y ) {
 		if ( model.getActionIndicator().equals( PunctaPickerModel.ACTION_MODIFY ) ) {
 
 		}
 
 		else if ( model.getActionIndicator().equals( PunctaPickerModel.ACTION_SELECT ) ) {
 
-			if ( !model.getPuncta().isEmpty() ) {
-
-				behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
-					float minDist = Float.MAX_VALUE;
-					float distance = 0;
-					Puncta minDistPuncta = null;
-					bdv.getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
-					for ( int i = 0; i < model.getPuncta().size(); i++ ) {
-						
-						distance = ( pos.getFloatPosition( 0 ) - model.getPuncta().get( i ).getX() ) * ( pos
-								.getFloatPosition( 0 ) - model.getPuncta().get( i ).getX() ) + ( pos.getFloatPosition( 1 ) - model
-								.getPuncta()
-								.get( i )
-										.getY() ) * ( pos.getFloatPosition( 1 ) - model.getPuncta().get( i ).getY() );
-						if ( distance <= minDist ) {
-							minDist = distance;
-							minDistPuncta = model.getPuncta().get( i );
-						}
-					}
-					model.setSelectedPuncta( minDistPuncta );
-					Graph selectedTracklet = model.getGraph();
-					selectedTracklet = selectedTracklet.selectSubgraphContaining( minDistPuncta );
-					model.selectSubgraph( selectedTracklet );
-					overlay.paint();
-				}, "print global pos", "button1" );
-			}
+			actionSelect( x, y );
 		}
 
 		else if ( model.getActionIndicator().equals( PunctaPickerModel.ACTION_TRACK ) ) {
-				behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
-
-				pos = new RealPoint( 3 );
-				bdv.getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
-				ViewerState state = bdv.getBdvHandle().getViewerPanel().getState();
-				int t = state.getCurrentTimepoint();
-				int numTimepoints = bdv.getViewerPanel().getState().getNumTimepoints();
-				Puncta pOld = model.getLatestPuncta();
-				Puncta p = new Puncta();
-
-				if ( pOld != null ) {
-					if ( !( t == numTimepoints - 1 && pOld.getT() == numTimepoints - 1 ) ) {
-						p = model.addPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t );
-						if ( pOld.getT() == p.getT() - 1 ) {
-							model.addEdge( pOld, p );
-						}
-					}
+			actionTrack( x, y );
 				}
-				else {
-					p = model.addPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t );
-				}
-				Graph selectedTracklet = model.getGraph();
-				selectedTracklet = selectedTracklet.selectSubgraphContaining( p );
-				model.selectSubgraph( selectedTracklet );
-				model.setSelectedPuncta( p );
-				overlay.paint();
-				bdv.getViewerPanel().nextTimePoint();
-				System.out.println( "global coordinates: " + Util.printCoordinates( pos ) );
-			}, "print global pos", "button1" );
+	}
+
+	private void actionSelect( int x, int y ) {
+		if ( !model.getPuncta().isEmpty() ) {
+			bdv.getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
+			Puncta minDistPuncta = model.getClosestPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getPuncta() );
+			model.setSelectedPuncta( minDistPuncta );
+			Graph selectedTracklet = model.getGraph();
+			selectedTracklet = selectedTracklet.selectSubgraphContaining( minDistPuncta );
+			model.selectSubgraph( selectedTracklet );
+			overlay.paint();
 		}
+	}
 
+	private void actionTrack( int x, int y ) {
+		pos = new RealPoint( 3 );
+		bdv.getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
+		ViewerState state = bdv.getBdvHandle().getViewerPanel().getState();
+		int t = state.getCurrentTimepoint();
+		Puncta pOld = model.getLatestPuncta();
+		Puncta p;
+		if ( !model.getPunctaAtTime( t ).isEmpty() ) {
+			if ( model.getClosestPunctaDist( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getPunctaAtTime( t ) ) < model.radius ) {
+				p = model.getClosestPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getPunctaAtTime( t ) );
+				mergeTrack( t, pOld, p );
+			
+			}
+			else
+				p = continueOriginalTrack( t, pOld );
+		} else {
+			p = continueOriginalTrack( t, pOld );
+		}
+			
+
+
+		Graph selectedTracklet = model.getGraph();
+		selectedTracklet = selectedTracklet.selectSubgraphContaining( p );
+		model.selectSubgraph( selectedTracklet );
+		model.setSelectedPuncta( p );
+		overlay.paint();
+		bdv.getViewerPanel().nextTimePoint();
+	}
+
+	private void mergeTrack( int t, Puncta pOld, Puncta nearestP ) {
+		model.addEdge( pOld, nearestP );
 
 	}
+
+	private Puncta continueOriginalTrack( int t, Puncta pOld ) {
+		Puncta p = new Puncta();
+		int numTimepoints = bdv.getViewerPanel().getState().getNumTimepoints();
+		if ( pOld != null ) {
+			if ( !( t == numTimepoints - 1 && pOld.getT() == numTimepoints - 1 ) ) {
+				p = model.addPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t );
+				if ( pOld.getT() == p.getT() - 1 ) {
+					model.addEdge( pOld, p );
+				}
+			}
+		} else {
+			p = model.addPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t );
+				}
+		return p;
+	}
+
 
 	public void updateOverlay() {
 		overlay.paint();

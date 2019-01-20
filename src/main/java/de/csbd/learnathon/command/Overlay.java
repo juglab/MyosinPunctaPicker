@@ -16,7 +16,6 @@ public class Overlay {
 
 	private static BdvHandlePanel bdv;
 	private PunctaPickerModel model;
-	private int thickness = 3;
 
 	public Overlay( BdvHandlePanel bdv, PunctaPickerModel model ) {
 		Overlay.bdv = bdv;
@@ -43,16 +42,16 @@ public class Overlay {
 
 				final int start = 0;
 				final int end = allPuncta.size();
-				final int radius = 20;
 
 				for ( int i = start; i < end; i++ ) {
 					if ( allPuncta.get( i ).getT() <= info.getTimePointIndex() ) {
-						g.setStroke( new BasicStroke( thickness ) );
+						g.setStroke( new BasicStroke( model.lineThickness ) );
 					} else {
-						g.setStroke( new BasicStroke( thickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
+						g.setStroke(
+								new BasicStroke( model.lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
 					}
 					if ( allPuncta.get( i ).equals( model.getSelectedPuncta() ) ) {
-						g.setStroke( new BasicStroke( 2 * thickness ) );
+						g.setStroke( new BasicStroke( 2 * model.lineThickness ) );
 					}
 					RealPoint planarPoint = new RealPoint( allPuncta.get( i ).getX(), allPuncta.get( i ).getY() );
 					planarPoint.localize( lPos );
@@ -62,10 +61,10 @@ public class Overlay {
 					else
 						g.setColor( Color.BLUE );
 					g.drawOval(
-							( int ) ( gPos[ 0 ] - radius ),
-							( int ) ( gPos[ 1 ] - radius ),
-							radius * 2,
-							radius * 2 );
+							( int ) ( gPos[ 0 ] - model.radius ),
+							( int ) ( gPos[ 1 ] - model.radius ),
+							model.radius * 2,
+							model.radius * 2 );
 
 				}
 
@@ -84,16 +83,17 @@ public class Overlay {
 					else
 						g.setColor( Color.BLUE );
 					if ( edge.getA().getT() <= info.getTimePointIndex() && edge.getB().getT() <= info.getTimePointIndex() )
-						g.setStroke( new BasicStroke( thickness ) );
+						g.setStroke( new BasicStroke( model.lineThickness ) );
 					else
-						g.setStroke( new BasicStroke( thickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
+						g.setStroke(
+								new BasicStroke( model.lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
 					drawPeripheralLine(
 							g,
 							( float ) gPos1[ 0 ],
 							( float ) gPos1[ 1 ],
 							( float ) gPos2[ 0 ],
 							( float ) gPos2[ 1 ],
-							radius );
+							model.radius );
 
 				}
 			}

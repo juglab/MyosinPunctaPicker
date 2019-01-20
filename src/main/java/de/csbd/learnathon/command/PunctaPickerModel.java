@@ -1,6 +1,7 @@
 package de.csbd.learnathon.command;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class PunctaPickerModel {
@@ -15,6 +16,9 @@ public class PunctaPickerModel {
 	private Puncta latest;
 	private Graph selectedSubgraph = new Graph( new ArrayList< Puncta >(), new ArrayList< Edge >() );
 	private Puncta selectedPuncta;
+	public int radius = 12;
+	public int lineThickness = 2;
+	
 	void setPuncta( List< Puncta > loadedPuncta ) {
 
 		puncta = loadedPuncta;
@@ -83,6 +87,38 @@ public class PunctaPickerModel {
 
 	public Puncta getSelectedPuncta() {
 		return selectedPuncta;
+	}
+
+	public List< Puncta > getPunctaAtTime( int t ) {
+		ArrayList< Puncta > ret = new ArrayList< Puncta >();
+		for ( Puncta p : puncta ) {
+			if ( p.getT() == t )
+				ret.add( p );
+		}
+		return ret;
+	}
+
+	public List<Double> getDistanceSqauredToPuncta(float x, float y,List<Puncta> ps){
+		double distanceSqaured;
+		ArrayList< Double > ret = new ArrayList<>();
+		for ( Puncta p : ps ) {
+			distanceSqaured = Math.pow( (p.getX() - x), 2 ) + Math.pow( (p.getY() - y), 2 ); 
+			ret.add( distanceSqaured );
+		}
+		return ret;
+	}
+
+	public Puncta getClosestPuncta( float x, float y, List< Puncta > ps ) {
+		List< Double > ds = getDistanceSqauredToPuncta( x, y, ps );
+		int minDsId = ds.indexOf( Collections.min( ds ) );
+		Puncta minP = ps.get( minDsId );
+		return minP;
+	}
+
+	public Double getClosestPunctaDist( float x, float y, List< Puncta > ps ) {
+		List< Double > ds = getDistanceSqauredToPuncta( x, y, ps );
+		int minDsId = ds.indexOf( Collections.min( ds ) );
+		return Math.sqrt( ds.get( minDsId ) );
 	}
 
 }
