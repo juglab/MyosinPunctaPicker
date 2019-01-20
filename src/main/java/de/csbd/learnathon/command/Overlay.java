@@ -16,6 +16,7 @@ public class Overlay {
 
 	private static BdvHandlePanel bdv;
 	private PunctaPickerModel model;
+	private int thickness = 3;
 
 	public Overlay( BdvHandlePanel bdv, PunctaPickerModel model ) {
 		Overlay.bdv = bdv;
@@ -32,8 +33,6 @@ public class Overlay {
 
 				final AffineTransform2D t = new AffineTransform2D();
 				getCurrentTransform2D( t );
-				g.setColor( Color.RED );
-
 
 				final double[] lPos = new double[ 2 ];
 				final double[] gPos = new double[ 2 ];
@@ -48,40 +47,53 @@ public class Overlay {
 
 				for ( int i = start; i < end; i++ ) {
 					if ( allPuncta.get( i ).getT() <= info.getTimePointIndex() ) {
-						int thickness = 5 - ( info.getTimePointIndex() - allPuncta.get( i ).getT() );
-						if ( thickness <= 0 ) {
-							thickness = 0;
-						}
-						g.setStroke( new BasicStroke( thickness / 2 ) );
-						RealPoint planarPoint = new RealPoint( allPuncta.get( i ).getX(), allPuncta.get( i ).getY() );
-						planarPoint.localize( lPos );
-						t.apply( lPos, gPos );
-						g.drawOval(
-								( int ) ( gPos[ 0 ] - radius ),
-								( int ) ( gPos[ 1 ] - radius ),
-								radius * 2,
-								radius * 2 );
-						}
+						g.setStroke( new BasicStroke( thickness ) );
+					} else {
+						g.setStroke( new BasicStroke( thickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
+					}
+					if ( allPuncta.get( i ).equals( model.getSelectedPuncta() ) ) {
+						g.setStroke( new BasicStroke( 2 * thickness ) );
+					}
+					RealPoint planarPoint = new RealPoint( allPuncta.get( i ).getX(), allPuncta.get( i ).getY() );
+					planarPoint.localize( lPos );
+					t.apply( lPos, gPos );
+					if ( model.getSelectedSubgraph().graphContainsPuncta( allPuncta.get( i ) ) )
+						g.setColor( Color.RED );
+					else
+						g.setColor( Color.BLUE );
+					g.drawOval(
+							( int ) ( gPos[ 0 ] - radius ),
+							( int ) ( gPos[ 1 ] - radius ),
+							radius * 2,
+							radius * 2 );
+
 				}
 
 				for ( int i = 0; i < model.getEdges().size(); i++ ) {
-					Edge edge = model.getEdges().get( i );
-					if ( edge.getA().getT() <= info.getTimePointIndex() && edge.getB().getT() <= info.getTimePointIndex() ) {
-						RealPoint point1 = new RealPoint( edge.getA().getX(), edge.getA().getY() );
-						point1.localize( lPos1 );
-						t.apply( lPos1, gPos1 );
 
-						RealPoint point2 = new RealPoint( edge.getB().getX(), edge.getB().getY() );
-						point2.localize( lPos2 );
-						t.apply( lPos2, gPos2 );
-						drawPeripheralLine(
-								g,
-								( float ) gPos1[ 0 ],
-								( float ) gPos1[ 1 ],
-								( float ) gPos2[ 0 ],
-								( float ) gPos2[ 1 ],
-								radius );
-					}
+					Edge edge = model.getEdges().get( i );
+					RealPoint point1 = new RealPoint( edge.getA().getX(), edge.getA().getY() );
+					point1.localize( lPos1 );
+					t.apply( lPos1, gPos1 );
+
+					RealPoint point2 = new RealPoint( edge.getB().getX(), edge.getB().getY() );
+					point2.localize( lPos2 );
+					t.apply( lPos2, gPos2 );
+					if ( model.getSelectedSubgraph().graphContainsEdge( model.getEdges().get( i ) ) )
+						g.setColor( Color.RED );
+					else
+						g.setColor( Color.BLUE );
+					if ( edge.getA().getT() <= info.getTimePointIndex() && edge.getB().getT() <= info.getTimePointIndex() )
+						g.setStroke( new BasicStroke( thickness ) );
+					else
+						g.setStroke( new BasicStroke( thickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
+					drawPeripheralLine(
+							g,
+							( float ) gPos1[ 0 ],
+							( float ) gPos1[ 1 ],
+							( float ) gPos2[ 0 ],
+							( float ) gPos2[ 1 ],
+							radius );
 
 				}
 			}

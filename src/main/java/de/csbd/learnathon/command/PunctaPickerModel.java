@@ -5,11 +5,16 @@ import java.util.List;
 
 public class PunctaPickerModel {
 
-	private int id = 0;
+	public static String ACTION_NONE = "none";
+	public static String ACTION_TRACK = "track";
+	public static String ACTION_SELECT = "select";
+	public static String ACTION_MODIFY = "modify";
+	private String actionIndicator = ACTION_NONE;
 	private List< Puncta > puncta = new ArrayList<>();
 	private List< Edge > edges = new ArrayList<>();
 	private Puncta latest;
-
+	private Graph selectedSubgraph = new Graph( new ArrayList< Puncta >(), new ArrayList< Edge >() );
+	private Puncta selectedPuncta;
 	void setPuncta( List< Puncta > loadedPuncta ) {
 
 		puncta = loadedPuncta;
@@ -48,5 +53,35 @@ public class PunctaPickerModel {
 
 	public Graph getGraph() {
 		return new Graph( puncta, edges );
+	}
+
+	public void selectSubgraph( Graph g ) {
+		selectedSubgraph = g;
+	}
+
+	public Graph getSelectedSubgraph()
+	{
+		return selectedSubgraph;
+	}
+
+	public void setActionIndicator( String s ) {
+		actionIndicator = s;
+	}
+
+	public String getActionIndicator() {
+		return actionIndicator;
+	}
+
+	public void deleteSelectedTracklet() {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void setSelectedPuncta( Puncta p ) {
+		selectedPuncta = p;
+	}
+
+	public Puncta getSelectedPuncta() {
+		return selectedPuncta;
 	}
 }

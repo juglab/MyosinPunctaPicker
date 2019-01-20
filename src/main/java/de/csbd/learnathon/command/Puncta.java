@@ -7,6 +7,8 @@ public class Puncta {
 	private float y;
 	private int t;
 	
+	public Puncta() {}
+
 	public Puncta( float x, float y, int t ) {
 		this.x = x;
 		this.y = y;

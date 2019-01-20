@@ -1,12 +1,18 @@
 package de.csbd.learnathon.command;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Graph {
 
 	List< Puncta > punctaList;
 	List< Edge > edgeList;
+
+	public Graph() {
+		this.punctaList = new ArrayList<>();
+		this.edgeList = new ArrayList<>();
+	}
 
 	public Graph( List< Puncta > p, List< Edge > e ) {
 		this.punctaList = p;
@@ -51,30 +57,69 @@ public class Graph {
 		punctaList.remove( p );
 	}
 
-	public Graph selectSubgraph( Puncta queryPuncta, Graph changingGraph ) {
-		Graph selectedGraph = new Graph( new ArrayList< Puncta >(), new ArrayList< Edge >() );
-		Graph temporaryGraph;
+	public Graph selectSubgraphContaining( Puncta queryPuncta ) {
+		Graph ret = new Graph();
+		ret.addPuncta( queryPuncta );
 
-		int i = -1;
-		while ( i < changingGraph.getEdgeList().size() - 1 ) {
-			i++;
+		// traversing into the future
+		LinkedList< Edge > queue = new LinkedList<>();
+		queue.addAll( this.getOutEdges( queryPuncta ) );
+		while ( !queue.isEmpty() ) {
+			Edge ce = queue.poll();
 
-			if ( ( queryPuncta.equals( changingGraph.getEdgeList().get( i ).getA() ) ) || ( queryPuncta
-					.equals( changingGraph.getEdgeList().get( i ).getB() ) ) ) {
-				Puncta associatedPuncta;
-				if ( queryPuncta.equals( changingGraph.getEdgeList().get( i ).getA() ) )
-					associatedPuncta = changingGraph.getEdgeList().get( i ).getB();
-				else
-					associatedPuncta = changingGraph.getEdgeList().get( i ).getA();
-				selectedGraph.addEdge( changingGraph.getEdgeList().get( i ) );
-				changingGraph.removeEdge( changingGraph.getEdgeList().get( i ) );
-				temporaryGraph = selectSubgraph( associatedPuncta, changingGraph );
-				selectedGraph.mergeGraph( temporaryGraph );
-				i = -1;
+			// feed our new graph
+			ret.addPuncta( ce.pB );
+			ret.addEdge( ce );
+
+			queue.addAll( getOutEdges( ce.pB ) );
+		}
+
+		// traversing into the past
+		queue = new LinkedList<>();
+		queue.addAll( this.getInEdges( queryPuncta ) );
+		while ( !queue.isEmpty() ) {
+			Edge ce = queue.poll();
+
+			// feed our new graph
+			ret.addPuncta( ce.pA );
+			ret.addEdge( ce );
+
+			queue.addAll( getInEdges( ce.pA ) );
+		}
+		return ret;
+	}
+
+	private List< Edge > getOutEdges( Puncta queryPuncta ) {
+		List< Edge > ret = new ArrayList<>();
+		for ( Edge edge : edgeList ) {
+			if ( edge.pA.equals( queryPuncta ) ) {
+				ret.add( edge );
 			}
 		}
-		selectedGraph.addPuncta( queryPuncta );
+		return ret;
+	}
 
-		return selectedGraph;
+	private List< Edge > getInEdges( Puncta queryPuncta ) {
+		List< Edge > ret = new ArrayList<>();
+		for ( Edge edge : edgeList ) {
+			if ( edge.pB.equals( queryPuncta ) ) {
+				ret.add( edge );
+			}
+		}
+		return ret;
+	}
+
+	private List< Edge > getAdjecentEdges( Puncta queryPuncta ) {
+		List< Edge > ret = getOutEdges( queryPuncta );
+		ret.addAll( getInEdges( queryPuncta ) );
+		return ret;
+	}
+
+	public boolean graphContainsPuncta( Puncta p ) {
+		return punctaList.contains( p );
+	}
+
+	public boolean graphContainsEdge( Edge e ) {
+		return edgeList.contains( e );
 	}
 }

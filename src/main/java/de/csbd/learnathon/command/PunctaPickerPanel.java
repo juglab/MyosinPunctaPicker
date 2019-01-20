@@ -57,8 +57,6 @@ public class PunctaPickerPanel {
 
 	private CSVReader reader;
 
-	private String actionIndicator;
-
 	public CSVReader getReader() {
 		return reader;
 	}
@@ -229,8 +227,8 @@ public class PunctaPickerPanel {
 
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
-				actionIndicator = "DELETE";
-				defineBehavior();
+				model.setActionIndicator( PunctaPickerModel.ACTION_SELECT );
+				punctaClicker.mainClick();
 
 			}
 
@@ -244,8 +242,8 @@ public class PunctaPickerPanel {
 
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
-				actionIndicator = "MODIFY";
-				defineBehavior();
+				model.setActionIndicator( PunctaPickerModel.ACTION_MODIFY );
+				punctaClicker.mainClick();
 
 			}
 
@@ -260,8 +258,7 @@ public class PunctaPickerPanel {
 
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
-				actionIndicator = "DELETE";
-				defineBehavior();
+				model.deleteSelectedTracklet();
 
 			}
 
@@ -336,8 +333,8 @@ public class PunctaPickerPanel {
 
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
-				actionIndicator = "TRACK";
-				defineBehavior();
+				model.setActionIndicator( PunctaPickerModel.ACTION_TRACK );
+				punctaClicker.mainClick();
 
 			}
 
@@ -346,15 +343,6 @@ public class PunctaPickerPanel {
 		} );
 		return bStartPickingPuncta;
 	}
-
-
-	private void defineBehavior() {
-
-		punctaClicker.mainClick( actionIndicator );
-	}
-
-
-
 
 	private JButton initMoveButton() {
 		final JButton bMoveTime = new JButton( "Move" );
