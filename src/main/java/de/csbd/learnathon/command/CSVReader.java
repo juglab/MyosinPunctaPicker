@@ -22,7 +22,7 @@ public class CSVReader {
 				String[] values = line.split( COMMA_DELIMITER );
 				System.out.println( values[ 0 ] );
 				Puncta puncta = new Puncta( Float.parseFloat( values[ 0 ] ), Float.parseFloat( values[ 1 ] ), Integer
-						.parseInt( values[ 2 ] ), Integer.parseInt( values[ 3 ] ) );
+						.parseInt( values[ 2 ] ) );
 				loadedTracklets.add( puncta );
 			}
 		} catch ( FileNotFoundException e ) {

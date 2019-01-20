@@ -209,9 +209,34 @@ public class PunctaPickerPanel {
 		final JButton bSaveTracklets = initSaveTrackletsButton();
 		helper.add( bSaveTracklets, gbc8 );
 
+		final GridBagConstraints gbc11 = new GridBagConstraints();
+		gbc11.fill = GridBagConstraints.HORIZONTAL;
+		gbc11.gridwidth = 2;
+		gbc11.anchor = GridBagConstraints.NORTHWEST;
+		gbc11.insets = new Insets( 5, 5, 5, 5 );
+		gbc11.gridx = 0;
+		gbc11.gridy = 10;
+		final JButton bSelectTracklet = initSelectTrackletsButton();
+		helper.add( bSelectTracklet, gbc11 );
+
 		return helper;
 	}
 
+
+	private JButton initSelectTrackletsButton() {
+		final JButton bSelectTracklet = new JButton( "Select a tracklet" );
+		bSelectTracklet.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( final ActionEvent e ) {
+				actionIndicator = "DELETE";
+				defineBehavior();
+
+			}
+
+		} );
+		return bSelectTracklet;
+	}
 
 	private JButton initModify() {
 		final JButton bModifyTracklet = new JButton( "Modify a tracklet" );
@@ -252,7 +277,6 @@ public class PunctaPickerPanel {
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
 				model.setPuncta( CSVReader.loadCSV( "test2.csv" ) );
-				model.setMaxId();
 				punctaClicker.updateOverlay();
 			}
 		} );
@@ -312,7 +336,6 @@ public class PunctaPickerPanel {
 
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
-				model.increaseId();
 				actionIndicator = "TRACK";
 				defineBehavior();
 

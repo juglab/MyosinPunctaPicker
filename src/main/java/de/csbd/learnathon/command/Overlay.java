@@ -61,36 +61,27 @@ public class Overlay {
 								( int ) ( gPos[ 1 ] - radius ),
 								radius * 2,
 								radius * 2 );
-
-						if ( i >= 1 ) {
-							if ( allPuncta.get( i ).getId() == allPuncta.get( i - 1 ).getId() ) {
-
-								if ( i > 0 ) {
-									RealPoint point1 = new RealPoint( allPuncta.get( i - 1 ).getX(), allPuncta.get( i - 1 ).getY() );
-									point1.localize( lPos1 );
-									t.apply( lPos1, gPos1 );
-
-									RealPoint point2 = new RealPoint( allPuncta.get( i ).getX(), allPuncta.get( i ).getY() );
-									point2.localize( lPos2 );
-									t.apply( lPos2, gPos2 );
-									drawPeripheralLine(
-											g,
-											( float ) gPos1[ 0 ],
-											( float ) gPos1[ 1 ],
-											( float ) gPos2[ 0 ],
-											( float ) gPos2[ 1 ],
-											radius );
-//									g.drawLine(
-//											( int ) gPos1[ 0 ],
-//											( int ) gPos1[ 1 ],
-//											( int ) gPos2[ 0 ],
-//											( int ) gPos2[ 1 ] );
-								}
 						}
-						}
+				}
 
+				for ( int i = 0; i < model.getEdges().size(); i++ ) {
+					Edge edge = model.getEdges().get( i );
+					if ( edge.getA().getT() <= info.getTimePointIndex() && edge.getB().getT() <= info.getTimePointIndex() ) {
+						RealPoint point1 = new RealPoint( edge.getA().getX(), edge.getA().getY() );
+						point1.localize( lPos1 );
+						t.apply( lPos1, gPos1 );
+
+						RealPoint point2 = new RealPoint( edge.getB().getX(), edge.getB().getY() );
+						point2.localize( lPos2 );
+						t.apply( lPos2, gPos2 );
+						drawPeripheralLine(
+								g,
+								( float ) gPos1[ 0 ],
+								( float ) gPos1[ 1 ],
+								( float ) gPos2[ 0 ],
+								( float ) gPos2[ 1 ],
+								radius );
 					}
-
 
 				}
 			}

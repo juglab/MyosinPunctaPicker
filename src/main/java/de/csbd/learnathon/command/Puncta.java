@@ -6,21 +6,11 @@ public class Puncta {
 	private float x;
 	private float y;
 	private int t;
-	private int id;
 	
-	public Puncta( float x, float y, int t, int id ) {
+	public Puncta( float x, float y, int t ) {
 		this.x = x;
 		this.y = y;
 		this.t = t;
-		this.id = id;
-	}
-
-	public int getId() {
-		return id;
-	}
-
-	public void setId( int id ) {
-		this.id = id;
 	}
 
 	public float getX() {

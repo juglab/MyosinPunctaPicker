@@ -11,7 +11,7 @@ public class CSVWriter {
 	private static final String NEW_LINE_SEPARATOR = "\n";
 
 	//CSV file header
-	private static final String FILE_HEADER = "x,y,t,id";
+	private static final String FILE_HEADER = "x,y,t";
 
 	public static void writeCsvFile( String fileName, List< Puncta > punctaList ) {
 
@@ -33,8 +33,6 @@ public class CSVWriter {
 				fileWriter.append( String.valueOf( puncta.getY() ) );
 				fileWriter.append( COMMA_DELIMITER );
 				fileWriter.append( String.valueOf( puncta.getT() ) );
-				fileWriter.append( COMMA_DELIMITER );
-				fileWriter.append( String.valueOf( puncta.getId() ) );
 				fileWriter.append( NEW_LINE_SEPARATOR );
 			}
 
