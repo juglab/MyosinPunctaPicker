@@ -61,31 +61,41 @@ public class Graph {
 	public Graph selectSubgraphContaining( Puncta queryPuncta ) {
 		Graph ret = new Graph();
 		ret.addPuncta( queryPuncta );
+		LinkedList< Edge > queueOut = new LinkedList<>();
+		queueOut.addAll( this.getOutEdges( queryPuncta ) );
+		LinkedList< Edge > queueIn = new LinkedList<>();
+		queueIn.addAll( this.getInEdges( queryPuncta ) );
+		
+		LinkedList< Edge > visitedEdges = new LinkedList<>();
+		
+		while ( !queueIn.isEmpty() || !queueOut.isEmpty()) {
+			if( !queueIn.isEmpty()) {
+				Edge cIn = queueIn.poll();
+				if(!visitedEdges.contains( cIn )) {
+					ret.addPuncta( cIn.pA );
+					ret.addEdge( cIn );
+					queueIn.addAll( getInEdges( cIn.pA ) );
+					for ( Edge e : getOutEdges( cIn.pA ) ) {
+						if ( !visitedEdges.contains( e ) )
+							queueOut.add( e );
+					}
+					visitedEdges.add( cIn );
+				}
+			}
+			if( !queueOut.isEmpty()) {
+				Edge cOut = queueOut.poll();
+				if(!visitedEdges.contains( cOut )) {
+					ret.addPuncta( cOut.pB );
+					ret.addEdge( cOut );
+					for ( Edge e : getInEdges( cOut.pB ) ) {
+						if ( !visitedEdges.contains( e ) )
+							queueIn.add( e );
+					}
+					queueOut.addAll( getOutEdges( cOut.pB ) );
+					visitedEdges.add( cOut );
+				}
+			}
 
-		// traversing into the future
-		LinkedList< Edge > queue = new LinkedList<>();
-		queue.addAll( this.getOutEdges( queryPuncta ) );
-		while ( !queue.isEmpty() ) {
-			Edge ce = queue.poll();
-
-			// feed our new graph
-			ret.addPuncta( ce.pB );
-			ret.addEdge( ce );
-
-			queue.addAll( getOutEdges( ce.pB ) );
-		}
-
-		// traversing into the past
-		queue = new LinkedList<>();
-		queue.addAll( this.getInEdges( queryPuncta ) );
-		while ( !queue.isEmpty() ) {
-			Edge ce = queue.poll();
-
-			// feed our new graph
-			ret.addPuncta( ce.pA );
-			ret.addEdge( ce );
-
-			queue.addAll( getInEdges( ce.pA ) );
 		}
 		return ret;
 	}

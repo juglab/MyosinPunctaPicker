@@ -121,4 +121,8 @@ public class PunctaPickerModel {
 		return Math.sqrt( ds.get( minDsId ) );
 	}
 
+	public void setLatest( Puncta p ) {
+		latest = p;
+	}
+
 }

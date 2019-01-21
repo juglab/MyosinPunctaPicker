@@ -93,6 +93,7 @@ public class PunctaClicker {
 
 	private void mergeTrack( int t, Puncta pOld, Puncta nearestP ) {
 		model.addEdge( pOld, nearestP );
+		model.setLatest( nearestP );
 
 	}
 
