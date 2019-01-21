@@ -120,7 +120,7 @@ public class Graph {
 		return ret;
 	}
 
-	private List< Edge > getAdjecentEdges( Puncta queryPuncta ) {
+	public List< Edge > getAdjecentEdges( Puncta queryPuncta ) {
 		List< Edge > ret = getOutEdges( queryPuncta );
 		ret.addAll( getInEdges( queryPuncta ) );
 		return ret;

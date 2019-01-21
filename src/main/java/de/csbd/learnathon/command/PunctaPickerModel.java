@@ -52,6 +52,7 @@ public class PunctaPickerModel {
 	}
 
 	public void removePuncta( Puncta p ) {
+
 		puncta.remove( p );
 	}
 
@@ -123,6 +124,23 @@ public class PunctaPickerModel {
 
 	public void setLatest( Puncta p ) {
 		latest = p;
+	}
+
+	public void deleteSelectedPunctaAndEdges() {
+		if ( !( selectedPuncta == null ) ) {
+			removeEdges( getGraph().getAdjecentEdges( selectedPuncta ) );
+			removePuncta( selectedPuncta );
+			selectedPuncta = null;
+
+		}
+
+
+	}
+
+	public void removeEdges( List< Edge > eds ) {
+		edges.removeAll( eds );
+
+
 	}
 
 }

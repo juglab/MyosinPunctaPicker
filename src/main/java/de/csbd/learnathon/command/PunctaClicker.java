@@ -42,12 +42,14 @@ public class PunctaClicker {
 	public void defineBehaviour() {
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
 		behaviours.install( bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {leftClickAction( x, y );}, "print global pos1", "button1" );
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {rigthClickAction( x, y );}, "print global pos2", "button3" );	
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {clickAction( x, y );}, "print global pos1", "button1" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
+			rigthClickAction( x, y );
+		}, "print global pos2", "P" );
 
 	}
 
-	private void leftClickAction( int x, int y ) {
+	private void clickAction( int x, int y ) {
 		if ( model.getActionIndicator().equals( PunctaPickerModel.ACTION_MODIFY ) ) {
 
 		}
@@ -60,6 +62,7 @@ public class PunctaClicker {
 		else if ( model.getActionIndicator().equals( PunctaPickerModel.ACTION_TRACK ) ) {
 			actionTrack( x, y );
 				}
+
 	}
 	
 	private void rigthClickAction( int x, int y ) {
@@ -76,13 +79,19 @@ public class PunctaClicker {
 		if ( !model.getPuncta().isEmpty() ) {
 			bdv.getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
 			Puncta minDistPuncta = model.getClosestPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getPuncta() );
-			model.setSelectedPuncta( minDistPuncta );
-			Graph selectedTracklet = model.getGraph();
-			selectedTracklet = selectedTracklet.selectSubgraphContaining( minDistPuncta );
-			model.selectSubgraph( selectedTracklet );
+			if ( model.radius > ( model.getClosestPunctaDist( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getPuncta() ) ) ) {
+				model.setSelectedPuncta( minDistPuncta );
+				Graph selectedTracklet = model.getGraph();
+				selectedTracklet = selectedTracklet.selectSubgraphContaining( minDistPuncta );
+				model.selectSubgraph( selectedTracklet );
+			} else {
+				model.setSelectedPuncta( new Puncta() );
+				model.selectSubgraph( new Graph() );
+			}
 			overlay.paint();
 			getOverlay().refreshBdv();
-			bdv.getViewerPanel().setTimepoint(minDistPuncta.getT());
+			if ( !model.getSelectedPuncta().isEmpty() )
+				bdv.getViewerPanel().setTimepoint( model.getSelectedPuncta().getT() );
 			
 			
 		}

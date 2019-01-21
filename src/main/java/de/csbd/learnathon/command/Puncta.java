@@ -1,6 +1,5 @@
 package de.csbd.learnathon.command;
 
-
 public class Puncta {
 
 	private float x;
@@ -37,6 +36,11 @@ public class Puncta {
 
 	public void setT( int t ) {
 		this.t = t;
+	}
+
+	public boolean isEmpty() {
+		Float value = new Float(this.x);
+		return ( value == null );
 	}
 
 }

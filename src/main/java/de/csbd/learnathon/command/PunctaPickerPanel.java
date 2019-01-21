@@ -217,6 +217,16 @@ public class PunctaPickerPanel {
 		final JButton bSelectTracklet = initSelectTrackletsButton();
 		helper.add( bSelectTracklet, gbc11 );
 
+		final GridBagConstraints gbc12 = new GridBagConstraints();
+		gbc12.fill = GridBagConstraints.HORIZONTAL;
+		gbc12.gridwidth = 2;
+		gbc12.anchor = GridBagConstraints.NORTHWEST;
+		gbc12.insets = new Insets( 5, 5, 5, 5 );
+		gbc12.gridx = 0;
+		gbc12.gridy = 11;
+		final JButton bDeleteSelectedPuncta = initDeleteSelectedPunctaButton();
+		helper.add( bDeleteSelectedPuncta, gbc12 );
+
 		return helper;
 	}
 
@@ -228,10 +238,25 @@ public class PunctaPickerPanel {
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
 				model.setActionIndicator( PunctaPickerModel.ACTION_SELECT );
+				punctaClicker.getOverlay().refreshBdv();
 			}
 
 		} );
 		return bSelectTracklet;
+	}
+
+	private JButton initDeleteSelectedPunctaButton() {
+		final JButton bDeletePuncta = new JButton( "Delete selected puncta" );
+		bDeletePuncta.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( final ActionEvent e ) {
+				model.deleteSelectedPunctaAndEdges();
+				punctaClicker.getOverlay().refreshBdv();
+			}
+
+		} );
+		return bDeletePuncta;
 	}
 
 	private JButton initModify() {
