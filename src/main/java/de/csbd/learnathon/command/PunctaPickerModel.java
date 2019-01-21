@@ -40,7 +40,7 @@ public class PunctaPickerModel {
 	}
 
 	public Puncta getLatestPuncta() {
-		return latest;
+		return latest=selectedPuncta;
 	}
 
 	public List< Edge > getEdges() {

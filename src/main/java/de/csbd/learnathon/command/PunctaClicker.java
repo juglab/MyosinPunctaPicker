@@ -68,6 +68,10 @@ public class PunctaClicker {
 	
 	
 
+	/**
+	 * @param x
+	 * @param y
+	 */
 	private void actionSelect( int x, int y ) {
 		if ( !model.getPuncta().isEmpty() ) {
 			bdv.getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
@@ -78,6 +82,9 @@ public class PunctaClicker {
 			model.selectSubgraph( selectedTracklet );
 			overlay.paint();
 			getOverlay().refreshBdv();
+			bdv.getViewerPanel().setTimepoint(minDistPuncta.getT());
+			
+			
 		}
 	}
 
