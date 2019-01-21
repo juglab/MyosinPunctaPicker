@@ -44,7 +44,6 @@ public class PunctaClicker {
 		behaviours.install( bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {leftClickAction( x, y );}, "print global pos1", "button1" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {rigthClickAction( x, y );}, "print global pos2", "button3" );	
-		mangal is stupid
 
 	}
 
