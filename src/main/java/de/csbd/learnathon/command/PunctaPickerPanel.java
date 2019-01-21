@@ -228,7 +228,6 @@ public class PunctaPickerPanel {
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
 				model.setActionIndicator( PunctaPickerModel.ACTION_SELECT );
-				punctaClicker.getOverlay().refreshBdv();
 			}
 
 		} );
@@ -360,7 +359,7 @@ public class PunctaPickerPanel {
 		final BdvSource source = BdvFunctions.show( img, "img", Bdv.options().addTo( bdv ) );
 		punctaClicker = new PunctaClicker( bdv, model );
 		// Initializing the click behaviour without having to click a button
-		punctaClicker.defineClickBehaviour();
+		punctaClicker.defineLeftClickBehaviour();
 
 		final T min = Util.getTypeFromInterval( img ).createVariable();
 		final T max = Util.getTypeFromInterval( img ).createVariable();

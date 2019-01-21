@@ -25,17 +25,31 @@ public class PunctaClicker {
 		return overlay;
 	}
 
-	public void defineClickBehaviour() {
+	public void defineRightClickBehaviour() {
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
 		behaviours.install( bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
-			clickAction( x, y );
+			rightClickAction( x, y );
+
+		}, "print global pos", "button2" );
+	}
+
+	private void rightClickAction( int x, int y ) {
+		actionSelect( x, y );
+
+	}
+
+	public void defineLeftClickBehaviour() {
+		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
+		behaviours.install( bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
+			leftClickAction( x, y );
 
 		}, "print global pos", "button1" );
 
 	}
 
-	private void clickAction( int x, int y ) {
+	private void leftClickAction( int x, int y ) {
 		if ( model.getActionIndicator().equals( PunctaPickerModel.ACTION_MODIFY ) ) {
 
 		}
@@ -59,6 +73,7 @@ public class PunctaClicker {
 			selectedTracklet = selectedTracklet.selectSubgraphContaining( minDistPuncta );
 			model.selectSubgraph( selectedTracklet );
 			overlay.paint();
+			getOverlay().refreshBdv();
 		}
 	}
 
