@@ -80,6 +80,7 @@ public class PunctaPickerModel {
 	public void deleteSelectedTracklet() {
 		edges.removeAll( selectedSubgraph.getEdgeList() );
 		puncta.removeAll( selectedSubgraph.getPunctaList() );
+		selectedPuncta = null;
 	}
 
 	public void setSelectedPuncta( Puncta p ) {
