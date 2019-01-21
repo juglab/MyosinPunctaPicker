@@ -6,14 +6,18 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.filechooser.FileSystemView;
 
 import org.scijava.Context;
 import org.scijava.command.CommandService;
@@ -295,8 +299,17 @@ public class PunctaPickerPanel {
 
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
-				FileChooser.main( null );
-				model.setGraph( CSVReader.loadCSV( "test2.csv" ) );
+				
+				JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+				jfc.setDialogTitle("Choose a directory to save your file: ");
+				jfc.setAcceptAllFileFilterUsed(false);
+				FileNameExtensionFilter filter = new FileNameExtensionFilter("CSv chooser", "csv");
+				jfc.addChoosableFileFilter(filter);
+				int returnValue = jfc.showOpenDialog(null);
+				File selectedFile = jfc.getSelectedFile();
+				
+				
+				model.setGraph( CSVReader.loadCSV( selectedFile.getAbsolutePath()) );
 				punctaClicker.getOverlay().refreshBdv();
 			}
 		} );
@@ -345,8 +358,17 @@ public class PunctaPickerPanel {
 	}
 
 	protected void writeToCSV( final List< Puncta > allPuncta ) {
+		
+		
+		JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+		jfc.setDialogTitle("Choose a directory to save your file: ");
+		jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		int returnValue = jfc.showSaveDialog(null);
+		File selectedFile = jfc.getSelectedFile();
+		System.out.println();
+		
 		getWriter();
-		CSVWriter.writeCsvFile( "test2.csv", allPuncta,model.getEdges() );
+		CSVWriter.writeCsvFile(selectedFile.getAbsolutePath() +"/test1.csv", allPuncta,model.getEdges() );
 
 	}
 
