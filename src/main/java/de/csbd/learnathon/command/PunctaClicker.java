@@ -26,9 +26,9 @@ public class PunctaClicker {
 	}
 
 	public void defineRightClickBehaviour() {
-		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
-		behaviours.install( bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
+		Behaviours behaviours1 = new Behaviours( new InputTriggerConfig() );
+		behaviours1.install( bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours1" );
+		behaviours1.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			rightClickAction( x, y );
 
 		}, "print global pos", "button2" );
@@ -39,13 +39,12 @@ public class PunctaClicker {
 
 	}
 
-	public void defineLeftClickBehaviour() {
+	public void defineBehaviour() {
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
 		behaviours.install( bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
-			leftClickAction( x, y );
-
-		}, "print global pos", "button1" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {leftClickAction( x, y );}, "print global pos1", "button1" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {rigthClickAction( x, y );}, "print global pos2", "button3" );	
+		
 
 	}
 
@@ -63,6 +62,12 @@ public class PunctaClicker {
 			actionTrack( x, y );
 				}
 	}
+	
+	private void rigthClickAction( int x, int y ) {
+			actionSelect( x, y );
+	}
+	
+	
 
 	private void actionSelect( int x, int y ) {
 		if ( !model.getPuncta().isEmpty() ) {
