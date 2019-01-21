@@ -11,9 +11,9 @@ public class CSVWriter {
 	private static final String NEW_LINE_SEPARATOR = "\n";
 
 	//CSV file header
-	private static final String FILE_HEADER = "x,y,t";
+	private static final String FILE_HEADER = "id,x,y,t";
 
-	public static void writeCsvFile( String fileName, List< Puncta > punctaList ) {
+	public static void writeCsvFile( String fileName, List< Puncta > punctaList, List< Edge > edgeList ) {
 
 		FileWriter fileWriter = null;
 
@@ -27,12 +27,26 @@ public class CSVWriter {
 			fileWriter.append( NEW_LINE_SEPARATOR );
 
 			//Write a new student object list to the CSV file
+			int id=-1;
 			for ( Puncta puncta : punctaList ) {
+				id++;
+				fileWriter.append( String.valueOf( id) );
+				fileWriter.append( COMMA_DELIMITER );
 				fileWriter.append( String.valueOf( puncta.getX() ) );
 				fileWriter.append( COMMA_DELIMITER );
 				fileWriter.append( String.valueOf( puncta.getY() ) );
 				fileWriter.append( COMMA_DELIMITER );
 				fileWriter.append( String.valueOf( puncta.getT() ) );
+				fileWriter.append( NEW_LINE_SEPARATOR );
+			}
+			
+			fileWriter.append( "edgep1,edgep2" );
+			fileWriter.append( NEW_LINE_SEPARATOR );
+			
+			for ( Edge e :  edgeList ) {
+				fileWriter.append( String.valueOf( punctaList.indexOf(e.pA)) );			
+				fileWriter.append( COMMA_DELIMITER );
+				fileWriter.append( String.valueOf( punctaList.indexOf(e.pB)) );	
 				fileWriter.append( NEW_LINE_SEPARATOR );
 			}
 

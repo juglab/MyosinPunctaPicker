@@ -345,7 +345,7 @@ public class PunctaPickerPanel {
 
 	protected void writeToCSV( final List< Puncta > allPuncta ) {
 		getWriter();
-		CSVWriter.writeCsvFile( "test2.csv", allPuncta );
+		CSVWriter.writeCsvFile( "test2.csv", allPuncta,model.getEdges() );
 
 	}
 
