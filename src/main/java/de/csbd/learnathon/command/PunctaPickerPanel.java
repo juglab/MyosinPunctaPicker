@@ -295,8 +295,9 @@ public class PunctaPickerPanel {
 
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
-				model.setPuncta( CSVReader.loadCSV( "test2.csv" ) );
-				punctaClicker.updateOverlay();
+				FileChooser.main( null );
+				model.setGraph( CSVReader.loadCSV( "test2.csv" ) );
+				punctaClicker.getOverlay().refreshBdv();
 			}
 		} );
 		return bLoadTracklets;

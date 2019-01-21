@@ -144,4 +144,9 @@ public class PunctaPickerModel {
 
 	}
 
+	public void setGraph( Graph g ) {
+		puncta = g.getPunctaList();
+		edges = g.getEdgeList();
+	}
+
 }

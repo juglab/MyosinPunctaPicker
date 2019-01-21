@@ -148,10 +148,4 @@ public class PunctaClicker {
 		return p;
 	}
 
-
-	public void updateOverlay() {
-		overlay.paint();
-	}
-
-
 }

@@ -8,23 +8,37 @@ import java.util.ArrayList;
 
 public class CSVReader {
 
-	public static ArrayList< Puncta > loadCSV( String filename ) {
+	public static Graph loadCSV( String filename ) {
 
 		String COMMA_DELIMITER = ",";
 
-		ArrayList< Puncta > loadedTracklets = new ArrayList< Puncta >();
+		ArrayList< Puncta > loadedPunctas = new ArrayList< Puncta >();
+		ArrayList< Edge > loadedEdges = new ArrayList< Edge >();
 
 		try (BufferedReader br = new BufferedReader( new FileReader( filename ) )) {
 			String line;
 			String headerLine = br.readLine();
+			boolean indicator = false;
 			while ( ( line = br.readLine() ) != null ) {
-				System.out.println( line );
-				String[] values = line.split( COMMA_DELIMITER );
-				System.out.println( values[ 0 ] );
-				Puncta puncta = new Puncta( Float.parseFloat( values[ 0 ] ), Float.parseFloat( values[ 1 ] ), Integer
-						.parseInt( values[ 2 ] ) );
-				loadedTracklets.add( puncta );
-			}
+				
+				if ( line.equals( "edgep1,edgep2" ) ) {
+					indicator = true;
+					line = br.readLine(); 
+				}
+				if(!indicator) {
+					String[] values = line.split( COMMA_DELIMITER );
+					System.out.println( values[ 0 ] );
+					Puncta p = new Puncta( Float.parseFloat( values[ 1 ] ), Float.parseFloat( values[ 2 ] ), Integer
+							.parseInt( values[ 3 ] ) );
+					loadedPunctas.add( p );
+					}
+				else {
+					String[] values = line.split( COMMA_DELIMITER );
+					Edge e = new Edge( loadedPunctas.get( Integer.parseInt( values[ 0 ] ) ), loadedPunctas.get( Integer.parseInt( values[ 1 ] ) ) );
+					loadedEdges.add(e );
+				}
+				}
+				
 		} catch ( FileNotFoundException e ) {
 			System.out.println( "File not found!" );
 			e.printStackTrace();
@@ -32,7 +46,7 @@ public class CSVReader {
 			System.out.println( "File read problem/IO!" );
 			e.printStackTrace();
 		}
-		return loadedTracklets;
+		return new Graph(loadedPunctas, loadedEdges);
 	}
 
 }
