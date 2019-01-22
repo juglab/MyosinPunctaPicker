@@ -179,8 +179,24 @@ public class PunctaPickerModel {
 	}
 
 	public void processFlow() {
+		
+		
 		Img< FloatType > flow = FlowComputation.getConstantFlow( getRawData() );
-		BdvFunctions.show( flow, "green", Bdv.options().addTo( view.bdv ) );
+		
+		FlowOverlay flowDrawer= new FlowOverlay(view.bdv);
+		flowDrawer.setData(flow);
+		flowDrawer.paint();
+		
+		
 	}
 
 }
+
+
+
+
+
+
+
+
+
