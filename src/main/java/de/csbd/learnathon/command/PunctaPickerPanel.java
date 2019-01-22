@@ -256,6 +256,7 @@ public class PunctaPickerPanel {
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
 				model.deleteSelectedPunctaAndEdges();
+				
 				punctaClicker.getOverlay().refreshBdv();
 			}
 

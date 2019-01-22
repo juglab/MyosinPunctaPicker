@@ -1,6 +1,10 @@
 package de.csbd.learnathon.command;
 
+import java.awt.event.MouseListener;
+
+import org.scijava.ui.behaviour.Behaviour;
 import org.scijava.ui.behaviour.ClickBehaviour;
+import org.scijava.ui.behaviour.DragBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
 
@@ -25,14 +29,6 @@ public class PunctaClicker {
 		return overlay;
 	}
 
-	public void defineRightClickBehaviour() {
-		Behaviours behaviours1 = new Behaviours( new InputTriggerConfig() );
-		behaviours1.install( bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours1" );
-		behaviours1.behaviour( ( ClickBehaviour ) ( x, y ) -> {
-			rightClickAction( x, y );
-
-		}, "print global pos", "button2" );
-	}
 
 	private void rightClickAction( int x, int y ) {
 		actionSelect( x, y );
@@ -42,13 +38,12 @@ public class PunctaClicker {
 	public void defineBehaviour() {
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
 		behaviours.install( bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {clickAction( x, y );}, "print global pos1", "button1" );
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
-			rigthClickAction( x, y );
-		}, "print global pos2", "P" );
-
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {clickAction( x, y );}, "left click", "button1" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {rigthClickAction( x, y );}, "rigth click", "P" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {actionMoveSelectedPuncta( x, y );}, "space click", "SPACE" );
+	
 	}
-
+	
 	private void clickAction( int x, int y ) {
 		if ( model.getActionIndicator().equals( PunctaPickerModel.ACTION_MODIFY ) ) {
 
@@ -69,6 +64,7 @@ public class PunctaClicker {
 			actionSelect( x, y );
 	}
 	
+
 	
 
 	/**
@@ -147,5 +143,19 @@ public class PunctaClicker {
 				}
 		return p;
 	}
+	
+	
+	
+	
+	
+	public void actionMoveSelectedPuncta( int x, int y )
+	{
+		bdv.getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
+		model.getSelectedPuncta().setX(pos.getFloatPosition(0));
+		model.getSelectedPuncta().setY(pos.getFloatPosition(1));
+		overlay.refreshBdv();
+	}
+	
+	
 
 }

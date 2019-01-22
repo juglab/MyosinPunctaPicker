@@ -70,4 +70,5 @@ public class FlowGuiCommand implements Command {
 
 		imageJ.command().run( FlowGuiCommand.class, true );
 	}
+	
 }
