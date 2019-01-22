@@ -18,7 +18,6 @@ public class PunctaPickerController {
 		this.view = punctaPickerView;
 	}
 
-
 	public void defineBehaviour() {
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
 		behaviours.install( view.bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours" );

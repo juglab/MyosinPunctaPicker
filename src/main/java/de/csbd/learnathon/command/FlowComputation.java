@@ -14,7 +14,7 @@ public class FlowComputation {
 	public static Img< FloatType > getConstantFlow( RandomAccessibleInterval< DoubleType > image ) {
 
 		final ImgFactory< FloatType > imgFactory = new CellImgFactory<>( new FloatType(), 5 );
-		final Img< FloatType > img1 = imgFactory.create( image.dimension( 0 ), image.dimension( 1 ), 2 );
+		final Img< FloatType > img1 = imgFactory.create( image.dimension( 0 ), image.dimension( 1 ), 8 * 2 - 2 );
 
 		Cursor< FloatType > cursorInput = img1.cursor();
 

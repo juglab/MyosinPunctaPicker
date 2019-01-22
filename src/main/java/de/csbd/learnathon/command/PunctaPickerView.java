@@ -250,7 +250,7 @@ public class PunctaPickerView {
 		gbc13.anchor = GridBagConstraints.NORTHWEST;
 		gbc13.insets = new Insets( 5, 5, 5, 5 );
 		gbc13.gridx = 0;
-		gbc13.gridy = 11;
+		gbc13.gridy = 12;
 		final JButton bShowFlow = initShowFlowButton();
 		helper.add( bShowFlow, gbc13 );
 
@@ -345,7 +345,6 @@ public class PunctaPickerView {
 				jfc.setAcceptAllFileFilterUsed(false);
 				FileNameExtensionFilter filter = new FileNameExtensionFilter("CSv chooser", "csv");
 				jfc.addChoosableFileFilter(filter);
-				int returnValue = jfc.showOpenDialog(null);
 				File selectedFile = jfc.getSelectedFile();
 				
 				
