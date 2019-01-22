@@ -4,19 +4,15 @@ package de.csbd.learnathon.command;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.util.ArrayList;
-import java.util.List;
 
 import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvHandlePanel;
 import bdv.util.BdvOverlay;
-import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.ValuePair;
-import bdv.util.BdvOverlay;
 
 public class FlowOverlay{
 	
@@ -112,13 +108,19 @@ public class FlowOverlay{
 
 		private ValuePair<Float, Float> getFlowVector(Img<FloatType> f, int x, int y, int t) {
 			
-			f.randomAccess().setPosition(new ArrayList<Integer>()););
-			
-			ValuePair< Float, Float > v =new ValuePair< Float, Float >(5f,5f);
-			
-			
-			
-			return v;
+    		f.randomAccess().setPosition( x, 0 );
+    		f.randomAccess().setPosition( y, 1 );
+		f.randomAccess().setPosition( 2 * t, 2 );
+    		Float u = f.randomAccess().get().getRealFloat();
+    			
+    		f.randomAccess().setPosition( x, 0 );
+    		f.randomAccess().setPosition( y, 1 );
+		f.randomAccess().setPosition( 2 * t, 2 );
+    		Float v = f.randomAccess().get().getRealFloat();
+    
+    		ValuePair< Float, Float > flowVector = new ValuePair< Float, Float >( u, v );
+    	
+		return flowVector;
 		}
 		
 }
