@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
+import net.imglib2.type.numeric.real.DoubleType;
+import net.imglib2.type.numeric.real.FloatType;
+
 public class PunctaPickerModel {
 
 	public static String ACTION_NONE = "none";
@@ -12,7 +17,9 @@ public class PunctaPickerModel {
 	public static String ACTION_MODIFY = "modify";
 	private String actionIndicator = ACTION_NONE;
 	public static float FADE_OUT_ALPHA = 1f;
-	
+
+	private RandomAccessibleInterval< DoubleType > rawData;
+
 	private List< Puncta > puncta = new ArrayList<>();
 	private List< Edge > edges = new ArrayList<>();
 	private Puncta latest;
@@ -20,7 +27,25 @@ public class PunctaPickerModel {
 	private Puncta selectedPuncta;
 	public int radius = 12;
 	public int lineThickness = 2;
+	private PunctaPickerView view;
+	private PunctaPickerController controller;
 	
+	PunctaPickerModel( RandomAccessibleInterval< DoubleType > image ) {
+		this.rawData = image;
+	}
+
+	public void setView( PunctaPickerView v ) {
+		this.view = v;
+	}
+
+	public void setController( PunctaPickerController controller ) {
+		this.controller = controller;
+	}
+
+	public RandomAccessibleInterval< DoubleType > getRawData() {
+		return rawData;
+	}
+
 	void setPuncta( List< Puncta > loadedPuncta ) {
 
 		puncta = loadedPuncta;
@@ -149,6 +174,10 @@ public class PunctaPickerModel {
 	public void setGraph( Graph g ) {
 		puncta = g.getPunctaList();
 		edges = g.getEdgeList();
+	}
+
+	public void processFlow() {
+		Img< FloatType > flow = FlowComputation.getConstantFlow( getRawData() );
 	}
 
 }

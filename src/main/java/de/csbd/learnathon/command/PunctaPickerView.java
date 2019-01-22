@@ -32,12 +32,11 @@ import bdv.util.BdvSource;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 import net.miginfocom.swing.MigLayout;
 
-public class PunctaPickerPanel {
+public class PunctaPickerView {
 
 	@Parameter
 	private Context context;
@@ -47,41 +46,55 @@ public class PunctaPickerPanel {
 
 	public Logger log;
 
-	private BdvHandlePanel bdv;
-
-	private final RandomAccessibleInterval< DoubleType > rawData;
+	public BdvHandlePanel bdv;
 
 	private JTextField tMoveTime;
 
-	private PunctaPickerModel model = new PunctaPickerModel();
+	private PunctaPickerModel model;
 
-	private PunctaClicker punctaClicker;
+	private PunctaPickerController controller;
 
 	private CSVWriter writer;
 
 	private CSVReader reader;
 
+	private Overlay overlay;
+
 	public CSVReader getReader() {
 		return reader;
 	}
 
-	public PunctaClicker getPickBehaviour() {
-		return punctaClicker;
+
+	public PunctaPickerView( PunctaPickerModel m, final Context context ) {
+//		context.inject( this );  // WTF am I good for?
+		this.model = m;
+		this.controller = new PunctaPickerController( m, this );
+		model.setController( controller );
+		model.setView( this );
+		bdv = initBdv( model.getRawData() );
+		this.overlay = new Overlay( bdv, m );
+		controller.defineBehaviour();
+
+
 	}
 
-	public void setPickBehaviour( final PunctaClicker punctaClicker ) {
-		this.punctaClicker = punctaClicker;
-	}
+	private < T extends RealType< T > & NativeType< T > > BdvHandlePanel initBdv( final RandomAccessibleInterval< T > img ) {
+		final BdvHandlePanel bdv = new BdvHandlePanel( null, Bdv.options().is2D() );
+		final BdvSource source = BdvFunctions.show( img, "img", Bdv.options().addTo( bdv ) );
 
-	public PunctaPickerPanel( final RandomAccessibleInterval< DoubleType > image, final Context context ) {
-		this.rawData = image;
-		context.inject( this );
+
+		final T min = Util.getTypeFromInterval( img ).createVariable();
+		final T max = Util.getTypeFromInterval( img ).createVariable();
+		ImglibUtil.computeMinMax( Views.iterable( img ), min, max );
+
+		source.setDisplayRangeBounds( 0, max.getRealFloat() );
+		source.setDisplayRange( min.getRealFloat(), max.getRealFloat() );
+		return bdv;
 	}
 
 
 	public JPanel getPanel() {
 		final JPanel controls = initControlsPanel();
-		bdv = initBdv( rawData );
 		return wrapToJPanel( initSplitPane( controls, bdv.getViewerPanel() ) );
 	}
 
@@ -231,9 +244,32 @@ public class PunctaPickerPanel {
 		final JButton bDeleteSelectedPuncta = initDeleteSelectedPunctaButton();
 		helper.add( bDeleteSelectedPuncta, gbc12 );
 
+		final GridBagConstraints gbc13 = new GridBagConstraints();
+		gbc13.fill = GridBagConstraints.HORIZONTAL;
+		gbc13.gridwidth = 2;
+		gbc13.anchor = GridBagConstraints.NORTHWEST;
+		gbc13.insets = new Insets( 5, 5, 5, 5 );
+		gbc13.gridx = 0;
+		gbc13.gridy = 11;
+		final JButton bShowFlow = initShowFlowButton();
+		helper.add( bShowFlow, gbc13 );
+
 		return helper;
 	}
 
+
+	private JButton initShowFlowButton() {
+		final JButton bShowFlow = new JButton( "Show computed flow" );
+		bShowFlow.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( final ActionEvent e ) {
+				model.processFlow();
+			}
+
+		} );
+		return bShowFlow;
+	}
 
 	private JButton initSelectTrackletsButton() {
 		final JButton bSelectTracklet = new JButton( "Select a tracklet" );
@@ -242,7 +278,7 @@ public class PunctaPickerPanel {
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
 				model.setActionIndicator( PunctaPickerModel.ACTION_SELECT );
-				punctaClicker.getOverlay().refreshBdv();
+				getOverlay().refreshBdv();
 			}
 
 		} );
@@ -257,7 +293,7 @@ public class PunctaPickerPanel {
 			public void actionPerformed( final ActionEvent e ) {
 				model.deleteSelectedPunctaAndEdges();
 				
-				punctaClicker.getOverlay().refreshBdv();
+				getOverlay().refreshBdv();
 				
 				
 				
@@ -288,7 +324,7 @@ public class PunctaPickerPanel {
 			@Override
 			public void actionPerformed( final ActionEvent e ) {
 				model.deleteSelectedTracklet();
-				punctaClicker.getOverlay().refreshBdv();
+				getOverlay().refreshBdv();
 
 			}
 
@@ -314,7 +350,7 @@ public class PunctaPickerPanel {
 				
 				
 				model.setGraph( CSVReader.loadCSV( selectedFile.getAbsolutePath()) );
-				punctaClicker.getOverlay().refreshBdv();
+				getOverlay().refreshBdv();
 			}
 		} );
 		return bLoadTracklets;
@@ -405,24 +441,7 @@ public class PunctaPickerPanel {
 		return bMoveTime;
 	}
 
-	private < T extends RealType< T > & NativeType< T > > BdvHandlePanel initBdv( final RandomAccessibleInterval< T > img ) {
-		final BdvHandlePanel bdv = new BdvHandlePanel( null, Bdv.options().is2D() );
-		final BdvSource source = BdvFunctions.show( img, "img", Bdv.options().addTo( bdv ) );
-		punctaClicker = new PunctaClicker( bdv, model );
-		
-		punctaClicker.defineBehaviour();
 
-
-		
-
-		final T min = Util.getTypeFromInterval( img ).createVariable();
-		final T max = Util.getTypeFromInterval( img ).createVariable();
-		ImglibUtil.computeMinMax( Views.iterable( img ), min, max );
-
-		source.setDisplayRangeBounds( 0, max.getRealFloat() );
-		source.setDisplayRange( min.getRealFloat(), max.getRealFloat() );
-		return bdv;
-	}
 
 	public void close() {
 		bdv.close();
@@ -442,6 +461,10 @@ public class PunctaPickerPanel {
 
 	public void setWriter( final CSVWriter writer ) {
 		this.writer = writer;
+	}
+
+	public Overlay getOverlay() {
+		return overlay;
 	}
 }
 
