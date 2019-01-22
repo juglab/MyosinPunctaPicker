@@ -1,9 +1,13 @@
+
+
 package de.csbd.learnathon.command;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.List;
+
+import org.scijava.util.ColorRGBA;
 
 import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
@@ -14,6 +18,7 @@ import net.imglib2.realtransform.AffineTransform2D;
 
 public class Overlay {
 
+	
 	private static BdvHandlePanel bdv;
 	private PunctaPickerModel model;
 
@@ -42,6 +47,12 @@ public class Overlay {
 
 				final int start = 0;
 				final int end = allPuncta.size();
+				float transparency;
+				int curentTime;
+				float Cr;
+				float Cg;
+				float Cb;
+				
 
 				for ( int i = start; i < end; i++ ) {
 					if ( allPuncta.get( i ).getT() <= info.getTimePointIndex() ) {
@@ -56,10 +67,30 @@ public class Overlay {
 					RealPoint planarPoint = new RealPoint( allPuncta.get( i ).getX(), allPuncta.get( i ).getY() );
 					planarPoint.localize( lPos );
 					t.apply( lPos, gPos );
+					
+
+					
 					if ( model.getSelectedSubgraph().graphContainsPuncta( allPuncta.get( i ) ) )
-						g.setColor( Color.RED );
+					{
+						Cr=1;
+						Cg=0;
+						Cb=0;
+					}
 					else
-						g.setColor( Color.BLUE );
+					{
+						Cr=0;
+						Cg=0;
+						Cb=1;
+					}
+					
+
+					curentTime=info.getTimePointIndex();
+//					transparency=(float) Math.pow((double)Math.abs((float)curentTime-(float)allPuncta.get( i ).getT()),2);
+					transparency=Math.abs((float)curentTime-(float)allPuncta.get( i ).getT());
+					transparency=(float) Math.exp(-transparency*model.FADE_OUT_ALPHA);
+					g.setColor(new Color(Cr, Cg, Cb,transparency));
+
+					
 					g.drawOval(
 							( int ) ( gPos[ 0 ] - model.radius ),
 							( int ) ( gPos[ 1 ] - model.radius ),
@@ -79,14 +110,35 @@ public class Overlay {
 					point2.localize( lPos2 );
 					t.apply( lPos2, gPos2 );
 					if ( model.getSelectedSubgraph().graphContainsEdge( model.getEdges().get( i ) ) )
-						g.setColor( Color.RED );
+					{
+						Cr=1;
+						Cg=0;
+						Cb=0;
+					}
 					else
-						g.setColor( Color.BLUE );
+					{
+						Cr=0;
+						Cg=0;
+						Cb=1;
+					}
 					if ( edge.getA().getT() <= info.getTimePointIndex() && edge.getB().getT() <= info.getTimePointIndex() )
 						g.setStroke( new BasicStroke( model.lineThickness ) );
 					else
 						g.setStroke(
 								new BasicStroke( model.lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
+					
+					
+					
+					curentTime=info.getTimePointIndex();
+//					transparency=(float) Math.pow((double)Math.abs((float)curentTime-(float)allPuncta.get( i ).getT()),2);
+					float d1=Math.abs((float)curentTime-edge.pA.getT());
+					float d2=Math.abs((float)curentTime-edge.pB.getT());
+					transparency=Math.min(d1, d2);
+					transparency=(float) Math.exp(-transparency*model.FADE_OUT_ALPHA);
+					g.setColor(new Color(Cr, Cg, Cb,transparency));
+					
+					
+					
 					drawPeripheralLine(
 							g,
 							( float ) gPos1[ 0 ],

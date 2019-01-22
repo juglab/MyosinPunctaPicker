@@ -30,10 +30,6 @@ public class PunctaClicker {
 	}
 
 
-	private void rightClickAction( int x, int y ) {
-		actionSelect( x, y );
-
-	}
 
 	public void defineBehaviour() {
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );

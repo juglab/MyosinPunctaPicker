@@ -258,6 +258,9 @@ public class PunctaPickerPanel {
 				model.deleteSelectedPunctaAndEdges();
 				
 				punctaClicker.getOverlay().refreshBdv();
+				
+				
+				
 			}
 
 		} );
