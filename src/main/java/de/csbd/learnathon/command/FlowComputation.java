@@ -16,7 +16,6 @@ import net.imglib2.algorithm.neighborhood.Neighborhood;
 import net.imglib2.algorithm.neighborhood.RectangleShape;
 import net.imglib2.algorithm.neighborhood.RectangleShape.NeighborhoodsAccessible;
 import net.imglib2.algorithm.region.hypersphere.HyperSphere;
-import net.imglib2.img.Img;
 import net.imglib2.interpolation.neighborsearch.NearestNeighborSearchInterpolatorFactory;
 import net.imglib2.neighborsearch.NearestNeighborSearch;
 import net.imglib2.neighborsearch.NearestNeighborSearchOnKDTree;
@@ -25,23 +24,23 @@ import net.imglib2.view.Views;
 
 public class FlowComputation {
 
-	public static Img< DoubleType > getTMFlow( Img< DoubleType > img ) {
+	public static RandomAccessibleInterval< DoubleType > getTMFlow( RandomAccessibleInterval< DoubleType > img ) {
 		float sigma = 2;
-		Img< DoubleType > smoothed_img = gaussian_smoothing2D( img, sigma );
+		RandomAccessibleInterval< DoubleType > smoothed_img = gaussian_smoothing2D( img, sigma );
 		ArrayList< LocalMaximaQuartet > localMaxima = findLocalMax( img, 5 );
 		ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima = thresholdedMaxima( localMaxima, 20 );
 		ArrayList< FlowVector > sparseFlow = templateMatching( smoothed_img, thresholdedLocalMaxima );
-		Img< DoubleType > denseFlow = interpolateFlowNN( sparseFlow, smoothed_img );
+		RandomAccessibleInterval< DoubleType > denseFlow = interpolateFlowNN( sparseFlow, smoothed_img );
 		return denseFlow;
 	}
 
-	private static Img< DoubleType > interpolateFlowNN( ArrayList< FlowVector > sparseFlow, Img< DoubleType > img ) {
+	private static RandomAccessibleInterval< DoubleType > interpolateFlowNN( ArrayList< FlowVector > sparseFlow, RandomAccessibleInterval< DoubleType > img ) {
 
-//		final ImgFactory< DoubleType > imgFactory = new CellImgFactory<>( new DoubleType(), 5 );
-//		final Img< DoubleType > denseFlow  = imgFactory.create( img.dimension( 0 ), img.dimension( 1 ),img.dimension( 2 )*2-2  );
+//		final RandomAccessibleIntervalFactory< DoubleType > imgFactory = new CellRandomAccessibleIntervalFactory<>( new DoubleType(), 5 );
+//		final RandomAccessibleInterval< DoubleType > denseFlow  = imgFactory.create( img.dimension( 0 ), img.dimension( 1 ),img.dimension( 2 )*2-2  );
 		
-//		final ImgFactory< DoubleType > imgFactory = new CellImgFactory<>( new DoubleType(), 5 );
-//		final Img< DoubleType > denseFlow  = imgFactory.create( img.dimension( 0 ), img.dimension( 1 ),0  );		
+//		final RandomAccessibleIntervalFactory< DoubleType > imgFactory = new CellRandomAccessibleIntervalFactory<>( new DoubleType(), 5 );
+//		final RandomAccessibleInterval< DoubleType > denseFlow  = imgFactory.create( img.dimension( 0 ), img.dimension( 1 ),0  );		
 		
 		ArrayList< RandomAccessibleInterval< DoubleType > > slices = new ArrayList< RandomAccessibleInterval< DoubleType > >();
 		
@@ -85,13 +84,13 @@ public class FlowComputation {
 			
 		}
 		
-		Img< DoubleType > stack = ( Img< DoubleType > ) Views.stack( slices );
+		RandomAccessibleInterval< DoubleType > stack = ( RandomAccessibleInterval< DoubleType > ) Views.stack( slices );
 	
 		
 		return stack;
 	}
 
-	private static ArrayList< LocalMaximaQuartet > findLocalMax( Img< DoubleType > img, int r ) {
+	private static ArrayList< LocalMaximaQuartet > findLocalMax( RandomAccessibleInterval< DoubleType > img, int r ) {
 
 		ArrayList< LocalMaximaQuartet > localMaxList = new ArrayList<>();
 		for ( long pos = 0; pos < img.dimension( 2 ); ++pos ) {
@@ -121,7 +120,7 @@ public class FlowComputation {
 		return localMaxList;
 	}
 
-	private static Img< DoubleType > gaussian_smoothing2D( Img< DoubleType > img, float sigma ) {
+	private static RandomAccessibleInterval< DoubleType > gaussian_smoothing2D( RandomAccessibleInterval< DoubleType > img, float sigma ) {
 
 		float[] s = new float[ img.numDimensions() - 1 ];
 
@@ -148,7 +147,7 @@ public class FlowComputation {
 		return a;
 	}
 
-	private static ArrayList< FlowVector > templateMatching( Img< DoubleType > img, ArrayList< LocalMaximaQuartet > quartet ) {
+	private static ArrayList< FlowVector > templateMatching( RandomAccessibleInterval< DoubleType > img, ArrayList< LocalMaximaQuartet > quartet ) {
 		RectangleShape rectangle = new RectangleShape( 5, false );
 		ArrayList<FlowVector> flowVectorList = new ArrayList<>(); 
 		int ii = 0;
@@ -206,10 +205,10 @@ public class FlowComputation {
 			return flowVectorList;
 	}
 
-//	public static Img< DoubleType > getConstantFlow( RandomAccessibleInterval< DoubleType > image ) {
+//	public static RandomAccessibleInterval< DoubleType > getConstantFlow( RandomAccessibleInterval< DoubleType > image ) {
 //
-//		final ImgFactory< DoubleType > imgFactory = new CellImgFactory<>( new DoubleType(), 5 );
-//		final Img< DoubleType > img1 = imgFactory.create( image.dimension( 0 ), image.dimension( 1 ), 8 * 2 - 2 );
+//		final RandomAccessibleIntervalFactory< DoubleType > imgFactory = new CellRandomAccessibleIntervalFactory<>( new DoubleType(), 5 );
+//		final RandomAccessibleInterval< DoubleType > img1 = imgFactory.create( image.dimension( 0 ), image.dimension( 1 ), 8 * 2 - 2 );
 //
 //		Cursor< DoubleType > cursorInput = img1.cursor();
 //
