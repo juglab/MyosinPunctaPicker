@@ -4,32 +4,91 @@ package de.csbd.learnathon.command;
 import java.util.ArrayList;
 
 import net.imglib2.Cursor;
+import net.imglib2.KDTree;
 import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.RealPoint;
+import net.imglib2.RealPointSampleList;
+import net.imglib2.RealRandomAccessible;
 import net.imglib2.algorithm.gauss3.Gauss3;
 import net.imglib2.algorithm.neighborhood.Neighborhood;
 import net.imglib2.algorithm.neighborhood.RectangleShape;
 import net.imglib2.algorithm.neighborhood.RectangleShape.NeighborhoodsAccessible;
 import net.imglib2.algorithm.region.hypersphere.HyperSphere;
 import net.imglib2.img.Img;
+import net.imglib2.img.ImgFactory;
+import net.imglib2.img.cell.CellImgFactory;
+import net.imglib2.interpolation.neighborsearch.NearestNeighborSearchInterpolatorFactory;
+import net.imglib2.neighborsearch.NearestNeighborSearch;
+import net.imglib2.neighborsearch.NearestNeighborSearchOnKDTree;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 
 public class FlowComputation {
 
-	public static ArrayList< FlowVector > getTMFlow( Img< FloatType > img ) {
+	public static Img< FloatType > getTMFlow( Img< FloatType > img ) {
 		float sigma = 2;
 		Img< FloatType > smoothed_img = gaussian_smoothing2D( img, sigma );
 		ArrayList< LocalMaximaQuartet > localMaxima = findLocalMax( img, 5 );
 		ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima = thresholdedMaxima( localMaxima, 20 );
 		ArrayList< FlowVector > sparseFlow = templateMatching( smoothed_img, thresholdedLocalMaxima );
-		ArrayList< FlowVector > denseFlow = interpolateFlow( sparseFlow );
+		Img< FloatType > denseFlow = interpolateFlowNN( sparseFlow,smoothed_img );
 		return denseFlow;
 	}
 
-	private static ArrayList< FlowVector > interpolateFlow( ArrayList< FlowVector > sparseFlow ) {
+	private static Img< FloatType > interpolateFlowNN( ArrayList< FlowVector > sparseFlow,Img< FloatType > img ) {
 
-		return null;
+//		final ImgFactory< FloatType > imgFactory = new CellImgFactory<>( new FloatType(), 5 );
+//		final Img< FloatType > denseFlow  = imgFactory.create( img.dimension( 0 ), img.dimension( 1 ),img.dimension( 2 )*2-2  );
+		
+//		final ImgFactory< FloatType > imgFactory = new CellImgFactory<>( new FloatType(), 5 );
+//		final Img< FloatType > denseFlow  = imgFactory.create( img.dimension( 0 ), img.dimension( 1 ),0  );		
+		
+		ArrayList<RandomAccessibleInterval< FloatType >> slices=new ArrayList<RandomAccessibleInterval< FloatType >>();
+		
+		for ( long pos = 0; pos < img.dimension( 2 )-1; ++pos ) {
+			 RandomAccessibleInterval< FloatType > slice = Views.hyperSlice( img, 2, pos );
+			
+			 ///FinalInterval interval = new FinalInterval( new long[] { 375, 200 } );
+			
+			 RealPointSampleList< FloatType > realIntervalU = new RealPointSampleList<>( 2 );
+			 RealPointSampleList< FloatType > realIntervalV = new RealPointSampleList<>( 2 );
+			 for ( FlowVector f : sparseFlow ) { 
+				 if (f.getT()==pos){ 
+					 RealPoint point = new RealPoint( 2 );
+					 point.setPosition(f.getX(),0);
+					 point.setPosition(f.getY(),1);
+					 
+					 realIntervalU.add(point, new FloatType(f.getU()));
+					 realIntervalV.add(point, new FloatType(f.getV()));
+				 }
+			 }
+			 
+			 
+			 
+			 NearestNeighborSearch< FloatType > searchU =new NearestNeighborSearchOnKDTree<>(new KDTree<>( realIntervalU ) );
+			 NearestNeighborSearch< FloatType > searchV =new NearestNeighborSearchOnKDTree<>(new KDTree<>( realIntervalV ) );
+			 
+			 RealRandomAccessible< FloatType > realRandomAccessibleU =Views.interpolate( searchU, new NearestNeighborSearchInterpolatorFactory< FloatType >() );
+			 RealRandomAccessible< FloatType > realRandomAccessibleV =Views.interpolate( searchV, new NearestNeighborSearchInterpolatorFactory< FloatType >() );
+			 
+			 RandomAccessible< FloatType > randomAccessibleU = Views.raster( realRandomAccessibleU );
+			 RandomAccessible< FloatType > randomAccessibleV = Views.raster( realRandomAccessibleV );
+			 
+			 RandomAccessibleInterval< FloatType > sliceU = Views.interval( randomAccessibleU, slice );
+			 RandomAccessibleInterval< FloatType > sliceV = Views.interval( randomAccessibleV, slice );
+			 
+			 slices.add(sliceU);
+			 slices.add(sliceV);
+			 
+			
+		}
+		
+		Img<FloatType> stack =(Img<FloatType>) Views.stack(slices);
+	
+		
+		return stack;
 	}
 
 	private static ArrayList< LocalMaximaQuartet > findLocalMax( Img< FloatType > img, int r ) {
