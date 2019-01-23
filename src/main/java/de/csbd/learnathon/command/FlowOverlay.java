@@ -118,8 +118,7 @@ public class FlowOverlay{
 		f.randomAccess().setPosition( 2 * t, 2 );
     		Float v = f.randomAccess().get().getRealFloat();
     
-    		ValuePair< Float, Float > flowVector = new ValuePair< Float, Float >( u, v );
-    	
+		ValuePair< Float, Float > flowVector = new ValuePair< Float, Float >( u, v );
 		return flowVector;
 		}
 		

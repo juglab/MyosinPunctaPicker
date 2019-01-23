@@ -273,6 +273,7 @@ public class PunctaPickerView {
 
 	private JButton initSelectTrackletsButton() {
 		final JButton bSelectTracklet = new JButton( "Select a tracklet" );
+//		bSelectTracklet.setMnemonic( KeyEvent.VK_T );
 		bSelectTracklet.addActionListener( new ActionListener() {
 
 			@Override
