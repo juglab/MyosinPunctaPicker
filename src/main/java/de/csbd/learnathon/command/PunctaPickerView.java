@@ -341,15 +341,18 @@ public class PunctaPickerView {
 			public void actionPerformed( final ActionEvent e ) {
 				
 				JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-				jfc.setDialogTitle("Choose a directory to save your file: ");
+				jfc.setDialogTitle( "Load tracklets csv file: " );
 				jfc.setAcceptAllFileFilterUsed(false);
-				FileNameExtensionFilter filter = new FileNameExtensionFilter("CSv chooser", "csv");
+				FileNameExtensionFilter filter = new FileNameExtensionFilter( "*.csv", "csv" );
+				jfc.setFileFilter( filter );
 				jfc.addChoosableFileFilter(filter);
-				File selectedFile = jfc.getSelectedFile();
+				int returnValue = jfc.showOpenDialog( null );
+				if ( returnValue == JFileChooser.APPROVE_OPTION ) {
+					File selectedFile = jfc.getSelectedFile();
 				
-				
-				model.setGraph( CSVReader.loadCSV( selectedFile.getAbsolutePath()) );
-				getOverlay().refreshBdv();
+					model.setGraph( CSVReader.loadCSV( selectedFile.getAbsolutePath() ) );
+					getOverlay().refreshBdv();
+				}
 			}
 		} );
 		return bLoadTracklets;
@@ -397,18 +400,16 @@ public class PunctaPickerView {
 	}
 
 	protected void writeToCSV( final List< Puncta > allPuncta ) {
-		
-		
-		JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-		jfc.setDialogTitle("Choose a directory to save your file: ");
-		jfc.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-		int returnValue = jfc.showSaveDialog(null);
-		File selectedFile = jfc.getSelectedFile();
-		System.out.println();
-		
-		getWriter();
-		CSVWriter.writeCsvFile(selectedFile.getAbsolutePath() +"/test1.csv", allPuncta,model.getEdges() );
 
+		JFileChooser chooser = new JFileChooser( FileSystemView.getFileSystemView().getHomeDirectory() );
+		chooser.setDialogTitle( "Choose a directory to save your file: " );
+		chooser.setFileSelectionMode( JFileChooser.DIRECTORIES_ONLY );
+		chooser.showSaveDialog( null );
+
+		String path = chooser.getSelectedFile().getAbsolutePath();
+		String filename = chooser.getSelectedFile().getName();
+		CSVWriter.writeCsvFile( path + filename + ".csv", allPuncta, model.getEdges() );
+		System.out.println( path + filename + ".csv" );
 	}
 
 	private JButton initPunctaPickingButton() {
