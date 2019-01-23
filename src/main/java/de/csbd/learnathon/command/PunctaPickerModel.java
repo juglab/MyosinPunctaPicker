@@ -181,10 +181,10 @@ public class PunctaPickerModel {
 	public void processFlow() {
 		
 		
-		Img< FloatType > flow = FlowComputation.getConstantFlow( getRawData() );
+		//Img< FloatType > flow = FlowComputation.getConstantFlow( getRawData() );
 		
 		FlowOverlay flowDrawer= new FlowOverlay(view.bdv);
-		flowDrawer.setData(flow);
+		//flowDrawer.setData(flow);
 		flowDrawer.paint();
 		
 		

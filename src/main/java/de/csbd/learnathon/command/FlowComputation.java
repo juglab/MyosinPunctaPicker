@@ -1,6 +1,8 @@
 package de.csbd.learnathon.command;
 
 
+import java.util.ArrayList;
+
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.gauss3.Gauss3;
@@ -9,6 +11,7 @@ import net.imglib2.algorithm.region.hypersphere.HyperSphere;
 import net.imglib2.algorithm.region.hypersphere.HyperSphereCursor;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 
 public class FlowComputation {
@@ -23,26 +26,28 @@ public class FlowComputation {
 
 	}
 
-	private static Object findLocalMax( Img< FloatType > img, int i ) {
-		HyperSphereCursor< FloatType > sphericalCursor = new Hype
-		for ( final Neighborhood localNeighborhood : shape.neighborhoods( source ) ) {
-
-			final T centerValue = center.next();
-
-			boolean isMinimum = true;
-
-			for ( final T value : localNeighborhood ) {
-				if ( centerValue.compareTo( value ) >= 0 ) {
-					isMinimum = false;
-					break;
+	private static ArrayList<LocalMaximaTriplet> findLocalMax( Img< FloatType > img, int r ) {
+		 Cursor<FloatType> cursor= Views.iterable(img).cursor();
+		 ArrayList<LocalMaximaTriplet> localMaxList = new ArrayList<>();
+		 while ( cursor.hasNext() )
+	        {
+	            cursor.fwd();
+	            HyperSphere< FloatType > smallSphere = new HyperSphere<>( img, cursor, r );
+	            FloatType centerValue=cursor.get();
+	            boolean isMaximum = true;
+	            
+	            for ( final FloatType value : smallSphere ) {
+	            	if ( centerValue.compareTo( value ) < 0 ) {
+						isMaximum = false;
+						break;
+					}
+	            }
+	            if ( isMaximum ) {
+	            	
+	            	localMaxList.add(new LocalMaximaTriplet( cursor.getIntPosition(0), cursor.getIntPosition(0), centerValue.get()));
 				}
-			}
-
-			if ( isMinimum ) {
-
-			}
-		}
-		return null;
+	        }
+		return localMaxList;
 	}
 
 	private static Img< FloatType > gaussian_smoothing2D( Img< FloatType > img, float sigma ) {
