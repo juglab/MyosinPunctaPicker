@@ -5,9 +5,9 @@ public class LocalMaximaQuartet {
 	int x;
 	int y;
 	int t;
-	float v;
+	double v;
 	
-	public LocalMaximaQuartet( int x, int y, int t, float v ) {
+	public LocalMaximaQuartet( int x, int y, int t, double v ) {
 		this.x = x;
 		this.y = y;
 		this.v = v;
@@ -21,7 +21,7 @@ public class LocalMaximaQuartet {
 		return y;
 	}
 	
-	public float getV() {
+	public double getV() {
 		return v;
 	}
 

@@ -6,10 +6,10 @@ public class FlowVector {
 	int x;
 	int y;
 	int t;
-	float u;
-	float v;
+	double u;
+	double v;
 
-	public FlowVector( int x, int y, int t, float u, float v ) {
+	public FlowVector( int x, int y, int t, double u, double v ) {
 		this.x = x;
 		this.y = y;
 		this.t = t;
@@ -29,11 +29,11 @@ public class FlowVector {
 		return t;
 	}
 
-	public float getU() {
+	public double getU() {
 		return u;
 	}
 
-	public float getV() {
+	public double getV() {
 		return v;
 	}
 

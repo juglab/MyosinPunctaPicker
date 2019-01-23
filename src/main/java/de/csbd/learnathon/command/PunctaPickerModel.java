@@ -4,12 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import bdv.util.Bdv;
-import bdv.util.BdvFunctions;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
 import net.imglib2.type.numeric.real.DoubleType;
-import net.imglib2.type.numeric.real.FloatType;
 
 public class PunctaPickerModel {
 
@@ -180,12 +176,11 @@ public class PunctaPickerModel {
 
 	public void processFlow() {
 		
+		RandomAccessibleInterval< DoubleType > flow = FlowComputation.getTMFlow( getRawData() );
 		
-		//Img< FloatType > flow = FlowComputation.getConstantFlow( getRawData() );
-		
-		FlowOverlay flowDrawer= new FlowOverlay(view.bdv);
+//		FlowOverlay flowDrawer= new FlowOverlay(view.bdv);
 		//flowDrawer.setData(flow);
-		flowDrawer.paint();
+//		flowDrawer.paint();
 		
 		
 	}
