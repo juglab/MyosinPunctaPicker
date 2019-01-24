@@ -110,5 +110,10 @@
 			<artifactId>Indago</artifactId>
 			<version>0.1.7</version>
 		</dependency>
+		<dependency>
+			<groupId>jitk</groupId>
+			<artifactId>jitk-tps</artifactId>
+			<version>3.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 </project>
