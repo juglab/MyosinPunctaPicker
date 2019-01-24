@@ -3,6 +3,7 @@ package de.csbd.learnathon.command;
 
 import java.util.ArrayList;
 
+
 import net.imglib2.Cursor;
 import net.imglib2.Interval;
 import net.imglib2.KDTree;
@@ -17,6 +18,9 @@ import net.imglib2.algorithm.neighborhood.Neighborhood;
 import net.imglib2.algorithm.neighborhood.RectangleShape;
 import net.imglib2.algorithm.neighborhood.RectangleShape.NeighborhoodsAccessible;
 import net.imglib2.algorithm.region.hypersphere.HyperSphere;
+import net.imglib2.img.Img;
+import net.imglib2.img.ImgFactory;
+import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.interpolation.neighborsearch.NearestNeighborSearchInterpolatorFactory;
 import net.imglib2.neighborsearch.NearestNeighborSearch;
 import net.imglib2.neighborsearch.NearestNeighborSearchOnKDTree;
@@ -29,8 +33,8 @@ public class FlowComputation {
 	public static RandomAccessibleInterval< DoubleType > getTMFlow( RandomAccessibleInterval< DoubleType > img ) {
 		float sigma = 2;
 		RandomAccessibleInterval< DoubleType > smoothed_img = gaussian_smoothing2D( img, sigma );
-		ArrayList< LocalMaximaQuartet > localMaxima = findLocalMax( img, 5);
-		ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima = thresholdedMaxima( localMaxima, 170 );
+		ArrayList< LocalMaximaQuartet > localMaxima = findLocalMax( img, 15);
+		ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima = thresholdedMaxima( localMaxima, 195);
 		ArrayList< FlowVector > sparseFlow = templateMatching( smoothed_img, thresholdedLocalMaxima );
 		RandomAccessibleInterval< DoubleType > denseFlow = interpolateFlowNN( sparseFlow, smoothed_img );
 		return denseFlow;
@@ -97,7 +101,7 @@ public class FlowComputation {
 		ArrayList< LocalMaximaQuartet > localMaxList = new ArrayList<>();
 		for ( long pos = 0; pos < img.dimension( 2 ); ++pos ) {
 			RandomAccessibleInterval< DoubleType > slice = Views.hyperSlice( img, 2, pos );
-			Interval interval = Intervals.expand(slice, -21);
+			Interval interval = Intervals.expand(slice, -r-2);
 			
 			slice = Views.interval(slice, interval);
 			
@@ -211,19 +215,18 @@ public class FlowComputation {
 			return flowVectorList;
 	}
 
-//	public static RandomAccessibleInterval< DoubleType > getConstantFlow( RandomAccessibleInterval< DoubleType > image ) {
-//
-//		final RandomAccessibleIntervalFactory< DoubleType > imgFactory = new CellRandomAccessibleIntervalFactory<>( new DoubleType(), 5 );
-//		final RandomAccessibleInterval< DoubleType > img1 = imgFactory.create( image.dimension( 0 ), image.dimension( 1 ), 8 * 2 - 2 );
-//
-//		Cursor< DoubleType > cursorInput = img1.cursor();
-//
-//		while ( cursorInput.hasNext() ) {
-//			cursorInput.fwd();
-//			cursorInput.get().set( 5f );
-//		}
-//
-//		return img1;
-//	}
+	public static RandomAccessibleInterval< DoubleType > getRandomFlow( RandomAccessibleInterval< DoubleType > image ) {
+
+		final ImgFactory< DoubleType > imgFactory = new CellImgFactory<>( new DoubleType(), 5 );
+		final Img< DoubleType > img1 = imgFactory.create( image.dimension( 0 ), image.dimension( 1 ), image.dimension( 2 ) * 2 - 2 );
+
+		Cursor< DoubleType > cursorInput = img1.cursor();
+
+		while ( cursorInput.hasNext() ) {
+			cursorInput.fwd();
+			cursorInput.get().set( 50*Math.random()-25 );
+		}
+		return (RandomAccessibleInterval< DoubleType >) img1;
+	}
 		
 }

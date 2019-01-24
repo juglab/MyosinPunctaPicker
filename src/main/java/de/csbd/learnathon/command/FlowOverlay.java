@@ -9,6 +9,7 @@ import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvHandlePanel;
 import bdv.util.BdvOverlay;
+import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.realtransform.AffineTransform2D;
@@ -41,29 +42,32 @@ public class FlowOverlay{
 				final long sizeX = flowData.dimension( 0 );
 				final long sizeY = flowData.dimension( 1 );
 				
-				final int t = 0;
-				int spacing = 20; // at most all 10 pixels
+				int t = info.getTimePointIndex();
 				
-				
-				final AffineTransform2D trans = new AffineTransform2D();
-				getCurrentTransform2D( trans );
-				
-				
-				
-				
-				int startx = ( int ) ( sizeX % spacing ) / 2;
-				startx = ( startx == 0 ) ? spacing / 2 : startx;
-				int starty = ( int ) ( sizeY % spacing ) / 2;
-				starty = ( starty == 0 ) ? spacing / 2 : starty;
-		
-				for ( int x = startx; x < sizeX; x += spacing ) {
-					for ( int y = starty; y < sizeY; y += spacing ) {
-						
-						
-						drawVector( trans ,g, t, x, y );
+				if (t<flowData.dimension(2)/2)
+				{
+					int spacing = 20; // at most all 10 pixels
+					
+					
+					final AffineTransform2D trans = new AffineTransform2D();
+					getCurrentTransform2D( trans );
+					
+					
+					
+					
+					int startx = ( int ) ( sizeX % spacing ) / 2;
+					startx = ( startx == 0 ) ? spacing / 2 : startx;
+					int starty = ( int ) ( sizeY % spacing ) / 2;
+					starty = ( starty == 0 ) ? spacing / 2 : starty;
+			
+					for ( int x = startx; x < sizeX; x += spacing ) {
+						for ( int y = starty; y < sizeY; y += spacing ) {
+							
+							
+							drawVector( trans ,g, t, x, y );
+						}
 					}
 				}
-				
 			}
 		};
 		BdvFunctions.showOverlay( overlay, "overlay", Bdv.options().addTo( bdv ) );
@@ -109,19 +113,25 @@ public class FlowOverlay{
 		}
 
 		private ValuePair<Double, Double> getFlowVector(RandomAccessibleInterval<DoubleType> f, int x, int y, int t) {
+			RandomAccess<DoubleType> ra = f.randomAccess();
+    		
+			ra.setPosition( x, 0 );
+    		ra.setPosition( y, 1 );
+    		ra.setPosition( 2 * t, 2 );
+    		//System.out.println(2 * t);
+    		
+    		Double u = ra.get().getRealDouble();
+    		
+    		
+    		ra.setPosition( x, 0 );
+    		ra.setPosition( y, 1 );
+    		ra.setPosition( 2 * t+1, 2 );
+    		Double v = ra.get().getRealDouble();
+
 			
-    		f.randomAccess().setPosition( x, 0 );
-    		f.randomAccess().setPosition( y, 1 );
-		f.randomAccess().setPosition( 2 * t, 2 );
-    		Float u = f.randomAccess().get().getRealFloat();
-    			
-    		f.randomAccess().setPosition( x, 0 );
-    		f.randomAccess().setPosition( y, 1 );
-		f.randomAccess().setPosition( 2 * t, 2 );
-    		Float v = f.randomAccess().get().getRealFloat();
-    
-		ValuePair< Double, Double > flowVector = new ValuePair< Double, Double >( (double)u, (double)v );
-		return flowVector;
+    		
+		    ValuePair< Double, Double > flowVector = new ValuePair< Double, Double >( u, v );
+		    return flowVector;
 		}
 		
 }
