@@ -9,21 +9,23 @@ import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvHandlePanel;
 import bdv.util.BdvOverlay;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.realtransform.AffineTransform2D;
+import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.ValuePair;
 
 public class FlowOverlay{
 	
-	private Img< FloatType > flowData;
+	private RandomAccessibleInterval< DoubleType > flowData;
 	private BdvHandlePanel bdv;
 	
 	public FlowOverlay( BdvHandlePanel bdv ) {
 		this.bdv = bdv;
 	}
 	
-	public void setData(Img< FloatType > f)
+	public void setData(RandomAccessibleInterval< DoubleType > f)
 	{
 		 this.flowData=f;
 	}
@@ -73,7 +75,7 @@ public class FlowOverlay{
 			
 			
 			
-			final ValuePair< Float, Float > flowVec = getFlowVector(flowData,x,y,t);
+			final ValuePair<Double, Double> flowVec = getFlowVector(flowData,x,y,t);
 			
 			
 			if ( x == 0 && y == 0 ) return;
@@ -106,7 +108,7 @@ public class FlowOverlay{
 
 		}
 
-		private ValuePair<Float, Float> getFlowVector(Img<FloatType> f, int x, int y, int t) {
+		private ValuePair<Double, Double> getFlowVector(RandomAccessibleInterval<DoubleType> f, int x, int y, int t) {
 			
     		f.randomAccess().setPosition( x, 0 );
     		f.randomAccess().setPosition( y, 1 );
@@ -118,7 +120,7 @@ public class FlowOverlay{
 		f.randomAccess().setPosition( 2 * t, 2 );
     		Float v = f.randomAccess().get().getRealFloat();
     
-		ValuePair< Float, Float > flowVector = new ValuePair< Float, Float >( u, v );
+		ValuePair< Double, Double > flowVector = new ValuePair< Double, Double >( (double)u, (double)v );
 		return flowVector;
 		}
 		

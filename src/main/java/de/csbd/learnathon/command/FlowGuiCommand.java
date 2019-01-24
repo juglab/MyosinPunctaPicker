@@ -61,8 +61,21 @@ public class FlowGuiCommand implements Command {
 	private RandomAccessibleInterval< DoubleType > toDoubleType( final RandomAccessibleInterval< ? extends RealType< ? > > image ) {
 		if ( Util.getTypeFromInterval( image ) instanceof DoubleType )
 			return ( RandomAccessibleInterval< DoubleType > ) image;
-		return Converters.convert( image, ( i, o ) -> o.setReal( i.getRealDouble() ), new DoubleType() );
+		
+		RandomAccessibleInterval< DoubleType > image2 = Converters.convert( image, ( i, o ) -> o.setReal( i.getRealDouble() ), new DoubleType() );
+		//RandomAccessibleInterval< T > duplicate = copyImage(image );
+		return image2;
+		
+		//Img< FloatType > duplicate = copyImage( img );
+		
+		
+		
+		
 	}
+	
+	
+	
+	
 
 	public static void main( final String... args ) {
 		final ImageJ imageJ = new ImageJ();

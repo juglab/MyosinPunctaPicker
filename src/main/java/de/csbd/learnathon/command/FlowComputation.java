@@ -4,6 +4,7 @@ package de.csbd.learnathon.command;
 import java.util.ArrayList;
 
 import net.imglib2.Cursor;
+import net.imglib2.Interval;
 import net.imglib2.KDTree;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
@@ -20,6 +21,7 @@ import net.imglib2.interpolation.neighborsearch.NearestNeighborSearchInterpolato
 import net.imglib2.neighborsearch.NearestNeighborSearch;
 import net.imglib2.neighborsearch.NearestNeighborSearchOnKDTree;
 import net.imglib2.type.numeric.real.DoubleType;
+import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
 
 public class FlowComputation {
@@ -27,8 +29,8 @@ public class FlowComputation {
 	public static RandomAccessibleInterval< DoubleType > getTMFlow( RandomAccessibleInterval< DoubleType > img ) {
 		float sigma = 2;
 		RandomAccessibleInterval< DoubleType > smoothed_img = gaussian_smoothing2D( img, sigma );
-		ArrayList< LocalMaximaQuartet > localMaxima = findLocalMax( img, 5 );
-		ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima = thresholdedMaxima( localMaxima, 20 );
+		ArrayList< LocalMaximaQuartet > localMaxima = findLocalMax( img, 5);
+		ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima = thresholdedMaxima( localMaxima, 170 );
 		ArrayList< FlowVector > sparseFlow = templateMatching( smoothed_img, thresholdedLocalMaxima );
 		RandomAccessibleInterval< DoubleType > denseFlow = interpolateFlowNN( sparseFlow, smoothed_img );
 		return denseFlow;
@@ -39,8 +41,8 @@ public class FlowComputation {
 //		final RandomAccessibleIntervalFactory< DoubleType > imgFactory = new CellRandomAccessibleIntervalFactory<>( new DoubleType(), 5 );
 //		final RandomAccessibleInterval< DoubleType > denseFlow  = imgFactory.create( img.dimension( 0 ), img.dimension( 1 ),img.dimension( 2 )*2-2  );
 		
-//		final RandomAccessibleIntervalFactory< DoubleType > imgFactory = new CellRandomAccessibleIntervalFactory<>( new DoubleType(), 5 );
-//		final RandomAccessibleInterval< DoubleType > denseFlow  = imgFactory.create( img.dimension( 0 ), img.dimension( 1 ),0  );		
+		//final RandomAccessibleIntervalFactory< DoubleType > imgFactory = new CellRandomAccessibleIntervalFactory<>( new DoubleType(), 5 );
+		//final RandomAccessibleInterval< DoubleType > denseFlow  = imgFactory.create( img.dimension( 0 ), img.dimension( 1 ),0  );		
 		
 		ArrayList< RandomAccessibleInterval< DoubleType > > slices = new ArrayList< RandomAccessibleInterval< DoubleType > >();
 		
@@ -95,6 +97,10 @@ public class FlowComputation {
 		ArrayList< LocalMaximaQuartet > localMaxList = new ArrayList<>();
 		for ( long pos = 0; pos < img.dimension( 2 ); ++pos ) {
 			RandomAccessibleInterval< DoubleType > slice = Views.hyperSlice( img, 2, pos );
+			Interval interval = Intervals.expand(slice, -21);
+			
+			slice = Views.interval(slice, interval);
+			
 			Cursor< DoubleType > cursor = Views.iterable( slice ).cursor();
 
 			while ( cursor.hasNext() ) {

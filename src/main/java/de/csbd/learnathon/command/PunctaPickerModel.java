@@ -178,9 +178,9 @@ public class PunctaPickerModel {
 		
 		RandomAccessibleInterval< DoubleType > flow = FlowComputation.getTMFlow( getRawData() );
 		
-//		FlowOverlay flowDrawer= new FlowOverlay(view.bdv);
-		//flowDrawer.setData(flow);
-//		flowDrawer.paint();
+		FlowOverlay flowDrawer= new FlowOverlay(view.bdv);
+		flowDrawer.setData(flow);
+		flowDrawer.paint();
 		
 		
 	}
