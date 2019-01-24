@@ -4,6 +4,7 @@ package de.csbd.learnathon.command;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.util.ArrayList;
 
 import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
@@ -11,29 +12,22 @@ import bdv.util.BdvHandlePanel;
 import bdv.util.BdvOverlay;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.type.numeric.real.DoubleType;
-import net.imglib2.type.numeric.real.FloatType;
-import net.imglib2.util.ValuePair;
 
 public class FlowOverlay{
 	
 	private RandomAccessibleInterval< DoubleType > flowData;
+
 	private BdvHandlePanel bdv;
 	
 	public FlowOverlay( BdvHandlePanel bdv ) {
 		this.bdv = bdv;
 	}
-	
-	public void setData(RandomAccessibleInterval< DoubleType > f)
-	{
-		 this.flowData=f;
-	}
-	
 
-	public void paint() {
 
+	public void paintDenseFlow( RandomAccessibleInterval< DoubleType > flowData ) {
+		this.flowData = flowData;
 		final BdvOverlay overlay = new BdvOverlay() {
 	
 			@Override
@@ -46,7 +40,7 @@ public class FlowOverlay{
 				
 				if (t<flowData.dimension(2)/2)
 				{
-					int spacing = 20; // at most all 10 pixels
+					int spacing = 5; // at most all 10 pixels
 					
 					
 					final AffineTransform2D trans = new AffineTransform2D();
@@ -63,8 +57,8 @@ public class FlowOverlay{
 					for ( int x = startx; x < sizeX; x += spacing ) {
 						for ( int y = starty; y < sizeY; y += spacing ) {
 							
-							
-							drawVector( trans ,g, t, x, y );
+							FlowVector flowVec = getFlowVector( flowData, x, y, t );
+							drawVector( trans, g, x, y, flowVec.getU(), flowVec.getV(), Color.RED );
 						}
 					}
 				}
@@ -75,23 +69,18 @@ public class FlowOverlay{
 	}
 		
 		
-		private void drawVector( AffineTransform2D trans,final Graphics2D g, final int t, int x, int y ) {
-			
-			
-			
-			final ValuePair<Double, Double> flowVec = getFlowVector(flowData,x,y,t);
-			
+	private void drawVector( AffineTransform2D trans, final Graphics2D g, int x, int y, double u, double v, Color c ) {
 			
 			if ( x == 0 && y == 0 ) return;
 	
 	
-			g.setColor( Color.YELLOW );
+		g.setColor( c );
 	
 			final Graphics2D g2 = g;
 			g2.setStroke( new BasicStroke( 1 ) );
 	
-			int xto = ( int ) ( x + flowVec.getA() );
-			int yto = ( int ) ( y + flowVec.getB() );
+		int xto = ( int ) ( x + u );
+		int yto = ( int ) ( y + v );
 	
 			final double[] from = new double[]{x,y};
 			final double[] to = new double[] { xto, yto };
@@ -112,26 +101,43 @@ public class FlowOverlay{
 
 		}
 
-		private ValuePair<Double, Double> getFlowVector(RandomAccessibleInterval<DoubleType> f, int x, int y, int t) {
+	private FlowVector getFlowVector( RandomAccessibleInterval< DoubleType > f, int x, int y, int t ) {
 			RandomAccess<DoubleType> ra = f.randomAccess();
-    		
 			ra.setPosition( x, 0 );
     		ra.setPosition( y, 1 );
-    		ra.setPosition( 2 * t, 2 );
-    		//System.out.println(2 * t);
-    		
+		ra.setPosition( 2 * t, 2 );
     		Double u = ra.get().getRealDouble();
-    		
-    		
     		ra.setPosition( x, 0 );
     		ra.setPosition( y, 1 );
     		ra.setPosition( 2 * t+1, 2 );
     		Double v = ra.get().getRealDouble();
-
-			
-    		
-		    ValuePair< Double, Double > flowVector = new ValuePair< Double, Double >( u, v );
+		FlowVector flowVector = new FlowVector( x, y, t, u, v );
 		    return flowVector;
 		}
+
+	public void paintSparseFlow( ArrayList< FlowVector > sparseFlow ) {
+		final BdvOverlay overlay = new BdvOverlay() {
+
+			@Override
+			protected void draw( final Graphics2D g ) {
+
+				int t = info.getTimePointIndex();
+				ArrayList< FlowVector > inTimeVectors = new ArrayList<>();
+				for ( FlowVector flowVector : sparseFlow ) {
+					if ( flowVector.getT() == t )
+						inTimeVectors.add( flowVector );
+
+				}
+
+				final AffineTransform2D trans = new AffineTransform2D();
+				getCurrentTransform2D( trans );
+				for ( FlowVector f : inTimeVectors ) {
+					drawVector( trans, g, f.getX(), f.getY(), f.getU(), f.getV(), Color.BLUE );
+				}
+
+			}
+		};
+		BdvFunctions.showOverlay( overlay, "overlay2", Bdv.options().addTo( bdv ) );
+	}
 		
 }
