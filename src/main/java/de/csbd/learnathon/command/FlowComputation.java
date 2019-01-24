@@ -114,9 +114,7 @@ public class FlowComputation {
 		for ( long pos = 0; pos < img.dimension( 2 ); ++pos ) {
 			RandomAccessibleInterval< DoubleType > slice = Views.hyperSlice( img, 2, pos );
 			Interval interval = Intervals.expand(slice, -r-2);
-			
 			slice = Views.interval(slice, interval);
-			
 			Cursor< DoubleType > cursor = Views.iterable( slice ).cursor();
 
 			while ( cursor.hasNext() ) {
@@ -134,7 +132,7 @@ public class FlowComputation {
 				if ( isMaximum ) {
 
 					localMaxList
-							.add( new LocalMaximaQuartet( cursor.getIntPosition( 0 ), cursor.getIntPosition( 0 ), ( int ) pos, centerValue.get() ) );
+							.add( new LocalMaximaQuartet( cursor.getIntPosition( 0 ), cursor.getIntPosition( 1 ), ( int ) pos, centerValue.get() ) );
 				}
 			}
 
@@ -158,12 +156,12 @@ public class FlowComputation {
 	}
 
 	private static ArrayList< LocalMaximaQuartet > thresholdedMaxima( ArrayList< LocalMaximaQuartet > a, float threshold ) {
+		ArrayList< LocalMaximaQuartet > thresholdedMaxima = new ArrayList<>();
 		int i = 0;
 		while ( i < a.size() ) {
-			if ( a.get( i ).getV() < threshold )
-				a.remove( i );
-			else
-				i++;
+			if ( a.get( i ).getV() >= threshold )
+				thresholdedMaxima.add( a.get( i ) );
+			i++;
 		}
 
 		return a;

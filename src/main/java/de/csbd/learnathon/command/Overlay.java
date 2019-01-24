@@ -7,8 +7,6 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.List;
 
-import org.scijava.util.ColorRGBA;
-
 import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvHandlePanel;
@@ -96,6 +94,16 @@ public class Overlay {
 							( int ) ( gPos[ 1 ] - model.radius ),
 							model.radius * 2,
 							model.radius * 2 );
+
+					if ( allPuncta.get( i ).getT() == curentTime ) {
+						g.setStroke(
+								new BasicStroke( model.lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
+						g.drawOval(
+								( int ) ( gPos[ 0 ] - model.radius - 4 ),
+								( int ) ( gPos[ 1 ] - model.radius - 4 ),
+								model.radius * 2 + 8,
+								model.radius * 2 + 8 );
+					}
 
 				}
 
