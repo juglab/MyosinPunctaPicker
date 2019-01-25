@@ -1,21 +1,27 @@
 package de.csbd.learnathon.command;
 
 import java.awt.BorderLayout;
+import java.awt.Event;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.io.File;
 import java.util.List;
 import java.util.logging.Logger;
 
+import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
+import javax.swing.KeyStroke;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
 
@@ -174,36 +180,6 @@ public class PunctaPickerView {
 		final JButton bStartPickingPuncta = initPunctaPickingButton();
 		helper.add( bStartPickingPuncta, gbc5 );
 
-		final GridBagConstraints gbc6 = new GridBagConstraints();
-		gbc6.fill = GridBagConstraints.HORIZONTAL;
-		gbc6.gridwidth = 2;
-		gbc6.anchor = GridBagConstraints.NORTHWEST;
-		gbc6.insets = new Insets( 5, 5, 5, 5 );
-		gbc6.gridx = 0;
-		gbc6.gridy = 6;
-		final JButton bPreviousTime = initPreviousTimeButton();
-		helper.add( bPreviousTime, gbc6 );
-
-		final GridBagConstraints gbc7 = new GridBagConstraints();
-		gbc7.fill = GridBagConstraints.HORIZONTAL;
-		gbc7.gridwidth = 2;
-		gbc7.anchor = GridBagConstraints.NORTHWEST;
-		gbc7.insets = new Insets( 5, 5, 5, 5 );
-		gbc7.gridx = 2;
-		gbc7.gridy = 6;
-		final JButton bNextTime = initNextTimeButton();
-		helper.add( bNextTime, gbc7 );
-
-		final GridBagConstraints gbc9 = new GridBagConstraints();
-		gbc9.fill = GridBagConstraints.HORIZONTAL;
-		gbc9.gridwidth = 2;
-		gbc9.anchor = GridBagConstraints.NORTHWEST;
-		gbc9.insets = new Insets( 5, 5, 5, 5 );
-		gbc9.gridx = 0;
-		gbc9.gridy = 8;
-		final JButton bModify = initModify();
-		helper.add( bModify, gbc9 );
-
 		final GridBagConstraints gbc10 = new GridBagConstraints();
 		gbc10.fill = GridBagConstraints.HORIZONTAL;
 		gbc10.gridwidth = 2;
@@ -272,132 +248,100 @@ public class PunctaPickerView {
 	}
 
 	private JButton initSelectTrackletsButton() {
-		final JButton bSelectTracklet = new JButton( "Select a tracklet" );
-//		bSelectTracklet.setMnemonic( KeyEvent.VK_T );
-		bSelectTracklet.addActionListener( new ActionListener() {
+
+		KeyStroke keySelectTracklet = KeyStroke.getKeyStroke( KeyEvent.VK_V, Event.CTRL_MASK );
+		Action performSelectTracklet = new AbstractAction( "Select a tracklet" ) {
 
 			@Override
-			public void actionPerformed( final ActionEvent e ) {
+			public void actionPerformed( ActionEvent e ) {
 				model.setActionIndicator( PunctaPickerModel.ACTION_SELECT );
 				getOverlay().refreshBdv();
 			}
-
-		} );
+		};
+		JButton bSelectTracklet = new JButton( performSelectTracklet );
+		bSelectTracklet.getActionMap().put( "performSelectTracklet", performSelectTracklet );
+		bSelectTracklet.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( keySelectTracklet, "performSelectTracklet" );
 		return bSelectTracklet;
 	}
 
 	private JButton initDeleteSelectedPunctaButton() {
-		final JButton bDeletePuncta = new JButton( "Delete selected puncta" );
-		bDeletePuncta.addActionListener( new ActionListener() {
+
+		KeyStroke keyDeletePuncta = KeyStroke.getKeyStroke( KeyEvent.VK_X, Event.CTRL_MASK );
+		Action performDeletePuncta = new AbstractAction( "Delete selected puncta" ) {
 
 			@Override
-			public void actionPerformed( final ActionEvent e ) {
+			public void actionPerformed( ActionEvent e ) {
 				model.deleteSelectedPunctaAndEdges();
-				
 				getOverlay().refreshBdv();
-				
-				
-				
 			}
-
-		} );
+		};
+		JButton bDeletePuncta = new JButton( performDeletePuncta );
+		bDeletePuncta.getActionMap().put( "performDeletePuncta", performDeletePuncta );
+		bDeletePuncta.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( keyDeletePuncta, "performDeletePuncta" );
 		return bDeletePuncta;
 	}
 
-	private JButton initModify() {
-		final JButton bModifyTracklet = new JButton( "Modify a tracklet" );
-		bModifyTracklet.addActionListener( new ActionListener() {
-
-			@Override
-			public void actionPerformed( final ActionEvent e ) {
-				model.setActionIndicator( PunctaPickerModel.ACTION_MODIFY );
-			}
-
-		} );
-		return bModifyTracklet;
-
-	}
-
 	private JButton initDelete() {
-		final JButton bDeleteTracklet = new JButton( "Delete a tracklet" );
-		bDeleteTracklet.addActionListener( new ActionListener() {
+
+		KeyStroke keyDeleteTracklet = KeyStroke.getKeyStroke( KeyEvent.VK_D, Event.CTRL_MASK );
+		Action performDeleteTracklet = new AbstractAction( "Delete selected tracklet" ) {
 
 			@Override
-			public void actionPerformed( final ActionEvent e ) {
+			public void actionPerformed( ActionEvent e ) {
 				model.deleteSelectedTracklet();
 				getOverlay().refreshBdv();
-
 			}
-
-		} );
+		};
+		JButton bDeleteTracklet = new JButton( performDeleteTracklet );
+		bDeleteTracklet.getActionMap().put( "performDeleteTracklet", performDeleteTracklet );
+		bDeleteTracklet.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( keyDeleteTracklet, "performDeleteTracklet" );
 		return bDeleteTracklet;
 
 	}
 
 	private JButton initLoadTrackelts() {
-		final JButton bLoadTracklets = new JButton( "Load Tracklets from CSV" );
-		bLoadTracklets.addActionListener( new ActionListener() {
+
+		KeyStroke keyLoadTracklets = KeyStroke.getKeyStroke( KeyEvent.VK_L, Event.CTRL_MASK );
+		Action performLoadTracklets = new AbstractAction( "Load Tracklets from CSV" ) {
 
 			@Override
-			public void actionPerformed( final ActionEvent e ) {
-				
-				JFileChooser jfc = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
+			public void actionPerformed( ActionEvent e ) {
+				JFileChooser jfc = new JFileChooser( FileSystemView.getFileSystemView().getHomeDirectory() );
 				jfc.setDialogTitle( "Load tracklets csv file: " );
-				jfc.setAcceptAllFileFilterUsed(false);
+				jfc.setAcceptAllFileFilterUsed( false );
 				FileNameExtensionFilter filter = new FileNameExtensionFilter( "*.csv", "csv" );
 				jfc.setFileFilter( filter );
-				jfc.addChoosableFileFilter(filter);
+				jfc.addChoosableFileFilter( filter );
 				int returnValue = jfc.showOpenDialog( null );
 				if ( returnValue == JFileChooser.APPROVE_OPTION ) {
 					File selectedFile = jfc.getSelectedFile();
-				
+
 					model.setGraph( CSVReader.loadCSV( selectedFile.getAbsolutePath() ) );
 					getOverlay().refreshBdv();
 				}
 			}
-		} );
+		};
+		JButton bLoadTracklets = new JButton( performLoadTracklets );
+		bLoadTracklets.getActionMap().put( "performLoadTracklets", performLoadTracklets );
+		bLoadTracklets.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( keyLoadTracklets, "performLoadTracklets" );
 		return bLoadTracklets;
-
 	}
 
 	private JButton initSaveTrackletsButton() {
-		final JButton bSaveTracklets = new JButton( "Save tracklets" );
-		bSaveTracklets.addActionListener( new ActionListener() {
+
+		KeyStroke keySaveTracklets = KeyStroke.getKeyStroke( KeyEvent.VK_S, Event.CTRL_MASK );
+		Action performSaveTracklets = new AbstractAction( "Save tracklets to CSV" ) {
 
 			@Override
-			public void actionPerformed( final ActionEvent e ) {
+			public void actionPerformed( ActionEvent e ) {
 				final List< Puncta > allPuncta = model.getPuncta();
 				writeToCSV( allPuncta );
 			}
-		} );
+		};
+		JButton bSaveTracklets = new JButton( performSaveTracklets );
+		bSaveTracklets.getActionMap().put( "performSaveTracklets", performSaveTracklets );
+		bSaveTracklets.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( keySaveTracklets, "performSaveTracklets" );
 		return bSaveTracklets;
-
-	}
-
-	private JButton initNextTimeButton() {
-		final JButton bNextTime = new JButton( "Next time ->" );
-		bNextTime.addActionListener( new ActionListener() {
-
-			@Override
-			public void actionPerformed( final ActionEvent e ) {
-				bdv.getBdvHandle().getViewerPanel().nextTimePoint();
-			}
-		} );
-		return bNextTime;
-
-	}
-
-	private JButton initPreviousTimeButton() {
-		final JButton bPreviousTime = new JButton( "<- Previous time" );
-		bPreviousTime.addActionListener( new ActionListener() {
-
-			@Override
-			public void actionPerformed( final ActionEvent e ) {
-				bdv.getBdvHandle().getViewerPanel().previousTimePoint();
-			}
-		} );
-		return bPreviousTime;
-
 	}
 
 	protected void writeToCSV( final List< Puncta > allPuncta ) {
@@ -414,31 +358,32 @@ public class PunctaPickerView {
 	}
 
 	private JButton initPunctaPickingButton() {
-		final JButton bStartPickingPuncta = new JButton( "Start a new tracklet" );
-		bStartPickingPuncta.addActionListener( new ActionListener() {
+		KeyStroke keyStart = KeyStroke.getKeyStroke( KeyEvent.VK_A, Event.CTRL_MASK );
+		Action performStart = new AbstractAction( "Start a new tracklet" ) {
 
 			@Override
-			public void actionPerformed( final ActionEvent e ) {
+			public void actionPerformed( ActionEvent e ) {
 				model.setActionIndicator( PunctaPickerModel.ACTION_TRACK );
-
 			}
-
-
-
-		} );
+		};
+		JButton bStartPickingPuncta = new JButton( performStart );
+		bStartPickingPuncta.getActionMap().put( "performStart", performStart );
+		bStartPickingPuncta.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( keyStart, "performStart" );
 		return bStartPickingPuncta;
 	}
 
 	private JButton initMoveButton() {
-		final JButton bMoveTime = new JButton( "Move" );
-		bMoveTime.addActionListener( new ActionListener() {
+		KeyStroke keyMove = KeyStroke.getKeyStroke( KeyEvent.VK_Q, Event.CTRL_MASK );
+		Action performMove = new AbstractAction( "Move" ) {
 
 			@Override
-			public void actionPerformed( final ActionEvent e ) {
+			public void actionPerformed( ActionEvent e ) {
 				bdv.getViewerPanel().setTimepoint( Integer.parseInt( tMoveTime.getText() ) );
-
 			}
-		} );
+		};
+		JButton bMoveTime = new JButton( performMove );
+		bMoveTime.getActionMap().put( "performMove", performMove );
+		bMoveTime.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( keyMove, "performMove" );
 		return bMoveTime;
 	}
 

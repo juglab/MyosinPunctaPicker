@@ -22,7 +22,7 @@ public class PunctaPickerController {
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
 		behaviours.install( view.bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {clickAction( x, y );}, "left click", "button1" );
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {rigthClickAction( x, y );}, "rigth click", "P" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {rigthClickAction( x, y );}, "rigth click", "V" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {actionMoveSelectedPuncta( x, y );}, "space click", "SPACE" );
 	
 	}
