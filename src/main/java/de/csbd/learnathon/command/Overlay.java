@@ -70,15 +70,15 @@ public class Overlay {
 					
 					if ( model.getSelectedSubgraph().graphContainsPuncta( allPuncta.get( i ) ) )
 					{
-						Cr=1;
-						Cg=0;
-						Cb=0;
+						Cr = 1;
+						Cg = 0;
+						Cb = 1;
 					}
 					else
 					{
-						Cr=0;
-						Cg=0;
-						Cb=1;
+						Cr = 1;
+						Cg = 1;
+						Cb = 0;
 					}
 					
 
@@ -119,15 +119,15 @@ public class Overlay {
 					t.apply( lPos2, gPos2 );
 					if ( model.getSelectedSubgraph().graphContainsEdge( model.getEdges().get( i ) ) )
 					{
-						Cr=1;
-						Cg=0;
-						Cb=0;
+						Cr = 1;
+						Cg = 0;
+						Cb = 1;
 					}
 					else
 					{
-						Cr=0;
-						Cg=0;
-						Cb=1;
+						Cr = 1;
+						Cg = 1;
+						Cb = 0;
 					}
 					if ( edge.getA().getT() <= info.getTimePointIndex() && edge.getB().getT() <= info.getTimePointIndex() )
 						g.setStroke( new BasicStroke( model.lineThickness ) );

@@ -17,7 +17,6 @@ import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
@@ -145,30 +144,30 @@ public class PunctaPickerView {
 		final JButton bAddPunctaFromCsv = initLoadTrackelts();
 		helper.add( bAddPunctaFromCsv, gbc1 );
 
-		final GridBagConstraints gbc2 = new GridBagConstraints();
-		gbc2.insets = new Insets( 0, 0, 0, 5 );
-		gbc2.gridx = 0;
-		gbc2.gridy = 1;
-		final JLabel label = new JLabel( "Move to time:" );
-		helper.add( label, gbc2 );
-
-		tMoveTime = new JTextField();
-		tMoveTime.setColumns( 4 );
-		tMoveTime.setMinimumSize( tMoveTime.getPreferredSize() );
-		final GridBagConstraints gbc3 = new GridBagConstraints();
-		gbc3.anchor = GridBagConstraints.WEST;
-		gbc3.insets = new Insets( 0, 0, 0, 5 );
-		gbc3.gridx = 1;
-		gbc3.gridy = 1;
-		helper.add( tMoveTime, gbc2 );
-
-		final JButton bMoveTime = initMoveButton();
-		final GridBagConstraints gbc4 = new GridBagConstraints();
-		gbc4.insets = new Insets( 0, 0, 0, 5 );
-		gbc4.anchor = GridBagConstraints.NORTHWEST;
-		gbc4.gridx = 2;
-		gbc4.gridy = 1;
-		helper.add( bMoveTime, gbc4 );
+//		final GridBagConstraints gbc2 = new GridBagConstraints();
+//		gbc2.insets = new Insets( 0, 0, 0, 5 );
+//		gbc2.gridx = 0;
+//		gbc2.gridy = 1;
+//		final JLabel label = new JLabel( "Move to time:" );
+//		helper.add( label, gbc2 );
+//
+//		tMoveTime = new JTextField();
+//		tMoveTime.setColumns( 4 );
+//		tMoveTime.setMinimumSize( tMoveTime.getPreferredSize() );
+//		final GridBagConstraints gbc3 = new GridBagConstraints();
+//		gbc3.anchor = GridBagConstraints.WEST;
+//		gbc3.insets = new Insets( 0, 0, 0, 5 );
+//		gbc3.gridx = 1;
+//		gbc3.gridy = 1;
+//		helper.add( tMoveTime, gbc2 );
+//
+//		final JButton bMoveTime = initMoveButton();
+//		final GridBagConstraints gbc4 = new GridBagConstraints();
+//		gbc4.insets = new Insets( 0, 0, 0, 5 );
+//		gbc4.anchor = GridBagConstraints.NORTHWEST;
+//		gbc4.gridx = 2;
+//		gbc4.gridy = 1;
+//		helper.add( bMoveTime, gbc4 );
 
 		final GridBagConstraints gbc5 = new GridBagConstraints();
 		gbc5.fill = GridBagConstraints.HORIZONTAL;
@@ -229,6 +228,16 @@ public class PunctaPickerView {
 		gbc13.gridy = 12;
 		final JButton bShowFlow = initShowFlowButton();
 		helper.add( bShowFlow, gbc13 );
+
+		final GridBagConstraints gbc14 = new GridBagConstraints();
+		gbc14.fill = GridBagConstraints.HORIZONTAL;
+		gbc14.gridwidth = 2;
+		gbc14.anchor = GridBagConstraints.NORTHWEST;
+		gbc14.insets = new Insets( 5, 5, 5, 5 );
+		gbc14.gridx = 0;
+		gbc14.gridy = 13;
+		final JButton bLoadOld = initLoadOldFormatButton();
+		helper.add( bLoadOld, gbc14 );
 
 		return helper;
 	}
@@ -385,6 +394,36 @@ public class PunctaPickerView {
 		bMoveTime.getActionMap().put( "performMove", performMove );
 		bMoveTime.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( keyMove, "performMove" );
 		return bMoveTime;
+	}
+
+	private JButton initLoadOldFormatButton() {
+		KeyStroke keyLoadOld = KeyStroke.getKeyStroke( KeyEvent.VK_O, Event.CTRL_MASK );
+		Action performLoadOld = new AbstractAction( "Load Old tracks from CSV" ) {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				JFileChooser jfc = new JFileChooser( FileSystemView.getFileSystemView().getHomeDirectory() );
+				jfc.setDialogTitle( "Load old tracks from csv file: " );
+				jfc.setMultiSelectionEnabled( true );
+				jfc.setAcceptAllFileFilterUsed( false );
+				FileNameExtensionFilter filter = new FileNameExtensionFilter( "*.csv", "csv" );
+				jfc.setFileFilter( filter );
+				jfc.addChoosableFileFilter( filter );
+				int returnValue = jfc.showOpenDialog( null );
+//				File[] files = jfc.getSelectedFiles();
+//				if ( returnValue == JFileChooser.APPROVE_OPTION ) {
+				File[] selectedFiles = jfc.getSelectedFiles();
+				System.out.println( selectedFiles[ 0 ].getAbsolutePath() );
+				System.out.println( selectedFiles[ 1 ].getAbsolutePath() );
+				model.setGraph( CSVReader.loadOldCSVs( selectedFiles[ 0 ].getAbsolutePath(), selectedFiles[ 1 ].getAbsolutePath() ) );
+				getOverlay().refreshBdv();
+//				}
+			}
+		};
+		JButton bLoadOldTracks = new JButton( performLoadOld );
+		bLoadOldTracks.getActionMap().put( "performLoadOldTracks", performLoadOld );
+		bLoadOldTracks.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( keyLoadOld, "performLoadOldTracks" );
+		return bLoadOldTracks;
 	}
 
 
