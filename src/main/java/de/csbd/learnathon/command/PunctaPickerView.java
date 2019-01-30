@@ -74,13 +74,14 @@ public class PunctaPickerView {
 //		context.inject( this );  // WTF am I good for?
 		this.model = m;
 		this.controller = new PunctaPickerController( m, this );
+
 		model.setController( controller );
 		model.setView( this );
+
+		this.overlay = new Overlay( model );
 		bdv = initBdv( model.getRawData() );
-		this.overlay = new Overlay( bdv, m );
+
 		controller.defineBehaviour();
-
-
 	}
 
 	private < T extends RealType< T > & NativeType< T > > BdvHandlePanel initBdv( final RandomAccessibleInterval< T > img ) {
@@ -94,6 +95,9 @@ public class PunctaPickerView {
 
 		source.setDisplayRangeBounds( 0, max.getRealFloat() );
 		source.setDisplayRange( min.getRealFloat(), max.getRealFloat() );
+
+		BdvFunctions.showOverlay( overlay, "overlay", Bdv.options().addTo( bdv ) );
+
 		return bdv;
 	}
 
@@ -263,8 +267,7 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				model.setActionIndicator( PunctaPickerModel.ACTION_SELECT );
-				getOverlay().refreshBdv();
+				controller.setActionIndicator( PunctaPickerController.ACTION_SELECT );
 			}
 		};
 		JButton bSelectTracklet = new JButton( performSelectTracklet );
@@ -280,8 +283,7 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				model.deleteSelectedPunctaAndEdges();
-				getOverlay().refreshBdv();
+				model.getGraph().deleteSelectedElements();
 			}
 		};
 		JButton bDeletePuncta = new JButton( performDeletePuncta );
@@ -297,8 +299,7 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				model.deleteSelectedTracklet();
-				getOverlay().refreshBdv();
+				model.getGraph().deleteSelectedElements();
 			}
 		};
 		JButton bDeleteTracklet = new JButton( performDeleteTracklet );
@@ -326,7 +327,6 @@ public class PunctaPickerView {
 					File selectedFile = jfc.getSelectedFile();
 
 					model.setGraph( CSVReader.loadCSV( selectedFile.getAbsolutePath() ) );
-					getOverlay().refreshBdv();
 				}
 			}
 		};
@@ -343,7 +343,7 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				final List< Puncta > allPuncta = model.getPuncta();
+				final List< Puncta > allPuncta = model.getGraph().getPunctas();
 				writeToCSV( allPuncta );
 			}
 		};
@@ -362,7 +362,7 @@ public class PunctaPickerView {
 
 		String path = chooser.getSelectedFile().getAbsolutePath();
 		String filename = chooser.getSelectedFile().getName();
-		CSVWriter.writeCsvFile( path + filename + ".csv", allPuncta, model.getEdges() );
+		CSVWriter.writeCsvFile( path + filename + ".csv", allPuncta, model.getGraph().getEdges() );
 		System.out.println( path + filename + ".csv" );
 	}
 
@@ -372,7 +372,7 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				model.setActionIndicator( PunctaPickerModel.ACTION_TRACK );
+				controller.setActionIndicator( PunctaPickerController.ACTION_TRACK );
 			}
 		};
 		JButton bStartPickingPuncta = new JButton( performStart );
@@ -416,7 +416,6 @@ public class PunctaPickerView {
 				System.out.println( selectedFiles[ 0 ].getAbsolutePath() );
 				System.out.println( selectedFiles[ 1 ].getAbsolutePath() );
 				model.setGraph( CSVReader.loadOldCSVs( selectedFiles[ 0 ].getAbsolutePath(), selectedFiles[ 1 ].getAbsolutePath() ) );
-				getOverlay().refreshBdv();
 //				}
 			}
 		};
@@ -425,8 +424,6 @@ public class PunctaPickerView {
 		bLoadOldTracks.getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW ).put( keyLoadOld, "performLoadOldTracks" );
 		return bLoadOldTracks;
 	}
-
-
 
 	public void close() {
 		bdv.close();

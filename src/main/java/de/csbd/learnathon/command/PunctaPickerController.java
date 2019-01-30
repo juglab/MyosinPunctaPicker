@@ -6,8 +6,14 @@ import org.scijava.ui.behaviour.util.Behaviours;
 
 import bdv.viewer.state.ViewerState;
 import net.imglib2.RealPoint;
+import net.imglib2.util.Pair;
 
 public class PunctaPickerController {
+
+	public static String ACTION_NONE = "none";
+	public static String ACTION_TRACK = "track";
+	public static String ACTION_SELECT = "select";
+	private String actionIndicator = ACTION_NONE;
 
 	private RealPoint pos;
 	private PunctaPickerModel model;
@@ -21,126 +27,98 @@ public class PunctaPickerController {
 	public void defineBehaviour() {
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
 		behaviours.install( view.bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {clickAction( x, y );}, "left click", "button1" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
-			rigthClickAction( x, y );
+			clickAction( x, y );
+		}, "left click", "button1" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
+			actionSelectClosestSubgraph( x, y );
 		}, "rigth click", "button3" );
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {actionMoveSelectedPuncta( x, y );}, "space click", "SPACE" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
+			actionMoveLeadPuncta( x, y );
+		}, "space click", "SPACE" );
 	
 	}
 	
-	private void clickAction( int x, int y ) {
-		if ( model.getActionIndicator().equals( PunctaPickerModel.ACTION_MODIFY ) ) {
-
+	private void clickAction( int x, int y ) { // TODO clickAction and actionClick might not be self expainatory... ;)
+		if ( actionIndicator.equals( ACTION_SELECT ) ) {
+			actionSelectClosestSubgraph( x, y );
+		} else if ( actionIndicator.equals( ACTION_TRACK ) ) {
+			actionClick( x, y );
 		}
-
-		else if ( model.getActionIndicator().equals( PunctaPickerModel.ACTION_SELECT ) ) {
-
-			actionSelect( x, y );
-		}
-
-		else if ( model.getActionIndicator().equals( PunctaPickerModel.ACTION_TRACK ) ) {
-			actionTrack( x, y );
-				}
-
 	}
 	
-	private void rigthClickAction( int x, int y ) {
-			actionSelect( x, y );
-	}
-	
-
-	
-
 	/**
-	 * @param x
-	 * @param y
+	 * Sets one of the ACTION_* strings statically defined in this class.
+	 * 
+	 * @param s
+	 *            any of the ACTION_* strings defined in this class
 	 */
-	private void actionSelect( int x, int y ) {
-		if ( !model.getPuncta().isEmpty() ) {
+	public void setActionIndicator( String s ) {
+		actionIndicator = s;
+	}
+
+	public String getActionIndicator() {
+		return actionIndicator;
+	}
+
+	private void actionSelectClosestSubgraph( int x, int y ) {
+		Graph g = model.getGraph();
+
+		if ( !g.getPunctas().isEmpty() ) {
 			view.bdv.getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
-			Puncta minDistPuncta = model.getClosestPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getPuncta() );
-			if ( model.radius > ( model.getClosestPunctaDist( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getPuncta() ) ) ) {
-				model.setSelectedPuncta( minDistPuncta );
-				Graph selectedTracklet = model.getGraph();
-				selectedTracklet = selectedTracklet.selectSubgraphContaining( minDistPuncta );
-				model.selectSubgraph( selectedTracklet );
-			} else {
-				model.setSelectedPuncta( new Puncta() );
-				model.selectSubgraph( new Graph() );
+
+			Pair<Puncta,Double> minEval = PPGraphUtils.getClosestPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), g.getPunctas() );
+			if ( minEval != null ) {
+				Puncta minDistPuncta = minEval.getA();
+				double minDist = Math.sqrt( minEval.getB() );
+				if ( minDistPuncta.getR() >= minDist ) {
+					minDistPuncta.setSelected( true );
+					g.selectSubgraphContaining( minDistPuncta );
+				}
+				view.bdv.getViewerPanel().setTimepoint( minDistPuncta.getT() );
 			}
-			view.getOverlay().paint();
-			view.getOverlay().refreshBdv();
-			if ( !model.getSelectedPuncta().isEmpty() )
-				view.bdv.getViewerPanel().setTimepoint( model.getSelectedPuncta().getT() );
-			
-			
 		}
 	}
 
-	private void actionTrack( int x, int y ) {
+	private void actionClick( int x, int y ) {
 		pos = new RealPoint( 3 );
 		view.bdv.getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
 		ViewerState state = view.bdv.getBdvHandle().getViewerPanel().getState();
+
 		int t = state.getCurrentTimepoint();
-		Puncta pOld = model.getLatestPuncta();
-		Puncta p;
-		if ( !model.getPunctaAtTime( t ).isEmpty() ) {
-			if ( model.getClosestPunctaDist( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getPunctaAtTime( t ) ) < model.radius ) {
-				p = model.getClosestPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getPunctaAtTime( t ) );
-				mergeTrack( t, pOld, p );
-			
+		Graph g = model.getGraph();
+		Puncta pOld = g.getLeadSelectedPuncta();
+
+		if ( !g.getPunctaAtTime( t ).isEmpty() ) {
+			Pair<Puncta,Double> min = PPGraphUtils.getClosestPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), g.getPunctaAtTime( t ) );
+
+			if ( min.getB() < min.getA().getR() ) {
+				addSelectedEdge( g, pOld, min.getA() );
 			}
-			else
-				p = continueOriginalTrack( t, pOld );
-		} else {
-			p = continueOriginalTrack( t, pOld );
+			return;
 		}
-			
 
+		Puncta pNew = new Puncta( x, y, t, model.getDefaultRadius() );
+		model.getGraph().addPuncta( pNew );
+		if ( pOld != null ) addSelectedEdge( g, pOld, pNew );
 
-		Graph selectedTracklet = model.getGraph();
-		selectedTracklet = selectedTracklet.selectSubgraphContaining( p );
-		model.selectSubgraph( selectedTracklet );
-		model.setSelectedPuncta( p );
-		view.getOverlay().paint();
 		view.bdv.getViewerPanel().nextTimePoint();
 	}
 
-	private void mergeTrack( int t, Puncta pOld, Puncta nearestP ) {
-		model.addEdge( pOld, nearestP );
-		model.setLatest( nearestP );
-
-	}
-
-	private Puncta continueOriginalTrack( int t, Puncta pOld ) {
-		Puncta p = new Puncta();
-		int numTimepoints = view.bdv.getViewerPanel().getState().getNumTimepoints();
-		if ( pOld != null ) {
-			if ( !( t == numTimepoints - 1 && pOld.getT() == numTimepoints - 1 ) ) {
-				p = model.addPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t );
-				if ( pOld.getT() == p.getT() - 1 ) {
-					model.addEdge( pOld, p );
-				}
-			}
-		} else {
-			p = model.addPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t );
-				}
-		return p;
+	private void addSelectedEdge( Graph g, Puncta p1, Puncta p2 ) {
+		Edge newE = new Edge( p1, p2 );
+		p1.setSelected( true );
+		p2.setSelected( true );
+		g.addEdge( newE );
+		newE.setSelected( true );
 	}
 	
-	
-	
-	
-	
-	public void actionMoveSelectedPuncta( int x, int y )
+	public void actionMoveLeadPuncta( int x, int y )
 	{
 		view.bdv.getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
-		model.getSelectedPuncta().setX(pos.getFloatPosition(0));
-		model.getSelectedPuncta().setY(pos.getFloatPosition(1));
-		view.getOverlay().refreshBdv();
+		Puncta lsp = model.getGraph().getLeadSelectedPuncta();
+		lsp.setX( pos.getFloatPosition( 0 ) );
+		lsp.setY( pos.getFloatPosition( 1 ) );
+//		view.getOverlay().refreshBdv();
 	}
-	
-	
-
 }

@@ -43,7 +43,7 @@ public class FlowComputation {
 		float sigma = 2;
 		RandomAccessibleInterval< DoubleType > smoothed_img = gaussian_smoothing2D( img, sigma );
 		localMaxima = findLocalMax( img, 20 );
-		thresholdedLocalMaxima = thresholdedMaxima( localMaxima, 205 );
+		thresholdedLocalMaxima = thresholdedMaxima( localMaxima, 150 );
 		sparseFlow = templateMatching( smoothed_img, thresholdedLocalMaxima );
 //		denseFlow = interpolateFlowNN( sparseFlow, smoothed_img );
 //		denseFlow = interpolateFlowkNN( sparseFlow, smoothed_img );
@@ -297,25 +297,26 @@ public class FlowComputation {
 			ArrayList< FlowVector > sparseFlow,
 			RandomAccessibleInterval< DoubleType > image ) {
 		ArrayList< RandomAccessibleInterval< DoubleType > > slices = new ArrayList< RandomAccessibleInterval< DoubleType > >();
-		for ( long pos = 0; pos < image.dimension( 2 ) - 1; pos++ ) {
+		for ( long pos = 0; pos < image.dimension( 2 ) - 1; ++pos ) {
 			System.out.println( pos );
 
 			RandomAccessibleInterval< DoubleType > slice = Views.hyperSlice( image, 2, pos );
 			final ImgFactory< DoubleType > imgFactory = new CellImgFactory<>( new DoubleType(), 5 );
-			final Img< DoubleType > img1 = imgFactory.create( slice.dimension( 0 ), slice.dimension( 1 ) );
-			final Img< DoubleType > img2 = imgFactory.create( slice.dimension( 0 ), slice.dimension( 1 ) );
+			final Img< DoubleType > sliceU = imgFactory.create( slice.dimension( 0 ), slice.dimension( 1 ) );
+			final Img< DoubleType > sliceV = imgFactory.create( slice.dimension( 0 ), slice.dimension( 1 ) );
 
 			int size = 0;
 			for ( FlowVector f : sparseFlow ) {
 				if ( f.getT() == pos )
 					size++;
 			}
-			System.out.println( size );
+
 			double[][] srcPts = new double[ 2 ][ size ];
 			double[][] tgtPts = new double[ 2 ][ size ];
 			int i = 0;
+			System.out.println( srcPts[ 1 ].length );
 			for ( int k = 0; k < sparseFlow.size(); k++ ) {
-				if ( sparseFlow.get( i ).getT() == pos ) {
+				if ( sparseFlow.get( k ).getT() == pos ) {
 					srcPts[ 0 ][ i ] = sparseFlow.get( i ).getX();
 					srcPts[ 1 ][ i ] = sparseFlow.get( i ).getY();
 					tgtPts[ 0 ][ i ] = sparseFlow.get( i ).getX() + sparseFlow.get( i ).getU();
@@ -325,9 +326,9 @@ public class FlowComputation {
 			}
 
 			ThinPlateR2LogRSplineKernelTransform tps = new ThinPlateR2LogRSplineKernelTransform( 2, srcPts, tgtPts, true );
-			System.out.println( pos );
-			Cursor< DoubleType > cursor1 = Views.iterable( img1 ).cursor();
-			Cursor< DoubleType > cursor2 = Views.iterable( img2 ).cursor();
+//			System.out.println( pos );
+			Cursor< DoubleType > cursor1 = Views.iterable( sliceU ).cursor();
+			Cursor< DoubleType > cursor2 = Views.iterable( sliceV ).cursor();
 
 			while ( cursor1.hasNext() ) {
 				cursor1.fwd();
@@ -341,8 +342,8 @@ public class FlowComputation {
 				cursor1.get().set( output[ 0 ] - position[ 0 ] );
 				cursor2.get().set( output[ 1 ] - position[ 1 ] );
 			}
-			slices.add( img1 );
-			slices.add( img2 );
+			slices.add( sliceU );
+			slices.add( sliceV );
 		}
 
 		RandomAccessibleInterval< DoubleType > stack = Views.stack( slices );

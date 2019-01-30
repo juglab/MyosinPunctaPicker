@@ -44,9 +44,9 @@ public class CSVWriter {
 			fileWriter.append( NEW_LINE_SEPARATOR );
 			
 			for ( Edge e :  edgeList ) {
-				fileWriter.append( String.valueOf( punctaList.indexOf(e.pA)) );			
+				fileWriter.append( String.valueOf( punctaList.indexOf( e.getA() ) ) );
 				fileWriter.append( COMMA_DELIMITER );
-				fileWriter.append( String.valueOf( punctaList.indexOf(e.pB)) );	
+				fileWriter.append( String.valueOf( punctaList.indexOf( e.getB() ) ) );
 				fileWriter.append( NEW_LINE_SEPARATOR );
 			}
 

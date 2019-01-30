@@ -1,109 +1,107 @@
 package de.csbd.learnathon.command;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class Graph {
 
-	List< Puncta > punctaList;
-	List< Edge > edgeList;
+	private List< Puncta > punctas;
+	private List< Edge > edges;
+
+	// Lead selection is used as endpoint for new edges being added.
+	private Puncta punctaLeadSelected;
+	// Holds the latest puncta that was hovered over.
+	private Puncta punctaMouseSelected;
+
+	// Explain what the heck this is
+	private Puncta latest;
 
 	public Graph() {
-		this.punctaList = new ArrayList<>();
-		this.edgeList = new ArrayList<>();
+		this.punctas = new ArrayList<>();
+		this.edges = new ArrayList<>();
+
 	}
 
 	public Graph( List< Puncta > p, List< Edge > e ) {
-		this.punctaList = p;
-		this.edgeList = e;
+		this.punctas = p;
+		this.edges = e;
 	}
 
-	public List< Puncta > getPunctaList() {
-		return punctaList;
+	public List< Puncta > getPunctas() {
+		return punctas;
 	}
 
-	public List< Edge > getEdgeList() {
-		return edgeList;
+	public List< Edge > getEdges() {
+		return edges;
 	}
 
 	public void mergeGraph( Graph g ) {
-		punctaList.addAll( g.getPunctaList() );
-		edgeList.addAll( g.getEdgeList() );
+		punctas.addAll( g.getPunctas() );
+		edges.addAll( g.getEdges() );
 
 	}
 
-	// To select the subgraph associated with a tracklet
 	public void addEdges( List< Edge > edges ) {
-		edgeList.addAll( edges );
+		edges.addAll( edges );
 	}
 
 	public void addPunctas( List< Puncta > punctas ) {
-		punctaList.addAll( punctas );
+		punctas.addAll( punctas );
 	}
 
 	public void addEdge( Edge edge ) {
-		edgeList.add( edge );
+		edges.add( edge );
 	}
 
 	public void addPuncta( Puncta puncta ) {
-		punctaList.add( puncta );
+		punctas.add( puncta );
 	}
 
 	public void removeEdge( Edge e ) {
-		edgeList.remove( e );
+		edges.remove( e );
 	}
 
 	public void removePuncta( Puncta p ) {
-		punctaList.remove( p );
+		punctas.remove( p );
 	}
 
-	public Graph selectSubgraphContaining( Puncta queryPuncta ) {
-		Graph ret = new Graph();
-		ret.addPuncta( queryPuncta );
-		LinkedList< Edge > queueOut = new LinkedList<>();
-		queueOut.addAll( this.getOutEdges( queryPuncta ) );
-		LinkedList< Edge > queueIn = new LinkedList<>();
-		queueIn.addAll( this.getInEdges( queryPuncta ) );
-		
-		LinkedList< Edge > visitedEdges = new LinkedList<>();
-		
-		while ( !queueIn.isEmpty() || !queueOut.isEmpty()) {
-			if( !queueIn.isEmpty()) {
-				Edge cIn = queueIn.poll();
-				if(!visitedEdges.contains( cIn )) {
-					ret.addPuncta( cIn.pA );
-					ret.addEdge( cIn );
-					queueIn.addAll( getInEdges( cIn.pA ) );
-					for ( Edge e : getOutEdges( cIn.pA ) ) {
-						if ( !visitedEdges.contains( e ) )
-							queueOut.add( e );
-					}
-					visitedEdges.add( cIn );
-				}
-			}
-			if( !queueOut.isEmpty()) {
-				Edge cOut = queueOut.poll();
-				if(!visitedEdges.contains( cOut )) {
-					ret.addPuncta( cOut.pB );
-					ret.addEdge( cOut );
-					for ( Edge e : getInEdges( cOut.pB ) ) {
-						if ( !visitedEdges.contains( e ) )
-							queueIn.add( e );
-					}
-					queueOut.addAll( getOutEdges( cOut.pB ) );
-					visitedEdges.add( cOut );
-				}
-			}
+	public void selectSubgraphContaining( Puncta queryPuncta ) {
+		unselectAll();
 
+		Set< Puncta > visited = new HashSet<>();
+		visited.add( queryPuncta );
+		queryPuncta.setSelected( true );
+
+		LinkedList< Edge > queue = new LinkedList<>();
+		queue.addAll( this.getAdjecentEdges( queryPuncta ) );
+		while ( !queue.isEmpty() ) {
+			Edge cIn = queue.poll();
+			cIn.setSelected( true );
+
+			if ( !visited.contains( cIn.getA() ) ) {
+				queue.addAll( getAdjecentEdges( cIn.getA() ) );
+				visited.add( cIn.getA() );
+			}
+			if ( !visited.contains( cIn.getB() ) ) {
+				queue.addAll( getAdjecentEdges( cIn.getB() ) );
+				visited.add( cIn.getB() );
+			}
 		}
-		return ret;
+	}
+
+	private void unselectAll() {
+		for ( Edge edge : edges ) {
+			edge.setSelected( false );
+		}
 	}
 
 	private List< Edge > getOutEdges( Puncta queryPuncta ) {
 		List< Edge > ret = new ArrayList<>();
-		for ( Edge edge : edgeList ) {
-			if ( edge.pA.equals( queryPuncta ) ) {
+		for ( Edge edge : edges ) {
+			if ( edge.getA().equals( queryPuncta ) ) {
 				ret.add( edge );
 			}
 		}
@@ -112,8 +110,8 @@ public class Graph {
 
 	private List< Edge > getInEdges( Puncta queryPuncta ) {
 		List< Edge > ret = new ArrayList<>();
-		for ( Edge edge : edgeList ) {
-			if ( edge.pB.equals( queryPuncta ) ) {
+		for ( Edge edge : edges ) {
+			if ( edge.getB().equals( queryPuncta ) ) {
 				ret.add( edge );
 			}
 		}
@@ -127,10 +125,49 @@ public class Graph {
 	}
 
 	public boolean graphContainsPuncta( Puncta p ) {
-		return punctaList.contains( p );
+		return punctas.contains( p );
 	}
 
 	public boolean graphContainsEdge( Edge e ) {
-		return edgeList.contains( e );
+		return edges.contains( e );
 	}
+
+	public void deleteSelectedElements() {
+		for ( Edge edge : edges ) {
+			if ( edge.isSelected() ) {
+				removeEdge( edge );
+			}
+		}
+		for ( Puncta puncta : punctas ) {
+			if ( puncta.isSelected() ) {
+				removePuncta( puncta );
+			}
+		}
+	}
+
+	public List< Puncta > getPunctaAtTime( int t ) {
+		ArrayList< Puncta > ret = new ArrayList< Puncta >();
+		for ( Puncta p : punctas ) {
+			if ( p.getT() == t )
+				ret.add( p );
+		}
+		return ret;
+	}
+
+	public Puncta getLeadSelectedPuncta() {
+		return punctaLeadSelected;
+	}
+
+	public Puncta getMouseSelectedPuncta() {
+		return punctaMouseSelected;
+	}
+
+	public void setLeadSelectedPuncta( Puncta p ) {
+		punctaLeadSelected = p;
+	}
+
+	public void setMouseSelectedPuncta( Puncta p ) {
+		punctaMouseSelected = p;
+	}
+
 }

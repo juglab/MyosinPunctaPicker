@@ -8,6 +8,8 @@ import java.util.ArrayList;
 
 public class CSVReader {
 
+	public static float defaultRadius = 15f; // TODO this need thinking
+
 	public static Graph loadCSV( String filename ) {
 
 		String COMMA_DELIMITER = ",";
@@ -29,7 +31,7 @@ public class CSVReader {
 					String[] values = line.split( COMMA_DELIMITER );
 					System.out.println( values[ 0 ] );
 					Puncta p = new Puncta( Float.parseFloat( values[ 1 ] ), Float.parseFloat( values[ 2 ] ), Integer
-							.parseInt( values[ 3 ] ) );
+							.parseInt( values[ 3 ] ), defaultRadius );
 					loadedPunctas.add( p );
 					}
 				else {
@@ -65,7 +67,7 @@ public class CSVReader {
 				lineCounter += 1;
 				String[] values1 = line1.split( COMMA_DELIMITER );
 				Puncta p = new Puncta( Float.parseFloat( values1[ 3 ].trim() ), Float.parseFloat( values1[ 4 ].trim() ), Integer
-						.parseInt( values1[ 7 ].trim() ) );
+						.parseInt( values1[ 7 ].trim() ), defaultRadius );
 				loadedPunctas.add( p );
 			}
 		} catch ( FileNotFoundException e1 ) {
@@ -83,7 +85,7 @@ public class CSVReader {
 
 				String[] values2 = line2.split( COMMA_DELIMITER );
 				Puncta p = new Puncta( Float.parseFloat( values2[ 1 ].trim() ), Float.parseFloat( values2[ 2 ].trim() ), Integer
-						.parseInt( values2[ 4 ].trim() ) );
+						.parseInt( values2[ 4 ].trim() ), defaultRadius );
 				loadedPunctas.add( p );
 			}
 			for ( int count = 0; count < lineCounter; count++ ) {

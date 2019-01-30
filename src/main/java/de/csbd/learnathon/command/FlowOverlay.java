@@ -40,7 +40,7 @@ public class FlowOverlay{
 				
 				if (t<flowData.dimension(2)/2)
 				{
-					int spacing = 30; // at most all 10 pixels
+					int spacing = 10; // spacing between pixels for flow display
 					
 					
 					final AffineTransform2D trans = new AffineTransform2D();
