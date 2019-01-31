@@ -94,14 +94,19 @@ public class PunctaPickerController {
 
 			if ( min.getB() < min.getA().getR() ) {
 				addSelectedEdge( g, pOld, min.getA() );
+				model.getGraph().setLeadSelectedPuncta( min.getA() );
 			}
-			return;
+//			return;
 		}
 
-		Puncta pNew = new Puncta( x, y, t, model.getDefaultRadius() );
+		Puncta pNew = new Puncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t, model.getDefaultRadius() );
+		System.out.println( "Here!" );
 		model.getGraph().addPuncta( pNew );
-		if ( pOld != null ) addSelectedEdge( g, pOld, pNew );
-
+		System.out.println( model.getGraph().getPunctas().size() );
+		model.getGraph().setLeadSelectedPuncta( pNew );//Added by me
+		if ( pOld != null && pOld.getT() < t ) {
+			addSelectedEdge( g, pOld, pNew );
+		}
 		view.bdv.getViewerPanel().nextTimePoint();
 	}
 
@@ -109,6 +114,7 @@ public class PunctaPickerController {
 		Edge newE = new Edge( p1, p2 );
 		p1.setSelected( true );
 		p2.setSelected( true );
+//		g.setLeadSelectedPuncta( p2 ); //Added by me
 		g.addEdge( newE );
 		newE.setSelected( true );
 	}
