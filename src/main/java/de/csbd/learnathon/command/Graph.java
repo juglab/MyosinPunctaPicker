@@ -177,13 +177,10 @@ public class Graph {
 	}
 
 	public void deleteSelectedPuncta() {
-		Iterator< Puncta > iterPuncta = punctas.iterator();
-		while ( iterPuncta.hasNext() ) {
-			Puncta puncta = iterPuncta.next();
-			if ( puncta.isSelected() ) {
-				iterPuncta.remove();
-			}
+		for ( Edge e : getAdjecentEdges( getLeadSelectedPuncta() ) ) {
+			edges.remove( e );
 		}
+		punctas.remove( getLeadSelectedPuncta() );
 		
 	}
 

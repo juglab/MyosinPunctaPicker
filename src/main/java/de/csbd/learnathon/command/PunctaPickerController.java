@@ -73,7 +73,7 @@ public class PunctaPickerController {
 				double minDist = Math.sqrt( minEval.getB() );
 				if ( minDistPuncta.getR() >= minDist ) {
 					minDistPuncta.setSelected( true );
-//					g.setLeadSelectedPuncta( minDistPuncta ); //Let's check
+					g.setLeadSelectedPuncta( minDistPuncta );
 					g.selectSubgraphContaining( minDistPuncta );
 				}
 				view.bdv.getViewerPanel().setTimepoint( minDistPuncta.getT() );
