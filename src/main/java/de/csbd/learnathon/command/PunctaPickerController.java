@@ -32,7 +32,7 @@ public class PunctaPickerController {
 		}, "left click", "button1" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			actionSelectClosestSubgraph( x, y );
-		}, "rigth click", "P" );
+		}, "rigth click", "button3" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			actionMoveLeadPuncta( x, y );
 		}, "space click", "SPACE" );

@@ -2,6 +2,7 @@ package de.csbd.learnathon.command;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -133,14 +134,19 @@ public class Graph {
 	}
 
 	public void deleteSelectedElements() {
-		for ( Edge edge : edges ) {
+		Iterator< Edge > iterEdge = edges.iterator();
+		while ( iterEdge.hasNext() ) {
+			Edge edge = iterEdge.next();
 			if ( edge.isSelected() ) {
-				removeEdge( edge );
+				iterEdge.remove();
 			}
 		}
-		for ( Puncta puncta : punctas ) {
+
+		Iterator< Puncta > iterPuncta = punctas.iterator();
+		while ( iterPuncta.hasNext() ) {
+			Puncta puncta = iterPuncta.next();
 			if ( puncta.isSelected() ) {
-				removePuncta( puncta );
+				iterPuncta.remove();
 			}
 		}
 	}
@@ -168,6 +174,17 @@ public class Graph {
 
 	public void setMouseSelectedPuncta( Puncta p ) {
 		punctaMouseSelected = p;
+	}
+
+	public void deleteSelectedPuncta() {
+		Iterator< Puncta > iterPuncta = punctas.iterator();
+		while ( iterPuncta.hasNext() ) {
+			Puncta puncta = iterPuncta.next();
+			if ( puncta.isSelected() ) {
+				iterPuncta.remove();
+			}
+		}
+		
 	}
 
 }

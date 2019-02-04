@@ -190,7 +190,7 @@ public class PunctaPickerView {
 		gbc10.insets = new Insets( 5, 5, 5, 5 );
 		gbc10.gridx = 0;
 		gbc10.gridy = 9;
-		final JButton bDeleteTracklet = initDelete();
+		final JButton bDeleteTracklet = initDeleteSelectedTracklet();
 		helper.add( bDeleteTracklet, gbc10 );
 
 		final GridBagConstraints gbc8 = new GridBagConstraints();
@@ -283,7 +283,7 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				model.getGraph().deleteSelectedElements();
+				model.getGraph().deleteSelectedPuncta();
 			}
 		};
 		JButton bDeletePuncta = new JButton( performDeletePuncta );
@@ -292,7 +292,7 @@ public class PunctaPickerView {
 		return bDeletePuncta;
 	}
 
-	private JButton initDelete() {
+	private JButton initDeleteSelectedTracklet() {
 
 		KeyStroke keyDeleteTracklet = KeyStroke.getKeyStroke( KeyEvent.VK_D, Event.CTRL_MASK );
 		Action performDeleteTracklet = new AbstractAction( "Delete selected tracklet" ) {
