@@ -92,7 +92,7 @@ public class Graph {
 		}
 	}
 
-	private void unselectAll() {
+	public void unselectAll() {
 		for ( Edge edge : edges ) {
 			edge.setSelected( false );
 		}

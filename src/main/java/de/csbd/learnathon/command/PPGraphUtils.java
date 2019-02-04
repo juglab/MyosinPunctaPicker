@@ -9,6 +9,7 @@ import net.imglib2.util.ValuePair;
 
 public class PPGraphUtils {
 
+	///Check for coordinate system consistency 
 	public static List< Double > getDistanceSqauredToPuncta( float x, float y, List< Puncta > ps ) {
 		ArrayList< Double > ret = new ArrayList<>();
 		for ( Puncta p : ps ) {

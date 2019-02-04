@@ -32,7 +32,7 @@ public class PunctaPickerController {
 		}, "left click", "button1" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			actionSelectClosestSubgraph( x, y );
-		}, "rigth click", "button3" );
+		}, "rigth click", "P" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			actionMoveLeadPuncta( x, y );
 		}, "space click", "SPACE" );
@@ -73,9 +73,11 @@ public class PunctaPickerController {
 				double minDist = Math.sqrt( minEval.getB() );
 				if ( minDistPuncta.getR() >= minDist ) {
 					minDistPuncta.setSelected( true );
+//					g.setLeadSelectedPuncta( minDistPuncta ); //Let's check
 					g.selectSubgraphContaining( minDistPuncta );
 				}
 				view.bdv.getViewerPanel().setTimepoint( minDistPuncta.getT() );
+				view.bdv.getViewerPanel().requestRepaint();
 			}
 		}
 	}
@@ -100,12 +102,15 @@ public class PunctaPickerController {
 		}
 
 		Puncta pNew = new Puncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t, model.getDefaultRadius() );
-		System.out.println( "Here!" );
 		model.getGraph().addPuncta( pNew );
-		System.out.println( model.getGraph().getPunctas().size() );
-		model.getGraph().setLeadSelectedPuncta( pNew );//Added by me
-		if ( pOld != null && pOld.getT() < t ) {
+		model.getGraph().setLeadSelectedPuncta( pNew );
+		pNew.setSelected( true );
+		if ( pOld != null && pOld.getT() == t - 1 ) {
 			addSelectedEdge( g, pOld, pNew );
+		}
+		else {
+			model.getGraph().unselectAll();
+			pNew.setSelected( true );
 		}
 		view.bdv.getViewerPanel().nextTimePoint();
 	}

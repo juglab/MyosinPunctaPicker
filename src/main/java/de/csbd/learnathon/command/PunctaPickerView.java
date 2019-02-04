@@ -388,6 +388,7 @@ public class PunctaPickerView {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
 				bdv.getViewerPanel().setTimepoint( Integer.parseInt( tMoveTime.getText() ) );
+//				bdv.getViewerPanel().requestFocus();
 			}
 		};
 		JButton bMoveTime = new JButton( performMove );
