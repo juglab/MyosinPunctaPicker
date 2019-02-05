@@ -74,30 +74,22 @@ public class PunctaPickerView {
 //		context.inject( this );  // WTF am I good for?
 		this.model = m;
 		this.controller = new PunctaPickerController( m, this );
-
 		model.setController( controller );
 		model.setView( this );
-
 		this.overlay = new Overlay( model );
 		bdv = initBdv( model.getRawData() );
-
 		controller.defineBehaviour();
 	}
 
 	private < T extends RealType< T > & NativeType< T > > BdvHandlePanel initBdv( final RandomAccessibleInterval< T > img ) {
 		final BdvHandlePanel bdv = new BdvHandlePanel( null, Bdv.options().is2D() );
 		final BdvSource source = BdvFunctions.show( img, "img", Bdv.options().addTo( bdv ) );
-
-
 		final T min = Util.getTypeFromInterval( img ).createVariable();
 		final T max = Util.getTypeFromInterval( img ).createVariable();
 		ImglibUtil.computeMinMax( Views.iterable( img ), min, max );
-
 		source.setDisplayRangeBounds( 0, max.getRealFloat() );
 		source.setDisplayRange( min.getRealFloat(), max.getRealFloat() );
-
 		BdvFunctions.showOverlay( overlay, "overlay", Bdv.options().addTo( bdv ) );
-
 		return bdv;
 	}
 
@@ -449,6 +441,7 @@ public class PunctaPickerView {
 	public Overlay getOverlay() {
 		return overlay;
 	}
+
 }
 
 

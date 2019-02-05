@@ -52,8 +52,6 @@ public class FlowGuiCommand implements Command {
 				panel.close();
 			}
 		} );
-
-		frame.setBounds( 100, 100, 1600, 1200 );
 		frame.pack();
 		frame.setVisible( true );
 	}
@@ -61,16 +59,8 @@ public class FlowGuiCommand implements Command {
 	private RandomAccessibleInterval< DoubleType > toDoubleType( final RandomAccessibleInterval< ? extends RealType< ? > > image ) {
 		if ( Util.getTypeFromInterval( image ) instanceof DoubleType )
 			return ( RandomAccessibleInterval< DoubleType > ) image;
-		
 		RandomAccessibleInterval< DoubleType > image2 = Converters.convert( image, ( i, o ) -> o.setReal( i.getRealDouble() ), new DoubleType() );
-		//RandomAccessibleInterval< T > duplicate = copyImage(image );
 		return image2;
-		
-		//Img< FloatType > duplicate = copyImage( img );
-		
-		
-		
-		
 	}
 	
 	

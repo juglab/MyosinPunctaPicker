@@ -1,5 +1,14 @@
 package de.csbd.learnathon.command;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+
+import javax.swing.AbstractAction;
+import javax.swing.ActionMap;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.KeyStroke;
+
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
@@ -37,6 +46,17 @@ public class PunctaPickerController {
 			actionMoveLeadPuncta( x, y );
 		}, "space click", "SPACE" );
 	
+		InputMap im = view.bdv.getViewerPanel().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW );
+		ActionMap am = view.bdv.getViewerPanel().getActionMap();
+		im.put( KeyStroke.getKeyStroke( KeyEvent.VK_L, 0 ), "Link" );
+		am.put( "Link", new AbstractAction() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				System.out.println( "There is hope!" );
+
+			}
+		} );
 	}
 	
 	private void clickAction( int x, int y ) { // TODO clickAction and actionClick might not be self expainatory... ;)
@@ -119,7 +139,6 @@ public class PunctaPickerController {
 		Edge newE = new Edge( p1, p2 );
 		p1.setSelected( true );
 		p2.setSelected( true );
-//		g.setLeadSelectedPuncta( p2 ); //Added by me
 		g.addEdge( newE );
 		newE.setSelected( true );
 	}

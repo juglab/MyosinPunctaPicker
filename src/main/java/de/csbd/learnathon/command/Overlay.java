@@ -5,14 +5,18 @@ package de.csbd.learnathon.command;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 
 import bdv.util.BdvOverlay;
 import net.imglib2.RealPoint;
 import net.imglib2.realtransform.AffineTransform2D;
+import net.imglib2.util.Pair;
 
-public class Overlay extends BdvOverlay {
+public class Overlay extends BdvOverlay implements MouseMotionListener {
 	
 	private PunctaPickerModel model;
+	private PunctaPickerView view;
 
 	public static float FADE_OUT_ALPHA = 1f;
 	public int radius = 12;
@@ -157,6 +161,26 @@ public class Overlay extends BdvOverlay {
 		}
 		
 		g.drawLine( ( int ) x1_prime, ( int ) y1_prime, ( int ) x2_prime, ( int ) y2_prime );
+	}
+
+	@Override
+	public void mouseDragged( MouseEvent e ) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void mouseMoved( MouseEvent e ) {
+		mouseInsidePuncta();
+
+	}
+
+	private void mouseInsidePuncta() {
+		final RealPoint pos = new RealPoint(3);
+		view.bdv.getViewerPanel().getGlobalMouseCoordinates( pos );
+		Pair< Puncta, Double > closest = PPGraphUtils.getClosestPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getGraph().getPunctas() );
+		if()
+		
 	}
 
 }
