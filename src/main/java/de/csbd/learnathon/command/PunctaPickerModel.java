@@ -21,6 +21,10 @@ public class PunctaPickerModel {
 		this.view = v;
 	}
 
+	public PunctaPickerView getView() {
+		return view;
+	}
+
 	public void setController( PunctaPickerController controller ) {
 		this.controller = controller;
 	}

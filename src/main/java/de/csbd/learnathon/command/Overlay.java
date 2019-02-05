@@ -13,10 +13,9 @@ import net.imglib2.RealPoint;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.util.Pair;
 
-public class Overlay extends BdvOverlay implements MouseMotionListener {
+public class Overlay extends BdvOverlay {
 	
 	private PunctaPickerModel model;
-	private PunctaPickerView view;
 
 	public static float FADE_OUT_ALPHA = 1f;
 	public int radius = 12;
@@ -27,6 +26,7 @@ public class Overlay extends BdvOverlay implements MouseMotionListener {
 	public Overlay( PunctaPickerModel model ) {
 		super();
 		this.model = model;
+		model.getView().getBdv().getViewerPanel().getDisplay().addHandler( new MouseOver() );
 	}
 
 	@Override
@@ -163,23 +163,37 @@ public class Overlay extends BdvOverlay implements MouseMotionListener {
 		g.drawLine( ( int ) x1_prime, ( int ) y1_prime, ( int ) x2_prime, ( int ) y2_prime );
 	}
 
-	@Override
-	public void mouseDragged( MouseEvent e ) {
-		// TODO Auto-generated method stub
+	private class MouseOver implements MouseMotionListener {
 
-	}
+		@Override
+		public void mouseDragged( MouseEvent e ) {
+			// TODO Auto-generated method stub
 
-	@Override
-	public void mouseMoved( MouseEvent e ) {
-		mouseInsidePuncta();
+		}
+
+		@Override
+		public void mouseMoved( MouseEvent e ) {
+			mouseInsidePuncta();
+
+		}
 
 	}
 
 	private void mouseInsidePuncta() {
 		final RealPoint pos = new RealPoint(3);
-		view.bdv.getViewerPanel().getGlobalMouseCoordinates( pos );
-		Pair< Puncta, Double > closest = PPGraphUtils.getClosestPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getGraph().getPunctas() );
-		if()
+		model.getView().getBdv().getViewerPanel().getGlobalMouseCoordinates( pos );
+		if ( !model.getGraph().getPunctas().isEmpty() ) {
+			Pair< Puncta, Double > closest =
+					PPGraphUtils.getClosestPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getGraph().getPunctas() );
+			if ( closest.getB() <= closest.getA().getR() ) {
+				model.getGraph().setMouseSelectedPuncta( closest.getA() );
+				System.out.println( "Yeah!" );
+			}
+			else {
+				System.out.println( "No!" );
+			}
+
+		}
 		
 	}
 

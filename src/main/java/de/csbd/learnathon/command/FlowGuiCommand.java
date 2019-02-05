@@ -41,7 +41,7 @@ public class FlowGuiCommand implements Command {
 	@Override
 	public void run() {
 		model = new PunctaPickerModel( toDoubleType( image.getImgPlus().getImg() ) );
-		panel = new PunctaPickerView( model, context );
+		panel = new PunctaPickerView( model );
 		frame = new JFrame( image.getImgPlus().getSource() );
 		frame.setLayout( new MigLayout( "", "[grow]", "[][]" ) );
 		frame.add( panel.getPanel(), "h 100%, grow, wrap" );

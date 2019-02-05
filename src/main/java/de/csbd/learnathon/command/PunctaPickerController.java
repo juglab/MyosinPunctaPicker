@@ -35,7 +35,7 @@ public class PunctaPickerController {
 
 	public void defineBehaviour() {
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
-		behaviours.install( view.bdv.getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
+		behaviours.install( view.getBdv().getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			clickAction( x, y );
 		}, "left click", "button1" );
@@ -46,8 +46,8 @@ public class PunctaPickerController {
 			actionMoveLeadPuncta( x, y );
 		}, "space click", "SPACE" );
 	
-		InputMap im = view.bdv.getViewerPanel().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW );
-		ActionMap am = view.bdv.getViewerPanel().getActionMap();
+		InputMap im = view.getBdv().getViewerPanel().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW );
+		ActionMap am = view.getBdv().getViewerPanel().getActionMap();
 		im.put( KeyStroke.getKeyStroke( KeyEvent.VK_L, 0 ), "Link" );
 		am.put( "Link", new AbstractAction() {
 
@@ -85,7 +85,7 @@ public class PunctaPickerController {
 		Graph g = model.getGraph();
 
 		if ( !g.getPunctas().isEmpty() ) {
-			view.bdv.getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
+			view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
 
 			Pair<Puncta,Double> minEval = PPGraphUtils.getClosestPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), g.getPunctas() );
 			if ( minEval != null ) {
@@ -96,16 +96,16 @@ public class PunctaPickerController {
 					g.setLeadSelectedPuncta( minDistPuncta );
 					g.selectSubgraphContaining( minDistPuncta );
 				}
-				view.bdv.getViewerPanel().setTimepoint( minDistPuncta.getT() );
-				view.bdv.getViewerPanel().requestRepaint();
+				view.getBdv().getViewerPanel().setTimepoint( minDistPuncta.getT() );
+				view.getBdv().getViewerPanel().requestRepaint();
 			}
 		}
 	}
 
 	private void actionClick( int x, int y ) {
 		pos = new RealPoint( 3 );
-		view.bdv.getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
-		ViewerState state = view.bdv.getBdvHandle().getViewerPanel().getState();
+		view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
+		ViewerState state = view.getBdv().getBdvHandle().getViewerPanel().getState();
 
 		int t = state.getCurrentTimepoint();
 		Graph g = model.getGraph();
@@ -132,7 +132,7 @@ public class PunctaPickerController {
 			model.getGraph().unselectAll();
 			pNew.setSelected( true );
 		}
-		view.bdv.getViewerPanel().nextTimePoint();
+		view.getBdv().getViewerPanel().nextTimePoint();
 	}
 
 	private void addSelectedEdge( Graph g, Puncta p1, Puncta p2 ) {
@@ -145,7 +145,7 @@ public class PunctaPickerController {
 	
 	public void actionMoveLeadPuncta( int x, int y )
 	{
-		view.bdv.getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
+		view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
 		Puncta lsp = model.getGraph().getLeadSelectedPuncta();
 		lsp.setX( pos.getFloatPosition( 0 ) );
 		lsp.setY( pos.getFloatPosition( 1 ) );

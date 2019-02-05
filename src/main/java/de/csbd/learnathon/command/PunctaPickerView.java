@@ -51,7 +51,7 @@ public class PunctaPickerView {
 
 	public Logger log;
 
-	public BdvHandlePanel bdv;
+	public BdvHandlePanel bdv = new BdvHandlePanel( null, Bdv.options().is2D() );
 
 	private JTextField tMoveTime;
 
@@ -69,9 +69,12 @@ public class PunctaPickerView {
 		return reader;
 	}
 
+	public BdvHandlePanel getBdv() {
+		return bdv;
+	}
 
-	public PunctaPickerView( PunctaPickerModel m, final Context context ) {
-//		context.inject( this );  // WTF am I good for?
+
+	public PunctaPickerView( PunctaPickerModel m ) {
 		this.model = m;
 		this.controller = new PunctaPickerController( m, this );
 		model.setController( controller );
@@ -82,7 +85,7 @@ public class PunctaPickerView {
 	}
 
 	private < T extends RealType< T > & NativeType< T > > BdvHandlePanel initBdv( final RandomAccessibleInterval< T > img ) {
-		final BdvHandlePanel bdv = new BdvHandlePanel( null, Bdv.options().is2D() );
+		final BdvHandlePanel bdv = getBdv();
 		final BdvSource source = BdvFunctions.show( img, "img", Bdv.options().addTo( bdv ) );
 		final T min = Util.getTypeFromInterval( img ).createVariable();
 		final T max = Util.getTypeFromInterval( img ).createVariable();
