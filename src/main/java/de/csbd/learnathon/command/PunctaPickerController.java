@@ -54,6 +54,9 @@ public class PunctaPickerController {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
 				System.out.println( "There is hope!" );
+				if ( !model.getGraph().getLeadSelectedPuncta().isEmpty() && !model.getGraph().getMouseSelectedPuncta().isEmpty() ) {
+					model.getGraph().addEdge( new Edge( model.getGraph().getLeadSelectedPuncta(), model.getGraph().getMouseSelectedPuncta() ) );
+				}
 
 			}
 		} );
