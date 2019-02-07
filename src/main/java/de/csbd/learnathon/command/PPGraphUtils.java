@@ -1,6 +1,7 @@
 package de.csbd.learnathon.command;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -36,5 +37,39 @@ public class PPGraphUtils {
 		int minDsId = ds.indexOf( Collections.min( ds ) );
 		if ( minDsId > -1 ) { return new ValuePair<>( ps.get( minDsId ), ds.get( minDsId ) ); }
 		return null;
+	}
+
+	/**
+	 * This method returns true if the collection is null or is empty.
+	 * 
+	 * @param collection
+	 * @return true | false
+	 */
+	public static boolean isEmpty( Collection< ? > collection ) {
+		if ( collection == null || collection.isEmpty() ) { return true; }
+		return false;
+	}
+
+	/**
+	 * This method returns true if the objet is null.
+	 * 
+	 * @param object
+	 * @return true | false
+	 */
+	public static boolean isEmpty( Object object ) {
+		if ( object == null ) { return true; }
+		return false;
+	}
+
+	/**
+	 * This method returns true if the input array is null or its length is
+	 * zero.
+	 * 
+	 * @param array
+	 * @return true | false
+	 */
+	public static boolean isEmpty( Object[] array ) {
+		if ( array == null || array.length == 0 ) { return true; }
+		return false;
 	}
 }
