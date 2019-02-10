@@ -184,4 +184,12 @@ public class Graph {
 		
 	}
 
+	public boolean isEmpty() {
+		if ( punctas.isEmpty() && edges.isEmpty() ) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 }

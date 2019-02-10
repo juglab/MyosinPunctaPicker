@@ -1,9 +1,11 @@
 package de.csbd.learnathon.command;
 
+import java.awt.Dimension;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
+import javax.swing.JPanel;
 
 import org.scijava.Context;
 import org.scijava.command.Command;
@@ -42,9 +44,12 @@ public class FlowGuiCommand implements Command {
 	public void run() {
 		model = new PunctaPickerModel( toDoubleType( image.getImgPlus().getImg() ) );
 		panel = new PunctaPickerView( model );
+		JPanel p = panel.getPanel();
+		p.setMinimumSize( new Dimension( 800, 800 ) );
 		frame = new JFrame( image.getImgPlus().getSource() );
 		frame.setLayout( new MigLayout( "", "[grow]", "[][]" ) );
-		frame.add( panel.getPanel(), "h 100%, grow, wrap" );
+		
+		frame.add( p, "h 100%, grow, wrap" );
 		frame.addWindowListener( new WindowAdapter() {
 
 			@Override
@@ -52,6 +57,8 @@ public class FlowGuiCommand implements Command {
 				panel.close();
 			}
 		} );
+		SimpleMenu smenu = new SimpleMenu( model );
+		frame.setJMenuBar( smenu.createMenuBar() );
 		frame.pack();
 		frame.setVisible( true );
 	}
@@ -63,10 +70,6 @@ public class FlowGuiCommand implements Command {
 		return image2;
 	}
 	
-	
-	
-	
-
 	public static void main( final String... args ) {
 		final ImageJ imageJ = new ImageJ();
 		imageJ.ui().showUI();

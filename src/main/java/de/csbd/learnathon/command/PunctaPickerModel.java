@@ -41,7 +41,7 @@ public class PunctaPickerModel {
 		this.graph = g;
 	}
 
-	public void processFlow() {
+	public void processFlow( String flowMethod ) {
 		FlowComputation flowComputation = new FlowComputation();
 		flowComputation.computeTMFlow( getRawData() );
 		RandomAccessibleInterval< DoubleType > denseFlow = flowComputation.getDenseFlow();

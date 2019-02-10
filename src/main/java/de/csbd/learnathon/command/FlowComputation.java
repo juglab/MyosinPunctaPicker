@@ -45,9 +45,16 @@ public class FlowComputation {
 		localMaxima = findLocalMax( img, 20 );
 		thresholdedLocalMaxima = thresholdedMaxima( localMaxima, 150 );
 		sparseFlow = templateMatching( smoothed_img, thresholdedLocalMaxima );
-//		denseFlow = interpolateFlowNN( sparseFlow, smoothed_img );
-//		denseFlow = interpolateFlowkNN( sparseFlow, smoothed_img );
-		denseFlow = interpolateFlowTPS( sparseFlow, smoothed_img );
+		if ( SimpleMenu.getFlowMethod() == "NN" ) {
+			System.out.println( "NN!" );
+			denseFlow = interpolateFlowNN( sparseFlow, smoothed_img );
+		}
+		if ( SimpleMenu.getFlowMethod() == "kNN" ) {
+			denseFlow = interpolateFlowkNN( sparseFlow, smoothed_img );
+		}
+		if ( SimpleMenu.getFlowMethod() == "TPS" ) {
+			denseFlow = interpolateFlowTPS( sparseFlow, smoothed_img );
+		}
 	}
 
 	public ArrayList< LocalMaximaQuartet > getLocalMaxima() {

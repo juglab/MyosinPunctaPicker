@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 
 import javax.swing.AbstractAction;
+import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
@@ -34,32 +35,64 @@ public class PunctaPickerController {
 	}
 
 	public void defineBehaviour() {
-		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
-		behaviours.install( view.getBdv().getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
-			clickAction( x, y );
-		}, "left click", "button1" );
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
-			actionSelectClosestSubgraph( x, y );
-		}, "rigth click", "button3" );
-		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
-			actionMoveLeadPuncta( x, y );
-		}, "space click", "SPACE" );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_A, 0 ), "Add", new ManualTrackingAction( "Add" ) );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_C, 0 ), "Select", new ManualTrackingAction( "Select" ) );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_SPACE, 0 ), "Move", new ManualTrackingAction( "Move" ) );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_L, 0 ), "Link", new ManualTrackingAction( "Link" ) );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_D, 0 ), "DeleteTracklet", new ManualTrackingAction( "DeleteTracklet" ) );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_X, 0 ), "DeletePuncta", new ManualTrackingAction( "DeletePuncta" ) );
+	}
 	
+	public void registerKeyBinding( KeyStroke keyStroke, String name, Action action ) {
 		InputMap im = view.getBdv().getViewerPanel().getInputMap( JComponent.WHEN_IN_FOCUSED_WINDOW );
 		ActionMap am = view.getBdv().getViewerPanel().getActionMap();
-		im.put( KeyStroke.getKeyStroke( KeyEvent.VK_L, 0 ), "Link" );
-		am.put( "Link", new AbstractAction() {
 
-			@Override
-			public void actionPerformed( ActionEvent e ) {
+		im.put( keyStroke, name );
+		am.put( name, action );
+	}
+
+	public class ManualTrackingAction extends AbstractAction {
+		private String name;
+		public ManualTrackingAction( String name ) {
+			this.name = name;
+		}
+
+		@Override
+		public void actionPerformed( ActionEvent e ) {
+			Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
+			behaviours.install( view.getBdv().getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
+			if ( name == "Add" ) {
+				actionIndicator = "track";
+				behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
+					clickAction( x, y );
+				}, "Add", "A" );
+			}
+			if ( name == "Select" ) {
+				actionIndicator = "select";
+				behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
+					actionSelectClosestSubgraph( x, y );
+				}, "Select", "C" );
+			}
+			if ( name == "Move" ) {
+				behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
+					actionMoveLeadPuncta( x, y );
+				}, "Move", "SPACE" );
+			}
+			if ( name == "Link" ) {
 				if ( !( model.getGraph().getLeadSelectedPuncta() == null ) && !( model.getGraph().getMouseSelectedPuncta() == null ) ) {
 					model.getGraph().addEdge( new Edge( model.getGraph().getLeadSelectedPuncta(), model.getGraph().getMouseSelectedPuncta() ) );
 				}
 			}
-		} );
+			if ( name == "DeleteTracklet" ) {
+				model.getGraph().deleteSelectedElements();
+			}
+			if ( name == "DeletePuncta" ) {
+				model.getGraph().deleteSelectedPuncta();
+			}
+
+		}
 	}
-	
+
 	private void clickAction( int x, int y ) { // TODO clickAction and actionClick might not be self expainatory... ;)
 		if ( actionIndicator.equals( ACTION_SELECT ) ) {
 			actionSelectClosestSubgraph( x, y );
