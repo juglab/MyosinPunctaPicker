@@ -45,7 +45,7 @@ public class FlowGuiCommand implements Command {
 		model = new PunctaPickerModel( toDoubleType( image.getImgPlus().getImg() ) );
 		panel = new PunctaPickerView( model );
 		JPanel p = panel.getPanel();
-		p.setMinimumSize( new Dimension( 800, 800 ) );
+		p.setMinimumSize( new Dimension( 500, 500 ) );
 		frame = new JFrame( image.getImgPlus().getSource() );
 		frame.setLayout( new MigLayout( "", "[grow]", "[][]" ) );
 		

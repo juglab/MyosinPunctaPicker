@@ -93,17 +93,10 @@ public class PunctaPickerView {
 		this.model = model;
 	}
 
-	public CSVWriter getWriter() {
-		return writer;
-	}
-
-	public void setWriter( final CSVWriter writer ) {
-		this.writer = writer;
-	}
-
 	public Overlay getOverlay() {
 		return overlay;
 	}
+
 }
 
 

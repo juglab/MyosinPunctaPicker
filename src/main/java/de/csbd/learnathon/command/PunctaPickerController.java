@@ -36,6 +36,8 @@ public class PunctaPickerController {
 
 	public void defineBehaviour() {
 		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_A, 0 ), "Add", new ManualTrackingAction( "Add" ) );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_E, 0 ), "IncreaseRadius", new ManualTrackingAction( "IncreaseRadius" ) );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_Q, 0 ), "DecreaseRadius", new ManualTrackingAction( "DecreaseRadius" ) );
 		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_C, 0 ), "Select", new ManualTrackingAction( "Select" ) );
 		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_SPACE, 0 ), "Move", new ManualTrackingAction( "Move" ) );
 		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_L, 0 ), "Link", new ManualTrackingAction( "Link" ) );
@@ -67,6 +69,19 @@ public class PunctaPickerController {
 					clickAction( x, y );
 				}, "Add", "A" );
 			}
+			if ( name == "IncreaseRadius" ) {
+				Puncta pun = model.getGraph().getLeadSelectedPuncta();
+				if ( !( pun == null ) ) {
+					pun.setR( pun.getR() * 1.2f );
+					model.getView().getBdv().getViewerPanel().requestRepaint();
+				}
+			}
+			if ( name == "DecreaseRadius" ) {
+				if ( !( model.getGraph().getLeadSelectedPuncta() == null ) ) {
+					model.getGraph().getLeadSelectedPuncta().setR( model.getGraph().getLeadSelectedPuncta().getR() * 0.8f );
+					model.getView().getBdv().getViewerPanel().requestRepaint();
+				}
+			}
 			if ( name == "Select" ) {
 				actionIndicator = "select";
 				behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
@@ -77,17 +92,21 @@ public class PunctaPickerController {
 				behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 					actionMoveLeadPuncta( x, y );
 				}, "Move", "SPACE" );
+				model.getView().getBdv().getViewerPanel().requestRepaint();
 			}
 			if ( name == "Link" ) {
 				if ( !( model.getGraph().getLeadSelectedPuncta() == null ) && !( model.getGraph().getMouseSelectedPuncta() == null ) ) {
 					model.getGraph().addEdge( new Edge( model.getGraph().getLeadSelectedPuncta(), model.getGraph().getMouseSelectedPuncta() ) );
+					model.getView().getBdv().getViewerPanel().requestRepaint();
 				}
 			}
 			if ( name == "DeleteTracklet" ) {
 				model.getGraph().deleteSelectedElements();
+				model.getView().getBdv().getViewerPanel().requestRepaint();
 			}
 			if ( name == "DeletePuncta" ) {
 				model.getGraph().deleteSelectedPuncta();
+				model.getView().getBdv().getViewerPanel().requestRepaint();
 			}
 
 		}
@@ -183,6 +202,5 @@ public class PunctaPickerController {
 		Puncta lsp = model.getGraph().getLeadSelectedPuncta();
 		lsp.setX( pos.getFloatPosition( 0 ) );
 		lsp.setY( pos.getFloatPosition( 1 ) );
-//		view.getOverlay().refreshBdv();
 	}
 }

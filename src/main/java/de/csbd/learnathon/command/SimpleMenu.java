@@ -95,6 +95,12 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem = new JMenuItem( "Select puncta/tracklet -> C" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
+		menuItem = new JMenuItem( "Increase radius of selected puncta -> E" );
+		menuItem.getAccessibleContext().setAccessibleDescription( "" );
+		helpsubmenu.add( menuItem );
+		menuItem = new JMenuItem( "Decrease radius of selected puncta -> Q" );
+		menuItem.getAccessibleContext().setAccessibleDescription( "" );
+		helpsubmenu.add( menuItem );
 		menuItem = new JMenuItem( "Move puncta -> SPACE" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );

@@ -121,12 +121,13 @@ public class Overlay extends BdvOverlay {
 		}
 	}
 
-	protected void drawPeripheralLine( Graphics2D g, float x1, float y1, float x2, float y2, float r1, float r2 ) { // TODO needs to take r2 into account!!!!
+	protected void drawPeripheralLine( Graphics2D g, float x1, float y1, float x2, float y2, float r1, float r2 ) {
 
-		float common_factor2 = r1 / ( float ) Math.sqrt( 1 + ( ( y2 - y1 ) * ( y2 - y1 ) ) / ( ( x2 - x1 ) * ( x2 - x1 ) ) );
+		float common_factor2 = r2 / ( float ) Math.sqrt( 1 + ( ( y2 - y1 ) * ( y2 - y1 ) ) / ( ( x2 - x1 ) * ( x2 - x1 ) ) );
+		float common_factor1 = r1 / ( float ) Math.sqrt( 1 + ( ( y2 - y1 ) * ( y2 - y1 ) ) / ( ( x2 - x1 ) * ( x2 - x1 ) ) );
 
-		float x1_prime1 = x1 + common_factor2;
-		float x1_prime2 = x1 - common_factor2;
+		float x1_prime1 = x1 + common_factor1;
+		float x1_prime2 = x1 - common_factor1;
 		float y1_prime1 = ((y2 -y1)/(x2-x1))*(x1_prime1 - x1) + y1;
 		float y1_prime2 = ((y2 -y1)/(x2-x1))*(x1_prime2 - x1) + y1;
 
@@ -166,10 +167,7 @@ public class Overlay extends BdvOverlay {
 	private class MouseOver implements MouseMotionListener {
 
 		@Override
-		public void mouseDragged( MouseEvent e ) {
-			// TODO Auto-generated method stub
-
-		}
+		public void mouseDragged( MouseEvent e ) {}
 
 		@Override
 		public void mouseMoved( MouseEvent e ) {
