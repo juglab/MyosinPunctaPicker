@@ -43,6 +43,7 @@ public class PunctaPickerController {
 		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_L, 0 ), "Link", new ManualTrackingAction( "Link" ) );
 		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_D, 0 ), "DeleteTracklet", new ManualTrackingAction( "DeleteTracklet" ) );
 		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_X, 0 ), "DeletePuncta", new ManualTrackingAction( "DeletePuncta" ) );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_R, 0 ), "DeleteEdge", new ManualTrackingAction( "DeleteEdge" ) );
 	}
 	
 	public void registerKeyBinding( KeyStroke keyStroke, String name, Action action ) {
@@ -108,6 +109,10 @@ public class PunctaPickerController {
 				model.getGraph().deleteSelectedPuncta();
 				model.getView().getBdv().getViewerPanel().requestRepaint();
 			}
+			if ( name == "DeleteEdge" ) {
+				model.getGraph().removeEdge( model.getGraph().getMouseSelectedEdge() );
+				model.getView().getBdv().getViewerPanel().requestRepaint();
+			}
 
 		}
 	}
@@ -148,8 +153,8 @@ public class PunctaPickerController {
 					minDistPuncta.setSelected( true );
 					g.setLeadSelectedPuncta( minDistPuncta );
 					g.selectSubgraphContaining( minDistPuncta );
+					view.getBdv().getViewerPanel().setTimepoint( minDistPuncta.getT() );
 				}
-				view.getBdv().getViewerPanel().setTimepoint( minDistPuncta.getT() );
 				view.getBdv().getViewerPanel().requestRepaint();
 			}
 		}
@@ -171,7 +176,6 @@ public class PunctaPickerController {
 				addSelectedEdge( g, pOld, min.getA() );
 				model.getGraph().setLeadSelectedPuncta( min.getA() );
 			}
-//			return;
 		}
 
 		Puncta pNew = new Puncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t, model.getDefaultRadius() );
