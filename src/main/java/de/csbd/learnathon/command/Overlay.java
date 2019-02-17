@@ -199,6 +199,8 @@ public class Overlay extends BdvOverlay {
 			Pair< Puncta, Double > closest =
 					PPGraphUtils.getClosestPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getGraph().getPunctas() );
 			if ( closest.getB() <= closest.getA().getR() ) {
+				model.getGraph().setMouseSelectedPuncta( closest.getA() );
+			} else {
 				if ( closest.getA().getT() > model.getGraph().getLeadSelectedPuncta().getT() ) {
 					model.getGraph().setMouseSelectedPuncta( closest.getA() );
 				}

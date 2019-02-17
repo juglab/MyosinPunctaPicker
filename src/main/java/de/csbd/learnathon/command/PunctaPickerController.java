@@ -163,6 +163,8 @@ public class PunctaPickerController {
 	}
 
 	private void actionClick( int x, int y ) {
+
+		System.out.println( "Draw!" );
 		pos = new RealPoint( 3 );
 		view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
 		ViewerState state = view.getBdv().getBdvHandle().getViewerPanel().getState();
