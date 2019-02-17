@@ -16,6 +16,8 @@ public class Graph {
 	private Puncta punctaLeadSelected;
 	// Holds the latest puncta that was hovered over.
 	private Puncta punctaMouseSelected;
+	// Holds the latest edge that was hovered over.
+	private Edge edgeMouseSelected;
 
 	// Explain what the heck this is
 	private Puncta latest;
@@ -182,6 +184,14 @@ public class Graph {
 		}
 		punctas.remove( getLeadSelectedPuncta() );
 		
+	}
+
+	public Edge getMouseSelectedEdge() {
+		return edgeMouseSelected;
+	}
+
+	public void setMouseSelectedEdge( Edge e ) {
+		edgeMouseSelected = e;
 	}
 
 	public boolean isEmpty() {
