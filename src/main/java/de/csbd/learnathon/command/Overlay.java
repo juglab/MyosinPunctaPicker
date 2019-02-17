@@ -34,6 +34,7 @@ public class Overlay extends BdvOverlay {
 
 		final AffineTransform2D t = new AffineTransform2D();
 		getCurrentTransform2D( t );
+		double scale = extractScale( t, 0 );
 
 		final double[] lPos = new double[ 2 ];
 		final double[] gPos = new double[ 2 ];
@@ -43,7 +44,7 @@ public class Overlay extends BdvOverlay {
 		final double[] gPos2 = new double[ 2 ];
 
 		float transparency;
-		final int curentTime = info.getTimePointIndex();;
+		final int curentTime = info.getTimePointIndex();
 
 		for ( Puncta p : model.getGraph().getPunctas() ) {
 			if ( p.getT() <= info.getTimePointIndex() ) {
@@ -68,18 +69,18 @@ public class Overlay extends BdvOverlay {
 			}
 
 			g.drawOval(
-					( int ) ( gPos[ 0 ] - p.getR() ),
-					( int ) ( gPos[ 1 ] - p.getR() ),
-					( int ) p.getR() * 2,
-					( int ) p.getR() * 2 );  // TODO needs to move from pixel coords to BDV coords
+					( int ) ( gPos[ 0 ] - ( p.getR() * scale ) ),
+					( int ) ( gPos[ 1 ] - ( p.getR() * scale ) ),
+					( int ) ( p.getR() * scale * 2 ),
+					( int ) ( p.getR() * scale * 2 ) );  // moves from pixel coords to BDV coords by extractScale method (courtesy Tobi and Manan)
 
 			if ( p.getT() == curentTime ) {
 				g.setStroke( new BasicStroke( lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
 					g.drawOval(
-						( int ) ( gPos[ 0 ] - p.getR() - 4 ),
-						( int ) ( gPos[ 1 ] - p.getR() - 4 ),
-						( int ) p.getR() * 2 + 8,
-						( int ) p.getR() * 2 + 8 );  // TODO needs to move from pixel coords to BDV coords
+						( int ) ( gPos[ 0 ] - (p.getR()*scale) - 4 ),
+						( int ) ( gPos[ 1 ] - (p.getR()*scale) - 4 ),
+						( int ) ( p.getR() * scale * 2 + 8 ),
+						( int ) ( p.getR() * scale * 2 + 8 ) );
 				}
 
 		}
@@ -97,6 +98,9 @@ public class Overlay extends BdvOverlay {
 				g.setStroke( new BasicStroke( lineThickness ) );
 			} else {
 				g.setStroke( new BasicStroke( lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
+			}
+			if ( edge.equals( model.getGraph().getMouseSelectedEdge() ) ) {
+				g.setStroke( new BasicStroke( 2 * lineThickness ) );
 			}
 
 			float d1 = Math.abs( ( float ) curentTime - edge.getA().getT() );
@@ -116,8 +120,8 @@ public class Overlay extends BdvOverlay {
 					( float ) gPos1[ 1 ],
 					( float ) gPos2[ 0 ],
 					( float ) gPos2[ 1 ],
-					edge.getA().getR(),
-					edge.getB().getR() ); // TODO needs to move from pixel coords to BDV coords
+					( float ) ( edge.getA().getR() * scale ),
+					( float ) ( edge.getB().getR() * scale ) );
 		}
 	}
 
@@ -164,6 +168,16 @@ public class Overlay extends BdvOverlay {
 		g.drawLine( ( int ) x1_prime, ( int ) y1_prime, ( int ) x2_prime, ( int ) y2_prime );
 	}
 
+	public static double extractScale( final AffineTransform2D transform, final int axis ) {
+		double sqSum = 0;
+		final int c = axis;
+		for ( int r = 0; r < 4; ++r ) {
+			final double x = transform.get( r, c );
+			sqSum += x * x;
+		}
+		return Math.sqrt( sqSum );
+	}
+
 	private class MouseOver implements MouseMotionListener {
 
 		@Override
@@ -172,6 +186,7 @@ public class Overlay extends BdvOverlay {
 		@Override
 		public void mouseMoved( MouseEvent e ) {
 			mouseInsidePuncta();
+			mouseOnEdge();
 
 		}
 
@@ -190,6 +205,23 @@ public class Overlay extends BdvOverlay {
 			}
 		}
 		
+	}
+
+	private void mouseOnEdge() {
+		final RealPoint pos = new RealPoint( 3 );
+		model.getView().getBdv().getViewerPanel().getGlobalMouseCoordinates( pos );
+		if ( !model.getGraph().getEdges().isEmpty() ) {
+
+			Edge selectedEdge =
+					PPGraphUtils.pointOnEdge( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), model.getGraph().getEdges() );
+			if ( !(selectedEdge == null) ) {
+				model.getGraph().setMouseSelectedEdge( selectedEdge );
+			}
+			else {
+				model.getGraph().setMouseSelectedEdge( null );
+			}
+		}
+
 	}
 
 }
