@@ -158,10 +158,14 @@ public class SimpleMenu implements ActionListener, ItemListener {
 			FileNameExtensionFilter filter = new FileNameExtensionFilter( "*.csv", "csv" );
 			jfc.setFileFilter( filter );
 			jfc.addChoosableFileFilter( filter );
-			File[] selectedFiles = jfc.getSelectedFiles();
-			System.out.println( selectedFiles[ 0 ].getAbsolutePath() );
-			System.out.println( selectedFiles[ 1 ].getAbsolutePath() );
+			int returnValue = jfc.showOpenDialog( null );
+			if ( returnValue == JFileChooser.APPROVE_OPTION ) {
+				File[] selectedFiles = jfc.getSelectedFiles();
+				System.out.println( selectedFiles[ 0 ].getAbsolutePath() );
+				System.out.println( selectedFiles[ 1 ].getAbsolutePath() );
 				model.setGraph( CSVReader.loadOldCSVs( selectedFiles[ 0 ].getAbsolutePath(), selectedFiles[ 1 ].getAbsolutePath() ) );
+			}
+
 		}
 		if ( jmi.getText() == "Nearest Neighbor flow" ) {
 			flowMethod = FLOW_NN;
