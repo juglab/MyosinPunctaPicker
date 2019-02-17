@@ -72,4 +72,22 @@ public class PPGraphUtils {
 		if ( array == null || array.length == 0 ) { return true; }
 		return false;
 	}
+
+	public static Edge pointOnEdge( float x, float y, List< Edge > edges ) {
+		for ( Edge e : edges ) {
+			double num = Math.abs(
+					( e.getA().getY() - e.getB().getY() ) * x - ( e.getA().getX() - e.getB().getX() ) * y + e.getA().getX() * e.getB().getY() - e
+							.getA()
+							.getY() * e.getB().getX() );
+			double den = Math.sqrt(
+					( e.getA().getY() - e.getB().getY() ) * ( e.getA().getY() - e.getB().getY() ) + ( e.getA().getX() - e.getB().getX() ) * ( e
+							.getA()
+							.getX() - e.getB().getX() ) );
+			double dist = num / den;
+			if ( dist < 5 ) { //If mouse hover is lesser than 5 pixels away from the edge
+			return e;
+			}
+		}
+		return null;
+	}
 }
