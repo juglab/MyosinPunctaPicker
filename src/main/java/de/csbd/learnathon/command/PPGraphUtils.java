@@ -84,7 +84,7 @@ public class PPGraphUtils {
 							.getA()
 							.getX() - e.getB().getX() ) );
 			double dist = num / den;
-			if ( dist < 5 ) { //If mouse hover is lesser than 5 pixels away from the edge
+			if ( dist < 2 ) { //If mouse hover is lesser than 2 pixels away from the edge
 			return e;
 			}
 		}

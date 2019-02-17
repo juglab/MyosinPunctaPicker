@@ -107,10 +107,10 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem = new JMenuItem( "Link punctas -> L" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
-		menuItem = new JMenuItem( "Delte selected puncta -> X" );
+		menuItem = new JMenuItem( "Delte selected puncta/edge -> D" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
-		menuItem = new JMenuItem( "Delete selected tracklet -> D" );
+		menuItem = new JMenuItem( "Delete selected tracklet -> X" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		return menuBar;

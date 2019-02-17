@@ -41,9 +41,8 @@ public class PunctaPickerController {
 		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_C, 0 ), "Select", new ManualTrackingAction( "Select" ) );
 		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_SPACE, 0 ), "Move", new ManualTrackingAction( "Move" ) );
 		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_L, 0 ), "Link", new ManualTrackingAction( "Link" ) );
-		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_D, 0 ), "DeleteTracklet", new ManualTrackingAction( "DeleteTracklet" ) );
-		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_X, 0 ), "DeletePuncta", new ManualTrackingAction( "DeletePuncta" ) );
-		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_R, 0 ), "DeleteEdge", new ManualTrackingAction( "DeleteEdge" ) );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_X, 0 ), "DeleteTracklet", new ManualTrackingAction( "DeleteTracklet" ) );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_D, 0 ), "DeletePunctaOrEdge", new ManualTrackingAction( "DeletePunctaOrEdge" ) );
 	}
 	
 	public void registerKeyBinding( KeyStroke keyStroke, String name, Action action ) {
@@ -105,15 +104,18 @@ public class PunctaPickerController {
 				model.getGraph().deleteSelectedElements();
 				model.getView().getBdv().getViewerPanel().requestRepaint();
 			}
-			if ( name == "DeletePuncta" ) {
-				model.getGraph().deleteSelectedPuncta();
-				model.getView().getBdv().getViewerPanel().requestRepaint();
-			}
-			if ( name == "DeleteEdge" ) {
-				model.getGraph().removeEdge( model.getGraph().getMouseSelectedEdge() );
-				model.getView().getBdv().getViewerPanel().requestRepaint();
-			}
+			if ( name == "DeletePunctaOrEdge" ) {
+				if ( !( model.getGraph().getMouseSelectedEdge() == null ) ) {
+					model.getGraph().removeEdge( model.getGraph().getMouseSelectedEdge() );
+					model.getGraph().setMouseSelectedEdge( null );
+					model.getView().getBdv().getViewerPanel().requestRepaint();
+				}
+				else {
+					model.getGraph().deleteSelectedPuncta();
+					model.getView().getBdv().getViewerPanel().requestRepaint();
 
+				}
+			}
 		}
 	}
 
