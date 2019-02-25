@@ -97,6 +97,7 @@ public class PunctaPickerController {
 			if ( name == "Link" ) {
 				if ( !( model.getGraph().getLeadSelectedPuncta() == null ) && !( model.getGraph().getMouseSelectedPuncta() == null ) ) {
 					model.getGraph().addEdge( new Edge( model.getGraph().getLeadSelectedPuncta(), model.getGraph().getMouseSelectedPuncta() ) );
+					model.getGraph().selectSubgraphContaining( model.getGraph().getLeadSelectedPuncta() );
 					model.getView().getBdv().getViewerPanel().requestRepaint();
 				}
 			}
@@ -108,6 +109,7 @@ public class PunctaPickerController {
 				if ( !( model.getGraph().getMouseSelectedEdge() == null ) ) {
 					model.getGraph().removeEdge( model.getGraph().getMouseSelectedEdge() );
 					model.getGraph().setMouseSelectedEdge( null );
+					model.getGraph().selectSubgraphContaining( model.getGraph().getLeadSelectedPuncta() ); //Trial Basis
 					model.getView().getBdv().getViewerPanel().requestRepaint();
 				}
 				else {
