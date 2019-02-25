@@ -163,7 +163,9 @@ public class SimpleMenu implements ActionListener, ItemListener {
 				File[] selectedFiles = jfc.getSelectedFiles();
 				System.out.println( selectedFiles[ 0 ].getAbsolutePath() );
 				System.out.println( selectedFiles[ 1 ].getAbsolutePath() );
-				model.setGraph( CSVReader.loadOldCSVs( selectedFiles[ 0 ].getAbsolutePath(), selectedFiles[ 1 ].getAbsolutePath() ) );
+				model.setGraph( CSVReader.loadOldCSVs( selectedFiles[ 0 ].getAbsolutePath(), selectedFiles[ 1 ].getAbsolutePath() ) ); //How do Fiji coordinates transfer to bdv coordinates?
+//				int size = model.getGraph().getPunctas().size();
+//				model.getGraph().setLeadSelectedPuncta( model.getGraph().getPunctas().get( size - 1 ) );
 			}
 
 		}
