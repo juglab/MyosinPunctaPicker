@@ -64,6 +64,8 @@ public class Graph {
 	}
 
 	public void removeEdge( Edge e ) {
+		e.getA().setSelected( false );
+		e.getB().setSelected( false );
 		edges.remove( e );
 	}
 
@@ -73,7 +75,6 @@ public class Graph {
 
 	public void selectSubgraphContaining( Puncta queryPuncta ) {
 		unselectAll();
-
 		Set< Puncta > visited = new HashSet<>();
 		visited.add( queryPuncta );
 		queryPuncta.setSelected( true );
@@ -183,6 +184,16 @@ public class Graph {
 			edges.remove( e );
 		}
 		punctas.remove( getLeadSelectedPuncta() );
+//		
+		unselectAllPunctas();
+		unselectAll();
+
+	}
+
+	private void unselectAllPunctas() {
+		for ( Puncta p : punctas ) {
+			p.setSelected( false );
+		}
 		
 	}
 

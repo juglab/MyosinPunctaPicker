@@ -1,5 +1,6 @@
 package de.csbd.learnathon.command;
 
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -11,6 +12,8 @@ import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JSlider;
+import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
 
@@ -47,6 +50,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		//Build the file menu.
 		filemenu = new JMenu( "File" );
 		filemenu.getAccessibleContext().setAccessibleDescription( "This is the menu to load/save tracklets" );
+		filemenu.setLayout( new FlowLayout() );
 		menuBar.add( filemenu );
 
 		menuItem = new JMenuItem( "Load tracklets from CSV" );
@@ -61,6 +65,15 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		menuItem.addActionListener( this );
 		filemenu.add( menuItem );
+
+		JSlider slider = new JSlider( JSlider.HORIZONTAL );
+		slider.setVisible( true );
+		ChangeListener cl = e -> {
+			JSlider x = ( JSlider ) e.getSource();
+			System.out.println( "value is: " + x.getValue() );
+		};
+		slider.addChangeListener( cl );
+		filemenu.add( slider );
 
 		//Build the file menu.
 		flowmenu = new JMenu( "Compute flows" );
@@ -164,8 +177,9 @@ public class SimpleMenu implements ActionListener, ItemListener {
 				System.out.println( selectedFiles[ 0 ].getAbsolutePath() );
 				System.out.println( selectedFiles[ 1 ].getAbsolutePath() );
 				model.setGraph( CSVReader.loadOldCSVs( selectedFiles[ 0 ].getAbsolutePath(), selectedFiles[ 1 ].getAbsolutePath() ) ); //How do Fiji coordinates transfer to bdv coordinates?
-//				int size = model.getGraph().getPunctas().size();
-//				model.getGraph().setLeadSelectedPuncta( model.getGraph().getPunctas().get( size - 1 ) );
+				int size = model.getGraph().getPunctas().size();
+				model.getGraph().setLeadSelectedPuncta( model.getGraph().getPunctas().get( size - 1 ) );
+				model.getView().getBdv().getViewerPanel().requestRepaint();
 			}
 
 		}
