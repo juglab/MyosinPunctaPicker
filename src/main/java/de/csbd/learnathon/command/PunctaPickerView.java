@@ -5,6 +5,8 @@ import java.util.logging.Logger;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import net.imagej.Dataset;
+import net.imglib2.img.Img;
 import org.scijava.Context;
 import org.scijava.command.CommandService;
 import org.scijava.plugin.Parameter;
@@ -20,6 +22,7 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
+import org.scijava.thread.ThreadService;
 
 public class PunctaPickerView {
 
@@ -29,6 +32,9 @@ public class PunctaPickerView {
 	@Parameter
 	private CommandService commandService;
 
+	@Parameter
+	private ThreadService threadService;
+
 	public Logger log;
 
 	public BdvHandlePanel bdv = new BdvHandlePanel( null, Bdv.options().is2D() );
@@ -36,6 +42,8 @@ public class PunctaPickerView {
 	private JTextField tMoveTime;
 
 	private PunctaPickerModel model;
+
+	private Dataset image;
 
 	private PunctaPickerController controller;
 
@@ -54,12 +62,15 @@ public class PunctaPickerView {
 	}
 
 
-	public PunctaPickerView( PunctaPickerModel m ) {
+	public PunctaPickerView(PunctaPickerModel m, Dataset image, CommandService cs, ThreadService ts) {
 		this.model = m;
-		this.controller = new PunctaPickerController( m, this );
+		this.image=image;
+		this.controller = new PunctaPickerController( m,  this , cs, ts);
 		model.setController( controller );
 		model.setView( this );
-		this.overlay = new Overlay( model );
+		this.commandService=cs;
+		this.threadService=ts;
+		this.overlay = new Overlay( model, image, commandService, threadService );
 		bdv = initBdv( model.getRawData() );
 		controller.defineBehaviour();
 	}
@@ -96,6 +107,10 @@ public class PunctaPickerView {
 	public Overlay getOverlay() {
 		return overlay;
 	}
+
+	public < T extends RealType< T > & NativeType< T > > Img getImage()
+	{
+		return this.image;}
 
 }
 

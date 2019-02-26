@@ -5,27 +5,43 @@ package de.csbd.learnathon.command;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
+import java.util.concurrent.Future;
 
 import bdv.util.BdvOverlay;
+import circledetection.command.BlobDetectionCommand;
+import net.imagej.Dataset;
+import net.imagej.table.GenericTable;
 import net.imglib2.RealPoint;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.util.Pair;
+import org.scijava.command.CommandModule;
+import org.scijava.command.CommandService;
+import org.scijava.thread.ThreadService;
 
 public class Overlay extends BdvOverlay {
 	
 	private PunctaPickerModel model;
 
-	public static float FADE_OUT_ALPHA = 0.2f;
+
+	private CommandService cs;
+	private ThreadService ts;
+	public static float FADE_OUT_ALPHA = 1f;
+
 	public int radius = 12;
 	public int lineThickness = 2;
 	public Color defaultColor = new Color( 0, 0, 1 );
 	public Color selectedColor = new Color( 1, 0, 0 );
+	private Dataset image;
 
-	public Overlay( PunctaPickerModel model ) {
+	public Overlay( PunctaPickerModel model, Dataset image, CommandService cs, ThreadService ts ) {
 		super();
 		this.model = model;
+		this.image=image;
+		this.cs=cs;
+		this.ts=ts;
 		model.getView().getBdv().getViewerPanel().getDisplay().addHandler( new MouseOver() );
 	}
 
@@ -60,13 +76,21 @@ public class Overlay extends BdvOverlay {
 			t.apply( lPos, gPos );
 
 			transparency = Math.abs( curentTime - ( float ) p.getT() );
-			transparency = ( float ) Math.exp( -transparency * FADE_OUT_ALPHA );
+			transparency = ( float ) Math.exp( - transparency * FADE_OUT_ALPHA );
+
 
 			if ( p.isSelected() ) {
 				g.setColor( new Color( selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue(), transparency ) );
 			} else {
 				g.setColor( new Color( defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), transparency ) );
 			}
+
+
+
+
+
+
+
 
 			g.drawOval(
 					( int ) ( gPos[ 0 ] - ( p.getR() * scale ) ),
@@ -177,6 +201,7 @@ public class Overlay extends BdvOverlay {
 		}
 		return Math.sqrt( sqSum );
 	}
+
 
 	private class MouseOver implements MouseMotionListener {
 

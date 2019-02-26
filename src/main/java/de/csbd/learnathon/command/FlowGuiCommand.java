@@ -9,8 +9,10 @@ import javax.swing.JPanel;
 
 import org.scijava.Context;
 import org.scijava.command.Command;
+import org.scijava.command.CommandService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.thread.ThreadService;
 import org.scijava.ui.UIService;
 
 import ij.IJ;
@@ -43,7 +45,7 @@ public class FlowGuiCommand implements Command {
 	@Override
 	public void run() {
 		model = new PunctaPickerModel( toDoubleType( image.getImgPlus().getImg() ) );
-		panel = new PunctaPickerView( model );
+		panel = new PunctaPickerView( model, image, context.getService(CommandService.class), context.getService(ThreadService.class));
 		JPanel p = panel.getPanel();
 		p.setMinimumSize( new Dimension( 500, 500 ) );
 		frame = new JFrame( image.getImgPlus().getSource() );

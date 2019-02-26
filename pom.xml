@@ -115,5 +115,11 @@
 			<artifactId>jitk-tps</artifactId>
 			<version>3.0.1-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-algorithm</artifactId>
+			<version> 0.9.1-a</version>
+		</dependency>
+
 	</dependencies>
 </project>

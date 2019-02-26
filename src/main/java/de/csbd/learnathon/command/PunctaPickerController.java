@@ -2,6 +2,12 @@ package de.csbd.learnathon.command;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -10,12 +16,31 @@ import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.KeyStroke;
 
+import circledetection.command.BlobDetectionCommand;
+import ij.ImagePlus;
+import net.imagej.ImgPlus;
+import net.imagej.table.Column;
+import net.imagej.table.GenericTable;
+import net.imglib2.*;
+import net.imglib2.img.Img;
+import net.imglib2.img.ImgFactory;
+import net.imglib2.img.cell.CellImgFactory;
+import net.imglib2.img.display.imagej.ImageJFunctions;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.real.DoubleType;
+import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Intervals;
+import net.imglib2.view.IntervalView;
+import net.imglib2.view.Views;
+import org.scijava.command.CommandModule;
+import org.scijava.command.CommandService;
+import org.scijava.thread.ThreadService;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
 
 import bdv.viewer.state.ViewerState;
-import net.imglib2.RealPoint;
 import net.imglib2.util.Pair;
 
 public class PunctaPickerController {
@@ -28,10 +53,14 @@ public class PunctaPickerController {
 	private RealPoint pos;
 	private PunctaPickerModel model;
 	private PunctaPickerView view;
+	private CommandService cs;
+	private ThreadService ts;
 
-	public PunctaPickerController( PunctaPickerModel model, PunctaPickerView punctaPickerView ) {
+	public PunctaPickerController(PunctaPickerModel model, PunctaPickerView punctaPickerView, CommandService cs, ThreadService ts) {
 		this.model = model;
 		this.view = punctaPickerView;
+		this.cs=cs;
+		this.ts=ts;
 	}
 
 	public void defineBehaviour() {
@@ -164,15 +193,23 @@ public class PunctaPickerController {
 		}
 	}
 
-	private void actionClick( int x, int y ) {
+
+	private < T extends RealType< T > & NativeType< T > > void actionClick( int x, int y ) {
+		ts.run( () -> {
+			actionClickInThread(x, y);
+		});
+	}
+
+	private <T extends RealType<T> & NativeType<T>> void actionClickInThread(int x, int y) {
 
 		pos = new RealPoint( 3 );
 		view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
 		ViewerState state = view.getBdv().getBdvHandle().getViewerPanel().getState();
-
 		int t = state.getCurrentTimepoint();
+
 		Graph g = model.getGraph();
 		Puncta pOld = g.getLeadSelectedPuncta();
+
 
 		if ( !g.getPunctaAtTime( t ).isEmpty() ) {
 			Pair<Puncta,Double> min = PPGraphUtils.getClosestPuncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), g.getPunctaAtTime( t ) );
@@ -183,7 +220,44 @@ public class PunctaPickerController {
 			}
 		}
 
-		Puncta pNew = new Puncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t, model.getDefaultRadius() );
+		Img<T> image = view.getImage();
+		Views.extendMirrorSingle(image);
+		int patchSize=50;
+		FinalInterval cropped= Intervals.createMinMax((long) (pos.getDoublePosition(0) - patchSize/2), (long) (pos.getDoublePosition(1)-patchSize/2), 0, (long) (pos.getDoublePosition(0) + patchSize/2), (long) (pos.getDoublePosition(1) + patchSize/2), 0);
+		RandomAccessibleInterval< T > croppedImage=  Views.interval(image, cropped);
+		ImagePlus imgPlus= ImageJFunctions.wrap(croppedImage, "cropped");
+		ImageJFunctions.show(croppedImage);
+		Img<T> newImage= ImageJFunctions.wrap(imgPlus);
+
+		Puncta pNew = detectFeatures(newImage);
+		if ( pNew != null ) {
+			System.out.println(pNew.getX() + ", " + pNew.getY()+ ", " + pNew.getR());
+		}
+		pNew.setT(t);
+		pNew.setX( (float) (pos.getDoublePosition(0) - patchSize/2) + pNew.getX());
+		pNew.setY( (float) (pos.getDoublePosition(1) - patchSize/2) + pNew.getY());
+
+//		try {
+//			future.get().setT(t);
+////			future.get().setX( (float) (pos.getDoublePosition(0) - patchSize/2) + future.get().getX());
+////			future.get().setY( (float) (pos.getDoublePosition(1) - patchSize/2) + future.get().getY());
+//
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		} catch (ExecutionException e) {
+//			e.printStackTrace();
+//		}
+
+		//Puncta pNew = new Puncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t, model.getDefaultRadius() );
+//		Puncta pNew = null;
+//		try {
+//			pNew = future.get();
+//			System.out.println("entered");
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		} catch (ExecutionException e) {
+//			e.printStackTrace();
+//		}
 		model.getGraph().addPuncta( pNew );
 		model.getGraph().setLeadSelectedPuncta( pNew );
 		pNew.setSelected( true );
@@ -212,4 +286,52 @@ public class PunctaPickerController {
 		lsp.setX( pos.getFloatPosition( 0 ) );
 		lsp.setY( pos.getFloatPosition( 1 ) );
 	}
+
+	private  < T extends RealType< T > & NativeType< T > > Puncta detectFeatures(Img<T> image){
+		System.out.println("In!");
+		double minScale=2;
+		double stepScale=1;
+		double maxScale = 4;
+		boolean brightBlobs = true;
+		int axis =  0;
+		double samplingFactor=1;
+
+		final Future<CommandModule> lp = cs.run(BlobDetectionCommand.class, false, "image", image, "minScale", minScale, "maxScale", maxScale, "stepScale", stepScale, "brightBlobs", brightBlobs, "axis", axis, "samplingFactor", samplingFactor);
+		final GenericTable resultsTable = (GenericTable) cs.moduleService().waitFor(lp).getOutput("resultsTable");
+		Column valueColumn=resultsTable.get("Value");
+		Iterator<Float> valueIterator= valueColumn.iterator();
+
+
+		double min;
+		int index=0;
+		int i=0;
+		double c1=valueIterator.next();
+
+		while(valueIterator.hasNext()){
+
+			double c2= valueIterator.next();
+			if(c1<=c2){
+				min=c1;
+				index=i;
+			}else{
+				min=c2;
+				index=i+1;
+			}
+			c1=min;
+			i++;
+		}
+
+
+
+		Column X= resultsTable.get("X");
+		int x=  (int) X.get(index);
+		Column Y= resultsTable.get("Y");
+		int y=  (int) Y.get(index);
+		Column Radius= resultsTable.get("Radius");
+		float r=  (float) Radius.get(index);
+		Puncta p= new Puncta((float) x, (float) y, 0, (int) r); // Fix time later on, depending on the frame
+		return p;
+	}
+
+
 }
