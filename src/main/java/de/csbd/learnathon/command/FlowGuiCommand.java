@@ -18,12 +18,21 @@ import org.scijava.ui.UIService;
 import ij.IJ;
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
+import net.imagej.ops.OpService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converters;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.util.Util;
 import net.miginfocom.swing.MigLayout;
+
+/**
+ * This is an implementation of manual puncta picking.
+ *
+ * @param <T>
+ *            type
+ * @author Mangal Prakash MPI-CBG / CSBD, Dresden
+ */
 
 @Plugin( menuPath = "Plugins>Puncta Picker GUI", type = Command.class )
 public class FlowGuiCommand implements Command {
@@ -45,7 +54,7 @@ public class FlowGuiCommand implements Command {
 	@Override
 	public void run() {
 		model = new PunctaPickerModel( toDoubleType( image.getImgPlus().getImg() ) );
-		panel = new PunctaPickerView( model, image, context.getService(CommandService.class), context.getService(ThreadService.class));
+		panel = new PunctaPickerView( model, image, context.getService( CommandService.class ), context.getService( ThreadService.class ), context.getService( OpService.class ) );
 		JPanel p = panel.getPanel();
 		p.setMinimumSize( new Dimension( 500, 500 ) );
 		frame = new JFrame( image.getImgPlus().getSource() );

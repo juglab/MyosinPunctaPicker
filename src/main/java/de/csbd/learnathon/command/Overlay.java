@@ -5,43 +5,32 @@ package de.csbd.learnathon.command;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
-import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
-import java.util.concurrent.Future;
+
+import org.scijava.command.CommandService;
+import org.scijava.thread.ThreadService;
 
 import bdv.util.BdvOverlay;
-import circledetection.command.BlobDetectionCommand;
-import net.imagej.Dataset;
-import net.imagej.table.GenericTable;
 import net.imglib2.RealPoint;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.util.Pair;
-import org.scijava.command.CommandModule;
-import org.scijava.command.CommandService;
-import org.scijava.thread.ThreadService;
 
 public class Overlay extends BdvOverlay {
 	
 	private PunctaPickerModel model;
-
-
 	private CommandService cs;
 	private ThreadService ts;
-	public static float FADE_OUT_ALPHA = 1f;
 
+	public static float FADE_OUT_ALPHA = 0.2f;
 	public int radius = 12;
 	public int lineThickness = 2;
 	public Color defaultColor = new Color( 0, 0, 1 );
 	public Color selectedColor = new Color( 1, 0, 0 );
-	private Dataset image;
 
-	public Overlay( PunctaPickerModel model, Dataset image, CommandService cs, ThreadService ts ) {
+	public Overlay( PunctaPickerModel model ) {
 		super();
 		this.model = model;
-		this.image=image;
-		this.cs=cs;
-		this.ts=ts;
 		model.getView().getBdv().getViewerPanel().getDisplay().addHandler( new MouseOver() );
 	}
 
