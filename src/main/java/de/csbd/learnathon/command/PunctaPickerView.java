@@ -6,9 +6,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.scijava.Context;
-import org.scijava.command.CommandService;
 import org.scijava.plugin.Parameter;
-import org.scijava.thread.ThreadService;
 
 import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
@@ -25,12 +23,6 @@ public class PunctaPickerView {
 
 	@Parameter
 	private Context context;
-
-	@Parameter
-	private CommandService commandService;
-
-	@Parameter
-	private ThreadService threadService;
 
 	@Parameter
 	private OpService opService;
@@ -62,14 +54,12 @@ public class PunctaPickerView {
 	}
 
 
-	public PunctaPickerView( PunctaPickerModel m, Dataset image, CommandService cs, ThreadService ts, OpService os ) {
+	public PunctaPickerView( PunctaPickerModel m, Dataset image, OpService os ) {
 		this.model = m;
 		this.image=image;
-		this.controller = new PunctaPickerController( m, this, cs, ts, os );
+		this.controller = new PunctaPickerController( m, this, os );
 		model.setController( controller );
 		model.setView( this );
-		this.commandService = cs;
-		this.threadService = ts;
 		this.opService = os;
 		this.overlay = new Overlay( model );
 		bdv = initBdv( model.getRawData() );

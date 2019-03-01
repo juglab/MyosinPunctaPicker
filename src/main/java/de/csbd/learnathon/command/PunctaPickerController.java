@@ -14,10 +14,8 @@ import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.KeyStroke;
 
-import org.scijava.command.CommandService;
 import org.scijava.table.Column;
 import org.scijava.table.GenericTable;
-import org.scijava.thread.ThreadService;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
@@ -42,39 +40,41 @@ import net.imglib2.view.Views;
 
 public class PunctaPickerController {
 
-    public static String ACTION_NONE = "none";
-    public static String ACTION_TRACK = "track";
-    public static String ACTION_SELECT = "select";
-    private String actionIndicator = ACTION_NONE;
-
     private RealPoint pos;
     private PunctaPickerModel model;
     private PunctaPickerView view;
-    private CommandService cs;
-//    private ThreadService ts;
     private OpService os;
 	private int patchSize;
 
-    public PunctaPickerController(PunctaPickerModel model, PunctaPickerView punctaPickerView, CommandService cs, ThreadService ts, OpService os) {
+	public PunctaPickerController( PunctaPickerModel model, PunctaPickerView punctaPickerView, OpService os ) {
         this.model = model;
         this.view = punctaPickerView;
-        this.cs = cs;
-//        this.ts = ts;
+
         this.os = os;
     }
 
     public void defineBehaviour() {
-        registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_A, 0), "Add", new ManualTrackingAction("Add"));
+		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
+		behaviours.install( view.getBdv().getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
+			actionClick( x, y );
+		}, "Add", "A" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
+			actionSelectClosestSubgraph( x, y );
+		}, "Select", "C" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
+			actionMoveLeadPuncta( x, y );
+		}, "Move", "SPACE" );
+
         registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0), "IncreaseRadius", new ManualTrackingAction("IncreaseRadius"));
         registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0), "DecreaseRadius", new ManualTrackingAction("DecreaseRadius"));
-        registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_C, 0), "Select", new ManualTrackingAction("Select"));
-        registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0), "Move", new ManualTrackingAction("Move"));
         registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_L, 0), "Link", new ManualTrackingAction("Link"));
         registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_X, 0), "DeleteTracklet", new ManualTrackingAction("DeleteTracklet"));
         registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0), "DeletePunctaOrEdge", new ManualTrackingAction("DeletePunctaOrEdge"));
     }
 
     public void registerKeyBinding(KeyStroke keyStroke, String name, Action action) {
+
         InputMap im = view.getBdv().getViewerPanel().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         ActionMap am = view.getBdv().getViewerPanel().getActionMap();
 
@@ -91,14 +91,7 @@ public class PunctaPickerController {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            Behaviours behaviours = new Behaviours(new InputTriggerConfig());
-            behaviours.install(view.getBdv().getBdvHandle().getTriggerbindings(), "my-new-behaviours");
-            if (name == "Add") {
-                actionIndicator = "track";
-                behaviours.behaviour((ClickBehaviour) (x, y) -> {
-                    clickAction(x, y);
-                }, "Add", "A");
-            }
+
             if (name == "IncreaseRadius") {
                 Puncta pun = model.getGraph().getLeadSelectedPuncta();
                 if (!(pun == null)) {
@@ -111,18 +104,6 @@ public class PunctaPickerController {
                     model.getGraph().getLeadSelectedPuncta().setR(model.getGraph().getLeadSelectedPuncta().getR() * 0.8f);
                     model.getView().getBdv().getViewerPanel().requestRepaint();
                 }
-            }
-            if (name == "Select") {
-                actionIndicator = "select";
-                behaviours.behaviour((ClickBehaviour) (x, y) -> {
-                    actionSelectClosestSubgraph(x, y);
-                }, "Select", "C");
-            }
-            if (name == "Move") {
-                behaviours.behaviour((ClickBehaviour) (x, y) -> {
-                    actionMoveLeadPuncta(x, y);
-                }, "Move", "SPACE");
-                model.getView().getBdv().getViewerPanel().requestRepaint();
             }
             if (name == "Link") {
                 if (!(model.getGraph().getLeadSelectedPuncta() == null) && !(model.getGraph().getMouseSelectedPuncta() == null)) {
@@ -148,27 +129,6 @@ public class PunctaPickerController {
                 }
             }
         }
-    }
-
-    private void clickAction(int x, int y) { // TODO clickAction and actionClick might not be self expainatory... ;)
-        if (actionIndicator.equals(ACTION_SELECT)) {
-            actionSelectClosestSubgraph(x, y);
-        } else if (actionIndicator.equals(ACTION_TRACK)) {
-            actionClick(x, y);
-        }
-    }
-
-    /**
-     * Sets one of the ACTION_* strings statically defined in this class.
-     *
-     * @param s any of the ACTION_* strings defined in this class
-     */
-    public void setActionIndicator(String s) {
-        actionIndicator = s;
-    }
-
-    public String getActionIndicator() {
-        return actionIndicator;
     }
 
     private void actionSelectClosestSubgraph(int x, int y) {
