@@ -1,10 +1,15 @@
 package circledetection.command;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.scijava.table.DefaultGenericTable;
+import org.scijava.table.FloatColumn;
+import org.scijava.table.GenericTable;
+import org.scijava.table.IntColumn;
+
 import net.imagej.ops.OpService;
-import net.imagej.table.DefaultGenericTable;
-import net.imagej.table.FloatColumn;
-import net.imagej.table.GenericTable;
-import net.imagej.table.IntColumn;
 import net.imglib2.Point;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
@@ -16,17 +21,6 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
-import org.scijava.ItemIO;
-import org.scijava.command.Command;
-import org.scijava.command.CommandModule;
-import org.scijava.command.CommandService;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.concurrent.Future;
 
 
 /**
@@ -36,69 +30,72 @@ import java.util.concurrent.Future;
  * @author Matthias Arzt, Tim-Oliver Buccholz, Manan Lalit MPI-CBG / CSBD, Dresden
  */
 
-@Plugin(type = Command.class, menuPath = "Plugins > Blob Detection")
-public class BlobDetectionCommand<T extends RealType<T> & Type<T>> implements Command {
+public class BlobDetectionCommand< T extends RealType< T > & Type< T > > {
 
-    @Parameter(type = ItemIO.INPUT)
     Img<T> image;
-
-
-    @Parameter(type = ItemIO.INPUT)
     double minScale=5;
-
-    @Parameter(type = ItemIO.INPUT)
     double maxScale=5.01;
-
-    @Parameter(type = ItemIO.INPUT)
     double stepScale=1;
-
-    @Parameter(type = ItemIO.INPUT)
     boolean brightBlobs=true; /*1 if bright blobs on dark background, 0 otherwise*/
-
-    @Parameter(type = ItemIO.INPUT)
     int axis=0; /*The axis (0,1,2) which is sampled differently*/
-
-    @Parameter(type = ItemIO.INPUT)
     double samplingFactor=1; /*The sampling factor applied on the axis*/
+	OpService ops;
+	private GenericTable resultsTable;
 
-    @Parameter(type=ItemIO.OUTPUT)
-    GenericTable resultsTable;
+	public BlobDetectionCommand(
+			Img< T > image,
+			double minScale,
+			double maxScale,
+			double stepScale,
+			boolean brightBlobs,
+			int axis,
+			double samplingFactor,
+			OpService ops ) {
+		this.image = image;
+		this.minScale = minScale;
+		this.maxScale = maxScale;
+		this.stepScale = stepScale;
+		this.brightBlobs = brightBlobs;
+		this.axis = axis;
+		this.samplingFactor = samplingFactor;
+		this.ops = ops;
+		setUpBlobDetectionCommand();
+	}
 
-    @Parameter
-    CommandService cs;
-
-    @Parameter
-    OpService ops;
-
-    @Override
-    public void run() {
-
-
-        /*Step One: Obtain Laplacian reponse, normalize to make scale-independent and stack in a pyramid*/
+	private void setUpBlobDetectionCommand() {
+		/*
+		 * Step One: Obtain Laplacian reponse, normalize to make
+		 * scale-independent and stack in a pyramid
+		 */
         Img<FloatType> normalizedExpandedImage = (Img<FloatType>) multiScaleLaplacian(image, minScale, maxScale, stepScale);
 
 
         /*Step Two: Apply LocalMinima Command to obtain the minima on the normalizedExpandedImage*/
-        final Future<CommandModule> lp = cs.run(LocalMinimaCommand.class, false, "image", normalizedExpandedImage);
-         List<Point> predictedResult = (List<Point>) cs.moduleService().waitFor(lp).getOutput("output");
+		LocalMinimaCommand localMinimaCommand = new LocalMinimaCommand<>( normalizedExpandedImage );
+		localMinimaCommand.setLocalMinima();
+		List< Point > predictedResult = localMinimaCommand.getOutput();
 
         /*Step Three: Create a (N+7) dimensioned table based on the results */
         resultsTable=createResultsTable(normalizedExpandedImage, predictedResult);
 
         predictedResult=null;
         normalizedExpandedImage=null;
-    }
+	}
 
+	public GenericTable getResultsTable() {
+		return resultsTable;
+	}
 
     private RandomAccessibleInterval<FloatType> multiScaleLaplacian(final Img<T> image, final double minScale, final double maxScale, final double stepScale) {
 
         final List<Img<FloatType>> results = new ArrayList<>();
         for (double scale = minScale; scale <= maxScale; scale = scale + stepScale) {
             Img<FloatType> normalizedLaplacianOfGaussian=ops.create().img(image, new FloatType());
-            final Future<CommandModule> lp = cs.run(LaplacianCommand.class, false, "image", image, "sigma", scale, "axis", axis, "samplingFactor", samplingFactor);
-            final Img<FloatType> laplacianOfGaussian = (Img<FloatType>) cs.moduleService().waitFor(lp).getOutput("output");
+			LaplacianCommand laplacianCommand = new LaplacianCommand<>( image, scale, axis, samplingFactor, ops );
+			laplacianCommand.runLaplacian();
+			final Img< FloatType > laplacianOfGaussian = laplacianCommand.getOutput();
             final double s = scale;
-            LoopBuilder.setImages((Img<FloatType>) laplacianOfGaussian, normalizedLaplacianOfGaussian).forEachPixel((i, o) -> o.setReal(Math.pow(s, 2) * i.getRealFloat()));
+            LoopBuilder.setImages(laplacianOfGaussian, normalizedLaplacianOfGaussian).forEachPixel((i, o) -> o.setReal(Math.pow(s, 2) * i.getRealFloat()));
             results.add(normalizedLaplacianOfGaussian);
         }
         return copy(Views.stack(results));

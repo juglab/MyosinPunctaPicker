@@ -10,8 +10,6 @@ import org.scijava.command.CommandService;
 import org.scijava.plugin.Parameter;
 import org.scijava.thread.ThreadService;
 
-import com.indago.util.ImglibUtil;
-
 import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvHandlePanel;
@@ -22,8 +20,6 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.util.Util;
-import net.imglib2.view.Views;
 
 public class PunctaPickerView {
 
@@ -83,11 +79,11 @@ public class PunctaPickerView {
 	private < T extends RealType< T > & NativeType< T > > BdvHandlePanel initBdv( final RandomAccessibleInterval< T > img ) {
 		final BdvHandlePanel bdv = getBdv();
 		final BdvSource source = BdvFunctions.show( img, "img", Bdv.options().addTo( bdv ) );
-		final T min = Util.getTypeFromInterval( img ).createVariable();
-		final T max = Util.getTypeFromInterval( img ).createVariable();
-		ImglibUtil.computeMinMax( Views.iterable( img ), min, max );
-		source.setDisplayRangeBounds( 0, max.getRealFloat() );
-		source.setDisplayRange( min.getRealFloat(), max.getRealFloat() );
+//		final T min = Util.getTypeFromInterval( img ).createVariable();
+//		final T max = Util.getTypeFromInterval( img ).createVariable();
+//		ImglibUtil.computeMinMax( Views.iterable( img ), min, max );
+//		source.setDisplayRangeBounds( 0, max.getRealFloat() );
+//		source.setDisplayRange( min.getRealFloat(), max.getRealFloat() );
 		BdvFunctions.showOverlay( overlay, "overlay", Bdv.options().addTo( bdv ) );
 		return bdv;
 	}

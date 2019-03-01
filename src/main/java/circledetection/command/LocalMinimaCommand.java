@@ -1,6 +1,11 @@
 package circledetection.command;
 
-import net.imagej.ops.OpService;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.scijava.command.Command;
+import org.scijava.plugin.Plugin;
+
 import net.imglib2.Interval;
 import net.imglib2.Point;
 import net.imglib2.RandomAccessible;
@@ -13,14 +18,6 @@ import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
-import org.scijava.ItemIO;
-import org.scijava.command.Command;
-import org.scijava.command.CommandService;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -31,32 +28,26 @@ import java.util.List;
  */
 
 @Plugin(type = Command.class, menuPath = "Plugins > LocalMinima")
-public class LocalMinimaCommand<T extends RealType<T> & NativeType<T> & Comparable<T>> implements Command {
+public class LocalMinimaCommand< T extends RealType< T > & NativeType< T > & Comparable< T > > {
 
-    @Parameter(type = ItemIO.INPUT)
     Img<T> image;
-
     /*The output is a list of Points*/
-    @Parameter(type = ItemIO.OUTPUT)
     List<Point> output;
 
-    @Parameter
-    CommandService cs;
+	public LocalMinimaCommand( Img< T > image ) {
+		this.image = image;
+		setLocalMinima();
+	}
 
-    @Parameter
-    OpService ops;
+	public void setLocalMinima() {
+		 final T value = image.firstElement().createVariable();
+	        /*Extract Local Minima*/
+	     output = extractLocalMinima(image, value);
+	}
 
-    @Override
-    public void run() {
-
-
-        final T value = image.firstElement().createVariable();
-
-        /*Extract Local Minima*/
-        output = extractLocalMinima(image, value);
-
-    }
-
+	public List< Point > getOutput() {
+		return output;
+	}
 
     private List<Point> extractLocalMinima(final RandomAccessibleInterval<T> image, final T highValue) {
         return extractLocalMinima(Views.extendValue(image, highValue), image);

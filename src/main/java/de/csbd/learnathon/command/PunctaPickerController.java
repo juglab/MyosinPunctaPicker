@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.Future;
 
 import javax.swing.AbstractAction;
 import javax.swing.Action;
@@ -15,8 +14,9 @@ import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.KeyStroke;
 
-import org.scijava.command.CommandModule;
 import org.scijava.command.CommandService;
+import org.scijava.table.Column;
+import org.scijava.table.GenericTable;
 import org.scijava.thread.ThreadService;
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
@@ -26,8 +26,6 @@ import bdv.viewer.state.ViewerState;
 import circledetection.command.BlobDetectionCommand;
 import ij.ImagePlus;
 import net.imagej.ops.OpService;
-import net.imagej.table.Column;
-import net.imagej.table.GenericTable;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
@@ -53,7 +51,7 @@ public class PunctaPickerController {
     private PunctaPickerModel model;
     private PunctaPickerView view;
     private CommandService cs;
-    private ThreadService ts;
+//    private ThreadService ts;
     private OpService os;
 	private int patchSize;
 
@@ -61,7 +59,7 @@ public class PunctaPickerController {
         this.model = model;
         this.view = punctaPickerView;
         this.cs = cs;
-        this.ts = ts;
+//        this.ts = ts;
         this.os = os;
     }
 
@@ -194,19 +192,21 @@ public class PunctaPickerController {
         }
     }
 
-
     private <T extends RealType<T> & NativeType<T>> void actionClick(int x, int y) {
-		ts.run( () -> {
-			try {
-				actionClickInThread( x, y );
-			} catch ( Exception e ) {
-				e.printStackTrace();
-			}
-        });
+		actionClickInThread( x, y );
     }
 
-    private <T extends RealType<T> & NativeType<T>> void actionClickInThread(int x, int y) {
+//    private <T extends RealType<T> & NativeType<T>> void actionClick(int x, int y) {
+//		ts.run( () -> {
+//			try {
+//				actionClickInThread( x, y );
+//			} catch ( Exception e ) {
+//				e.printStackTrace();
+//			}
+//        });
+//    }
 
+    private <T extends RealType<T> & NativeType<T>> void actionClickInThread(int x, int y) {
         pos = new RealPoint(3);
         view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates(x, y, pos);
         ViewerState state = view.getBdv().getBdvHandle().getViewerPanel().getState();
@@ -229,7 +229,7 @@ public class PunctaPickerController {
 
         Img<T> image = view.getImage();
         Views.extendMirrorSingle(image);
-		patchSize = 15;
+		patchSize = 50;
         FinalInterval cropped = Intervals.createMinMax((long) (pos.getDoublePosition(0) - patchSize / 2), (long) (pos.getDoublePosition(1) - patchSize / 2), 0, (long) (pos.getDoublePosition(0) + patchSize / 2), (long) (pos.getDoublePosition(1) + patchSize / 2), 0);
         RandomAccessibleInterval<T> croppedImage = Views.interval(image, cropped);
         ImagePlus imgPlus = ImageJFunctions.wrap(croppedImage, "cropped");
@@ -278,8 +278,9 @@ public class PunctaPickerController {
         int axis = 0;
         double samplingFactor = 1;
 
-        final Future<CommandModule> lp = cs.run(BlobDetectionCommand.class, false, "image", image, "minScale", minScale, "maxScale", maxScale, "stepScale", stepScale, "brightBlobs", brightBlobs, "axis", axis, "samplingFactor", samplingFactor);
-        final GenericTable resultsTable = (GenericTable) cs.moduleService().waitFor(lp).getOutput("resultsTable");
+		BlobDetectionCommand< T > blobDetection =
+				new BlobDetectionCommand<>( image, minScale, maxScale, stepScale, brightBlobs, axis, samplingFactor, os );
+		final GenericTable resultsTable = blobDetection.getResultsTable();
 
         /*Step Two: Find Otsu Threshold Value on the new List, so obtained*/
         SampleList<FloatType> localMinimaResponse = createIterableList(resultsTable.get("Value"));
