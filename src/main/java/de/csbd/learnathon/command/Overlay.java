@@ -25,7 +25,7 @@ public class Overlay extends BdvOverlay {
 	public static float FADE_OUT_ALPHA = 0.2f;
 	public int radius = 12;
 	public int lineThickness = 2;
-	public Color defaultColor = new Color( 0, 0, 1 );
+	public Color defaultColor = new Color( 0, 1, 1 );
 	public Color selectedColor = new Color( 1, 0, 0 );
 
 	public Overlay( PunctaPickerModel model ) {
