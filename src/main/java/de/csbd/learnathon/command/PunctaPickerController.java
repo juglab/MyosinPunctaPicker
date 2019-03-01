@@ -4,6 +4,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -14,10 +15,6 @@ import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.KeyStroke;
 
-
-import net.imagej.table.*;
-import net.imglib2.histogram.Histogram1d;
-import net.imglib2.type.numeric.real.FloatType;
 import org.scijava.command.CommandModule;
 import org.scijava.command.CommandService;
 import org.scijava.thread.ThreadService;
@@ -29,15 +26,20 @@ import bdv.viewer.state.ViewerState;
 import circledetection.command.BlobDetectionCommand;
 import ij.ImagePlus;
 import net.imagej.ops.OpService;
+import net.imagej.table.Column;
+import net.imagej.table.GenericTable;
 import net.imglib2.FinalInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
+import net.imglib2.histogram.Histogram1d;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
 import net.imglib2.view.Views;
 
 public class PunctaPickerController {
@@ -53,6 +55,7 @@ public class PunctaPickerController {
     private CommandService cs;
     private ThreadService ts;
     private OpService os;
+	private int patchSize;
 
     public PunctaPickerController(PunctaPickerModel model, PunctaPickerView punctaPickerView, CommandService cs, ThreadService ts, OpService os) {
         this.model = model;
@@ -193,8 +196,12 @@ public class PunctaPickerController {
 
 
     private <T extends RealType<T> & NativeType<T>> void actionClick(int x, int y) {
-        ts.run(() -> {
-            actionClickInThread(x, y);
+		ts.run( () -> {
+			try {
+				actionClickInThread( x, y );
+			} catch ( Exception e ) {
+				e.printStackTrace();
+			}
         });
     }
 
@@ -218,16 +225,20 @@ public class PunctaPickerController {
             }
         }
 
+		///Blob detection routine starts here
+
         Img<T> image = view.getImage();
         Views.extendMirrorSingle(image);
-        int patchSize = 50;
+		patchSize = 15;
         FinalInterval cropped = Intervals.createMinMax((long) (pos.getDoublePosition(0) - patchSize / 2), (long) (pos.getDoublePosition(1) - patchSize / 2), 0, (long) (pos.getDoublePosition(0) + patchSize / 2), (long) (pos.getDoublePosition(1) + patchSize / 2), 0);
         RandomAccessibleInterval<T> croppedImage = Views.interval(image, cropped);
         ImagePlus imgPlus = ImageJFunctions.wrap(croppedImage, "cropped");
-//		ImageJFunctions.show(croppedImage);
+//		ImageJFunctions.show( croppedImage );
         Img<T> newImage = ImageJFunctions.wrap(imgPlus);
 
         Puncta pNew = detectFeatures(newImage);
+
+		///Blob detection routine ends 
         pNew.setT(t);
         pNew.setX((float) (pos.getDoublePosition(0) - patchSize / 2) + pNew.getX());
         pNew.setY((float) (pos.getDoublePosition(1) - patchSize / 2) + pNew.getY());
@@ -269,84 +280,42 @@ public class PunctaPickerController {
 
         final Future<CommandModule> lp = cs.run(BlobDetectionCommand.class, false, "image", image, "minScale", minScale, "maxScale", maxScale, "stepScale", stepScale, "brightBlobs", brightBlobs, "axis", axis, "samplingFactor", samplingFactor);
         final GenericTable resultsTable = (GenericTable) cs.moduleService().waitFor(lp).getOutput("resultsTable");
-        Column valueColumn = resultsTable.get("Value");
-        Iterator<Float> valueIterator = valueColumn.iterator();
 
         /*Step Two: Find Otsu Threshold Value on the new List, so obtained*/
         SampleList<FloatType> localMinimaResponse = createIterableList(resultsTable.get("Value"));
         Histogram1d<FloatType> hist = os.image().histogram(localMinimaResponse);
-        float otsuThreshold = (float) os.threshold().otsu(hist).getRealFloat();
-        //GenericTable thresholdedTable = getThresholdedLocalMinima(otsuThreshold, resultsTable);
+        float otsuThreshold = os.threshold().otsu(hist).getRealFloat();
+		Pair< List< Puncta >, List< Float > > thresholdedPairList = getThresholdedLocalMinima( otsuThreshold, resultsTable );
 
-        GenericTable thresholdedLocalMinimaTable=new DefaultGenericTable();
-        Column valueOld = resultsTable.get("Value");
-        Column XOld = resultsTable.get("X");
-        Column YOld = resultsTable.get("Y");
-        Column radiusOld = resultsTable.get("Radius");
+		/* Pick the blob closest to the click with a good enough LOG response */
+		List< Puncta > potentBlobs = thresholdedPairList.getA();
+//		List< Float > potentBlobValues = thresholdedPairList.getB();
+		List< Double > weights = new ArrayList<>();
+		double epsilon = 0.01;
+		for ( int i = 0; i < potentBlobs.size(); i++ ) {
+			double weight =
+					1 * ( 1 / ( computeDistFromClick( potentBlobs.get( i ) ) + epsilon ) );
+//			double weight =
+//					0.5 * Math.abs( potentBlobValues.get( i ) );
+			weights.add( weight );
+		}
+		Double maxWeight = 0d;
+		int maxWeightInd = 0;
+		for ( int ind = 0; ind < weights.size(); ind++ ) {
+			if ( weights.get( ind ) > maxWeight ) {
+				maxWeight = weights.get( ind );
+				maxWeightInd = ind;
+			}
+		}
+		return potentBlobs.get( maxWeightInd );
 
-        Iterator valueOldIterator = valueOld.iterator();
-        Iterator XOldIterator = XOld.iterator();
-        Iterator YOldIterator = YOld.iterator();
-        Iterator radiusOldIterator = radiusOld.iterator();
-
-
-        FloatColumn XColumn = new FloatColumn("X");
-        FloatColumn YColumn = new FloatColumn("Y");
-        IntColumn RadiusColumn = new IntColumn("Radius");
-//		FloatColumn ValueColumn = new FloatColumn("Value");
-
-        int counter=0;
-        while (valueOldIterator.hasNext()) {
-
-            if ((float) valueOldIterator.next() <= otsuThreshold) {
-                XColumn.add((float) XOldIterator.next());
-                YColumn.add((float) YOldIterator.next());
-                RadiusColumn.add((int) radiusOldIterator.next());
-
-            } else {
-                XOldIterator.next();
-                YOldIterator.next();
-                radiusOldIterator.next();
-            }
-        counter++;
-        }
-        thresholdedLocalMinimaTable.add(XColumn);
-        thresholdedLocalMinimaTable.add(YColumn);
-        thresholdedLocalMinimaTable.add(RadiusColumn);
-
-
-
-
-        double min;
-        int index = 0;
-        int i = 0;
-        double c1 = valueIterator.next();
-
-        while (valueIterator.hasNext()) {
-
-            double c2 = valueIterator.next();
-            if (c1 <= c2) {
-                min = c1;
-                index = i;
-            } else {
-                min = c2;
-                index = i + 1;
-            }
-            c1 = min;
-            i++;
-        }
-
-        Column X = resultsTable.get("X");
-        int x = (int) X.get(index);
-        Column Y = resultsTable.get("Y");
-        int y = (int) Y.get(index);
-        Column Radius = resultsTable.get("Radius");
-        float r = (float) Radius.get(index);
-        Puncta p = new Puncta(x, y, 0, (int) r); // Fix time later on, depending on the frame
-        return p;
     }
 
-    private SampleList<FloatType> createIterableList(final Column column) {
+	private double computeDistFromClick( Puncta puncta ) {
+		return Math.sqrt( Math.pow( ( puncta.getX() - patchSize / 2 ), 2 ) + Math.pow( ( puncta.getY() - patchSize / 2 ), 2 ) );
+	}
+
+	private SampleList< FloatType > createIterableList( final Column column ) {
 
         final Iterator<Float> iterator = column.iterator();
         final List<FloatType> imageResponse = new ArrayList<>();
@@ -357,47 +326,22 @@ public class PunctaPickerController {
         return new SampleList<>(imageResponse);
     }
 
-    private GenericTable getThresholdedLocalMinima(float threshold, GenericTable resultsTable) {
-        GenericTable thresholdedLocalMinimaTable = new DefaultGenericTable();
-        Column valueOld = resultsTable.get("Value");
-        Column XOld = resultsTable.get("X");
-        Column YOld = resultsTable.get("Y");
-        Column radiusOld = resultsTable.get("Radius");
+	private Pair< List< Puncta >, List< Float > > getThresholdedLocalMinima( float threshold, GenericTable resultsTable ) {
+		Column< ? > valueOld = resultsTable.get( "Value" );
+		Column< ? > XOld = resultsTable.get( "X" );
+		Column< ? > YOld = resultsTable.get( "Y" );
+		Column< ? > radiusOld = resultsTable.get( "Radius" );
+		List< Puncta > listPuncta = new LinkedList<>();
+		List< Float > listVal = new LinkedList<>();
 
-        Iterator valueOldIterator = valueOld.iterator();
-        Iterator XOldIterator = XOld.iterator();
-        Iterator YOldIterator = YOld.iterator();
-        Iterator radiusOldIterator = radiusOld.iterator();
-
-
-        FloatColumn XColumn = new FloatColumn("X");
-        FloatColumn YColumn = new FloatColumn("Y");
-        IntColumn RadiusColumn = new IntColumn("Radius");
-//		FloatColumn ValueColumn = new FloatColumn("Value");
-
-
-        while (valueOldIterator.hasNext()) {
-
-            if ((float) valueOldIterator.next() <= threshold) {
-                XColumn.add((float) XOldIterator.next());
-                YColumn.add((float) YOldIterator.next());
-                RadiusColumn.add((int) radiusOldIterator.next());
-
-            } else {
-                XOldIterator.next();
-                YOldIterator.next();
-                radiusOldIterator.next();
-            }
-
-        }
-        thresholdedLocalMinimaTable.add(XColumn);
-        thresholdedLocalMinimaTable.add(YColumn);
-        thresholdedLocalMinimaTable.add(RadiusColumn);
-
-        return thresholdedLocalMinimaTable;
-
-
-    }
+		for ( int i = 0; i < resultsTable.getRowCount(); i++ ) {
+			if ( ( float ) valueOld.get( i ) <= threshold ) {
+				listPuncta.add( new Puncta( ( int ) XOld.get( i ), ( int ) YOld.get( i ), 0, ( float ) radiusOld.get( i ) ) );
+				listVal.add( ( float ) valueOld.get( i ) );
+			}
+		}
+		return new ValuePair<>( listPuncta, listVal );
+	}
 
 
 }
