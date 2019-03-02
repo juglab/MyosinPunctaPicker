@@ -66,11 +66,65 @@ public class PunctaPickerController {
 			actionMoveLeadPuncta( x, y );
 		}, "Move", "SPACE" );
 
-        registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0), "IncreaseRadius", new ManualTrackingAction("IncreaseRadius"));
-        registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0), "DecreaseRadius", new ManualTrackingAction("DecreaseRadius"));
-        registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_L, 0), "Link", new ManualTrackingAction("Link"));
-        registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_X, 0), "DeleteTracklet", new ManualTrackingAction("DeleteTracklet"));
-        registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0), "DeletePunctaOrEdge", new ManualTrackingAction("DeletePunctaOrEdge"));
+        registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0), "IncreaseRadius", new AbstractAction() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				Puncta pun = model.getGraph().getLeadSelectedPuncta();
+                if (!(pun == null)) {
+                    pun.setR(pun.getR() * 1.2f);
+                    model.getView().getBdv().getViewerPanel().requestRepaint();
+                }
+			}
+        });
+        registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_Q, 0), "DecreaseRadius", new AbstractAction() {
+			
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				if (!(model.getGraph().getLeadSelectedPuncta() == null)) {
+                    model.getGraph().getLeadSelectedPuncta().setR(model.getGraph().getLeadSelectedPuncta().getR() * 0.8f);
+                    model.getView().getBdv().getViewerPanel().requestRepaint();
+				}
+			}
+		} );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_L, 0 ), "Link", new AbstractAction() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				if ( !( model.getGraph().getLeadSelectedPuncta() == null ) && !( model.getGraph().getMouseSelectedPuncta() == null ) ) {
+					model.getGraph().addEdge( new Edge( model.getGraph().getLeadSelectedPuncta(), model.getGraph().getMouseSelectedPuncta() ) );
+					model.getGraph().selectSubgraphContaining( model.getGraph().getLeadSelectedPuncta() );
+					model.getView().getBdv().getViewerPanel().requestRepaint();
+				}
+
+			}
+		} );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_X, 0 ), "DeleteTracklet", new AbstractAction() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				model.getGraph().deleteSelectedElements();
+				model.getView().getBdv().getViewerPanel().requestRepaint();
+
+			}
+		} );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_D, 0 ), "DeletePunctaOrEdge", new AbstractAction() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				if ( !( model.getGraph().getMouseSelectedEdge() == null ) ) {
+					model.getGraph().removeEdge( model.getGraph().getMouseSelectedEdge() );
+					model.getGraph().setMouseSelectedEdge( null );
+					model.getGraph().selectSubgraphContaining( model.getGraph().getLeadSelectedPuncta() ); //Trial Basis
+					model.getView().getBdv().getViewerPanel().requestRepaint();
+				} else {
+					model.getGraph().deleteSelectedPuncta();
+					model.getView().getBdv().getViewerPanel().requestRepaint();
+
+				}
+
+			}
+		} );
     }
 
     public void registerKeyBinding(KeyStroke keyStroke, String name, Action action) {
@@ -82,54 +136,6 @@ public class PunctaPickerController {
         am.put(name, action);
     }
 
-    public class ManualTrackingAction extends AbstractAction {
-        private String name;
-
-        public ManualTrackingAction(String name) {
-            this.name = name;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-
-            if (name == "IncreaseRadius") {
-                Puncta pun = model.getGraph().getLeadSelectedPuncta();
-                if (!(pun == null)) {
-                    pun.setR(pun.getR() * 1.2f);
-                    model.getView().getBdv().getViewerPanel().requestRepaint();
-                }
-            }
-            if (name == "DecreaseRadius") {
-                if (!(model.getGraph().getLeadSelectedPuncta() == null)) {
-                    model.getGraph().getLeadSelectedPuncta().setR(model.getGraph().getLeadSelectedPuncta().getR() * 0.8f);
-                    model.getView().getBdv().getViewerPanel().requestRepaint();
-                }
-            }
-            if (name == "Link") {
-                if (!(model.getGraph().getLeadSelectedPuncta() == null) && !(model.getGraph().getMouseSelectedPuncta() == null)) {
-                    model.getGraph().addEdge(new Edge(model.getGraph().getLeadSelectedPuncta(), model.getGraph().getMouseSelectedPuncta()));
-                    model.getGraph().selectSubgraphContaining(model.getGraph().getLeadSelectedPuncta());
-                    model.getView().getBdv().getViewerPanel().requestRepaint();
-                }
-            }
-            if (name == "DeleteTracklet") {
-                model.getGraph().deleteSelectedElements();
-                model.getView().getBdv().getViewerPanel().requestRepaint();
-            }
-            if (name == "DeletePunctaOrEdge") {
-                if (!(model.getGraph().getMouseSelectedEdge() == null)) {
-                    model.getGraph().removeEdge(model.getGraph().getMouseSelectedEdge());
-                    model.getGraph().setMouseSelectedEdge(null);
-                    model.getGraph().selectSubgraphContaining(model.getGraph().getLeadSelectedPuncta()); //Trial Basis
-                    model.getView().getBdv().getViewerPanel().requestRepaint();
-                } else {
-                    model.getGraph().deleteSelectedPuncta();
-                    model.getView().getBdv().getViewerPanel().requestRepaint();
-
-                }
-            }
-        }
-    }
 
     private void actionSelectClosestSubgraph(int x, int y) {
         Graph g = model.getGraph();
@@ -156,15 +162,6 @@ public class PunctaPickerController {
 		actionClickInThread( x, y );
     }
 
-//    private <T extends RealType<T> & NativeType<T>> void actionClick(int x, int y) {
-//		ts.run( () -> {
-//			try {
-//				actionClickInThread( x, y );
-//			} catch ( Exception e ) {
-//				e.printStackTrace();
-//			}
-//        });
-//    }
 
     private <T extends RealType<T> & NativeType<T>> void actionClickInThread(int x, int y) {
         pos = new RealPoint(3);
@@ -189,7 +186,7 @@ public class PunctaPickerController {
 
         Img<T> image = view.getImage();
         Views.extendMirrorSingle(image);
-		patchSize = 50;
+		patchSize = 15;
         FinalInterval cropped = Intervals.createMinMax((long) (pos.getDoublePosition(0) - patchSize / 2), (long) (pos.getDoublePosition(1) - patchSize / 2), 0, (long) (pos.getDoublePosition(0) + patchSize / 2), (long) (pos.getDoublePosition(1) + patchSize / 2), 0);
         RandomAccessibleInterval<T> croppedImage = Views.interval(image, cropped);
         ImagePlus imgPlus = ImageJFunctions.wrap(croppedImage, "cropped");

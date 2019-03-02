@@ -3,9 +3,6 @@ package circledetection.command;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.scijava.command.Command;
-import org.scijava.plugin.Plugin;
-
 import net.imglib2.Interval;
 import net.imglib2.Point;
 import net.imglib2.RandomAccessible;
@@ -26,8 +23,6 @@ import net.imglib2.view.Views;
  * @param <T> type
  * @author Matthias Arzt, Tim-Oliver Buccholz, Manan Lalit, MPI-CBG / CSBD, Dresden
  */
-
-@Plugin(type = Command.class, menuPath = "Plugins > LocalMinima")
 public class LocalMinimaCommand< T extends RealType< T > & NativeType< T > & Comparable< T > > {
 
     Img<T> image;
