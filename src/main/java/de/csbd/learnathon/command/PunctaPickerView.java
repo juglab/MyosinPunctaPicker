@@ -1,5 +1,6 @@
 package de.csbd.learnathon.command;
 
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import javax.swing.JPanel;
@@ -14,10 +15,13 @@ import bdv.util.BdvHandlePanel;
 import bdv.util.BdvSource;
 import net.imagej.Dataset;
 import net.imagej.ops.OpService;
+import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.util.Util;
+import net.imglib2.view.Views;
 
 public class PunctaPickerView {
 
@@ -69,15 +73,42 @@ public class PunctaPickerView {
 	private < T extends RealType< T > & NativeType< T > > BdvHandlePanel initBdv( final RandomAccessibleInterval< T > img ) {
 		final BdvHandlePanel bdv = getBdv();
 		final BdvSource source = BdvFunctions.show( img, "img", Bdv.options().addTo( bdv ) );
-//		final T min = Util.getTypeFromInterval( img ).createVariable();
-//		final T max = Util.getTypeFromInterval( img ).createVariable();
-//		ImglibUtil.computeMinMax( Views.iterable( img ), min, max );
-//		source.setDisplayRangeBounds( 0, max.getRealFloat() );
-//		source.setDisplayRange( min.getRealFloat(), max.getRealFloat() );
+		final T min = Util.getTypeFromInterval( img ).createVariable();
+		final T max = Util.getTypeFromInterval( img ).createVariable();
+		computeMinMax( Views.iterable( img ), min, max );
+		source.setDisplayRangeBounds( 0, max.getRealFloat() );
+		source.setDisplayRange( min.getRealFloat(), max.getRealFloat() );
 		BdvFunctions.showOverlay( overlay, "overlay", Bdv.options().addTo( bdv ) );
 		return bdv;
 	}
 
+
+	private < T extends RealType< T > & NativeType< T > > void computeMinMax(
+			final IterableInterval< T > iterableInterval,
+			final T min,
+			final T max ) {
+		if ( iterableInterval == null ) { return; }
+
+		// create a cursor for the image (the order does not matter)
+		final Iterator< T > iterator = iterableInterval.iterator();
+
+		// initialize min and max with the first image value
+		T type = iterator.next();
+
+		min.set( type );
+		max.set( type );
+
+		// loop over the rest of the data and determine min and max value
+		while ( iterator.hasNext() ) {
+			// we need this type more than once
+			type = iterator.next();
+
+			if ( type.compareTo( min ) < 0 ) min.set( type );
+
+			if ( type.compareTo( max ) > 0 ) max.set( type );
+		}
+
+	}
 
 	public JPanel getPanel() {
 		return bdv.getViewerPanel();
