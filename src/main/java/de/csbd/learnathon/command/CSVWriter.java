@@ -1,5 +1,6 @@
 package de.csbd.learnathon.command;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
@@ -13,12 +14,12 @@ public class CSVWriter {
 	//CSV file header
 	private static final String FILE_HEADER = "id,x,y,t";
 
-	public static void writeCsvFile( String fileName, List< Puncta > punctaList, List< Edge > edgeList ) {
+	public static void writeCsvFile( final File file, final List< Puncta > punctaList, final List< Edge > edgeList ) {
 
 		FileWriter fileWriter = null;
 
 		try {
-			fileWriter = new FileWriter( fileName );
+			fileWriter = new FileWriter( file );
 
 			//Write the CSV file header
 			fileWriter.append( FILE_HEADER.toString() );
@@ -28,7 +29,7 @@ public class CSVWriter {
 
 			//Write a new student object list to the CSV file
 			int id=-1;
-			for ( Puncta puncta : punctaList ) {
+			for ( final Puncta puncta : punctaList ) {
 				id++;
 				fileWriter.append( String.valueOf( id) );
 				fileWriter.append( COMMA_DELIMITER );
@@ -43,7 +44,7 @@ public class CSVWriter {
 			fileWriter.append( "edgep1,edgep2" );
 			fileWriter.append( NEW_LINE_SEPARATOR );
 			
-			for ( Edge e :  edgeList ) {
+			for ( final Edge e : edgeList ) {
 				fileWriter.append( String.valueOf( punctaList.indexOf( e.getA() ) ) );
 				fileWriter.append( COMMA_DELIMITER );
 				fileWriter.append( String.valueOf( punctaList.indexOf( e.getB() ) ) );
@@ -52,7 +53,7 @@ public class CSVWriter {
 
 			System.out.println( "CSV file was created successfully !!!" );
 
-		} catch ( Exception e ) {
+		} catch ( final Exception e ) {
 			System.out.println( "Error in CsvFileWriter !!!" );
 			e.printStackTrace();
 		}
@@ -61,7 +62,7 @@ public class CSVWriter {
 			try {
 				fileWriter.flush();
 				fileWriter.close();
-			} catch ( IOException e ) {
+			} catch ( final IOException e ) {
 				System.out.println( "Error while flushing/closing fileWriter !!!" );
 				e.printStackTrace();
 			}
