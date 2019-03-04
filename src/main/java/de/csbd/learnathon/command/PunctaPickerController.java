@@ -189,7 +189,7 @@ public class PunctaPickerController {
             }
         }
 
-		String blobDetectionStatus = SimpleMenu.getSelectedButtonText();
+		String blobDetectionStatus = SimpleMenu.getBlobDetectionModuleStatus();
 		if ( blobDetectionStatus == "Blob Detection ON" ) {
 			Img< T > image = view.getImage();
 			Views.extendMirrorSingle( image );
