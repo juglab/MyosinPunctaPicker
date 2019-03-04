@@ -106,6 +106,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		buttonGroup = new ButtonGroup();
 		buttonGroup.add( on );
 		buttonGroup.add( off );
+		on.setSelected( true );
 		blobmenu.add( on );
 		blobmenu.add( off );
 		menuBar.add( blobmenu );
@@ -228,7 +229,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		CSVWriter.writeCsvFile( file, allPuncta, model.getGraph().getEdges() );
 	}
 	
-	public static String getSelectedButtonText() {
+	public static String getBlobDetectionModuleStatus() {
         for (Enumeration<AbstractButton> buttons = buttonGroup.getElements(); buttons.hasMoreElements();) {
             AbstractButton button = buttons.nextElement();
 
