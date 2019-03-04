@@ -16,7 +16,7 @@ import javax.swing.filechooser.FileSystemView;
 
 public class SimpleMenu implements ActionListener, ItemListener {
 
-	private PunctaPickerModel model;
+	private final PunctaPickerModel model;
 
 	public static String FLOW_NONE = "none";
 	public static String FLOW_TPS = "TPS";
@@ -24,7 +24,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 	public static String FLOW_kNN = "kNN";
 	private static String flowMethod = FLOW_NONE;
 
-	public SimpleMenu( PunctaPickerModel m ) {
+	public SimpleMenu( final PunctaPickerModel m ) {
 		this.model = m;
 	}
 
@@ -114,33 +114,33 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		return menuBar;
-	
+
 	}
 
 	@Override
-	public void itemStateChanged( ItemEvent e ) {}
+	public void itemStateChanged( final ItemEvent e ) {}
 
 	@Override
-	public void actionPerformed( ActionEvent e ) {
-		JMenuItem jmi = ( JMenuItem ) e.getSource();
+	public void actionPerformed( final ActionEvent e ) {
+		final JMenuItem jmi = ( JMenuItem ) e.getSource();
 		if ( jmi.getText() == "Load tracklets from CSV" ) {
-			JFileChooser jfc = new JFileChooser( FileSystemView.getFileSystemView().getHomeDirectory() );
+			final JFileChooser jfc = new JFileChooser( FileSystemView.getFileSystemView().getHomeDirectory() );
 			jfc.setDialogTitle( "Load tracklets csv file: " );
 			jfc.setAcceptAllFileFilterUsed( false );
-			FileNameExtensionFilter filter = new FileNameExtensionFilter( "*.csv", "csv" );
+			final FileNameExtensionFilter filter = new FileNameExtensionFilter( "*.csv", "csv" );
 			jfc.setFileFilter( filter );
 			jfc.addChoosableFileFilter( filter );
-			int returnValue = jfc.showOpenDialog( null );
+			final int returnValue = jfc.showOpenDialog( null );
 			if ( returnValue == JFileChooser.APPROVE_OPTION ) {
-				File selectedFile = jfc.getSelectedFile();
+				final File selectedFile = jfc.getSelectedFile();
 				if ( model.getGraph().isEmpty() ) {
 					model.setGraph( CSVReader.loadCSV( selectedFile.getAbsolutePath() ) );
 				} else {
-					Graph addGraph = CSVReader.loadCSV( selectedFile.getAbsolutePath() );
-					for ( Edge ed : addGraph.getEdges() ) {
+					final Graph addGraph = CSVReader.loadCSV( selectedFile.getAbsolutePath() );
+					for ( final Edge ed : addGraph.getEdges() ) {
 						model.getGraph().addEdge( ed );
 					}
-					for ( Puncta pu : addGraph.getPunctas() ) {
+					for ( final Puncta pu : addGraph.getPunctas() ) {
 						model.getGraph().addPuncta( pu );
 					}
 				}
@@ -151,14 +151,14 @@ public class SimpleMenu implements ActionListener, ItemListener {
 			writeToCSV( allPuncta );
 		}
 		if ( jmi.getText() == "Load tracklets from old format" ) {
-			JFileChooser jfc = new JFileChooser( FileSystemView.getFileSystemView().getHomeDirectory() );
+			final JFileChooser jfc = new JFileChooser( FileSystemView.getFileSystemView().getHomeDirectory() );
 			jfc.setDialogTitle( "Load old tracks from csv file: " );
 			jfc.setMultiSelectionEnabled( true );
 			jfc.setAcceptAllFileFilterUsed( false );
-			FileNameExtensionFilter filter = new FileNameExtensionFilter( "*.csv", "csv" );
+			final FileNameExtensionFilter filter = new FileNameExtensionFilter( "*.csv", "csv" );
 			jfc.setFileFilter( filter );
 			jfc.addChoosableFileFilter( filter );
-			File[] selectedFiles = jfc.getSelectedFiles();
+			final File[] selectedFiles = jfc.getSelectedFiles();
 			System.out.println( selectedFiles[ 0 ].getAbsolutePath() );
 			System.out.println( selectedFiles[ 1 ].getAbsolutePath() );
 				model.setGraph( CSVReader.loadOldCSVs( selectedFiles[ 0 ].getAbsolutePath(), selectedFiles[ 1 ].getAbsolutePath() ) );
@@ -178,16 +178,17 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		if ( jmi.getText() == "Key bindings" ) {}
 	}
 
-	private void writeToCSV( List< Puncta > allPuncta ) {
-		JFileChooser chooser = new JFileChooser( FileSystemView.getFileSystemView().getHomeDirectory() );
+	private void writeToCSV( final List< Puncta > allPuncta ) {
+		final JFileChooser chooser = new JFileChooser( FileSystemView.getFileSystemView().getHomeDirectory() );
 		chooser.setDialogTitle( "Choose a directory to save your file: " );
-		chooser.setFileSelectionMode( JFileChooser.DIRECTORIES_ONLY );
+		chooser.setFileSelectionMode( JFileChooser.FILES_ONLY );
 		chooser.showSaveDialog( null );
 
-		String path = chooser.getSelectedFile().getAbsolutePath();
-		String filename = chooser.getSelectedFile().getName();
-		CSVWriter.writeCsvFile( path + filename + ".csv", allPuncta, model.getGraph().getEdges() );
-		System.out.println( path + filename + ".csv" );
+		File file = chooser.getSelectedFile();
+		if ( !file.getName().endsWith( ".csv" ) ) {
+			file = new File( file.getAbsolutePath() + ".csv" );
+		}
+		CSVWriter.writeCsvFile( file, allPuncta, model.getGraph().getEdges() );
 	}
 }
 
