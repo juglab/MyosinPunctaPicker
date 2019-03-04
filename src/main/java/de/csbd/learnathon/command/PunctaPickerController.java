@@ -12,6 +12,7 @@ import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 import javax.swing.KeyStroke;
 
 import org.scijava.table.Column;
@@ -103,8 +104,14 @@ public class PunctaPickerController {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				model.getGraph().deleteSelectedElements();
-				model.getView().getBdv().getViewerPanel().requestRepaint();
+				int confirmButton = JOptionPane.YES_NO_OPTION;
+				int confirmResult =
+						JOptionPane.showConfirmDialog( null, "Would you like to delete the selected tracklet?", "Warning", confirmButton );
+				if ( confirmResult == JOptionPane.YES_OPTION ) {
+					model.getGraph().deleteSelectedElements();
+					model.getGraph().setLeadSelectedPuncta( null );
+					model.getView().getBdv().getViewerPanel().requestRepaint();
+				}
 
 			}
 		} );
