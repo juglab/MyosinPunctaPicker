@@ -37,6 +37,7 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.Pair;
 import net.imglib2.util.ValuePair;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 public class PunctaPickerController {
@@ -191,7 +192,8 @@ public class PunctaPickerController {
 
 		String blobDetectionStatus = SimpleMenu.getBlobDetectionModuleStatus();
 		if ( blobDetectionStatus == "Blob Detection ON" ) {
-			Img< T > image = view.getImage();
+			Img< T > fullImage = view.getImage();
+			IntervalView< T > image = Views.hyperSlice( fullImage, 2, t );
 			Views.extendMirrorSingle( image );
 			patchSize = 15;
 			FinalInterval cropped = Intervals.createMinMax(
