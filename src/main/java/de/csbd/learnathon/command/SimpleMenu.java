@@ -6,12 +6,16 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
+import java.util.Enumeration;
 import java.util.List;
 
+import javax.swing.AbstractButton;
+import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -20,6 +24,8 @@ import javax.swing.filechooser.FileSystemView;
 public class SimpleMenu implements ActionListener, ItemListener {
 
 	private PunctaPickerModel model;
+
+	private static ButtonGroup buttonGroup;
 
 	public static String FLOW_NONE = "none";
 	public static String FLOW_TPS = "TPS";
@@ -40,7 +46,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 
 		//create a menubar
 		JMenuBar menuBar;
-		JMenu filemenu, flowmenu, helpmenu;
+		JMenu filemenu, flowmenu, blobmenu, helpmenu;
 		JMenu helpsubmenu;
 		JMenuItem menuItem;
 
@@ -75,7 +81,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		slider.addChangeListener( cl );
 		filemenu.add( slider );
 
-		//Build the file menu.
+		//Build the flow menu.
 		flowmenu = new JMenu( "Compute flows" );
 		flowmenu.getAccessibleContext().setAccessibleDescription( "This is the menu to compute different flows" );
 		menuBar.add( flowmenu );
@@ -93,7 +99,18 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem.addActionListener( this );
 		flowmenu.add( menuItem );
 
-		//Build the file menu.
+		//Build the blob detection on/off menu.
+		blobmenu = new JMenu( "Automatic Blob Detection" );
+		JRadioButtonMenuItem on = new JRadioButtonMenuItem( "Blob Detection ON" );
+		JRadioButtonMenuItem off = new JRadioButtonMenuItem( "Blob Detection OFF" );
+		buttonGroup = new ButtonGroup();
+		buttonGroup.add( on );
+		buttonGroup.add( off );
+		blobmenu.add( on );
+		blobmenu.add( off );
+		menuBar.add( blobmenu );
+
+		//Build the help menu.
 		helpmenu = new JMenu( "Help" );
 		flowmenu.getAccessibleContext().setAccessibleDescription( "This is the menu for help about different key bindings" );
 		menuBar.add( helpmenu );
@@ -208,6 +225,17 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		String filename = chooser.getSelectedFile().getName();
 		CSVWriter.writeCsvFile( path + filename + ".csv", allPuncta, model.getGraph().getEdges() );
 		System.out.println( path + filename + ".csv" );
+	}
+	
+	public static String getSelectedButtonText() {
+        for (Enumeration<AbstractButton> buttons = buttonGroup.getElements(); buttons.hasMoreElements();) {
+            AbstractButton button = buttons.nextElement();
+
+            if (button.isSelected()) {
+                return button.getText();
+            }
+        }
+		return null;
 	}
 }
 

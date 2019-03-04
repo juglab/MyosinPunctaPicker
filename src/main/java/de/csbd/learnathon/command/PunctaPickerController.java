@@ -189,35 +189,55 @@ public class PunctaPickerController {
             }
         }
 
+		String blobDetectionStatus = SimpleMenu.getSelectedButtonText();
+		if ( blobDetectionStatus == "Blob Detection ON" ) {
+			Img< T > image = view.getImage();
+			Views.extendMirrorSingle( image );
+			patchSize = 15;
+			FinalInterval cropped = Intervals.createMinMax(
+					( long ) ( pos.getDoublePosition( 0 ) - patchSize / 2 ),
+					( long ) ( pos.getDoublePosition( 1 ) - patchSize / 2 ),
+					0,
+					( long ) ( pos.getDoublePosition( 0 ) + patchSize / 2 ),
+					( long ) ( pos.getDoublePosition( 1 ) + patchSize / 2 ),
+					0 );
+			RandomAccessibleInterval< T > croppedImage = Views.interval( image, cropped );
+			ImagePlus imgPlus = ImageJFunctions.wrap( croppedImage, "cropped" );
+//				ImageJFunctions.show( croppedImage );
+			Img< T > newImage = ImageJFunctions.wrap( imgPlus );
+
+			Puncta pNew = detectFeatures( newImage );
+
+			///Blob detection routine ends 
+			pNew.setT( t );
+			pNew.setX( ( float ) ( pos.getDoublePosition( 0 ) - patchSize / 2 ) + pNew.getX() );
+			pNew.setY( ( float ) ( pos.getDoublePosition( 1 ) - patchSize / 2 ) + pNew.getY() );
+			addPunctaToGraph( t, g, pOld, pNew );
+
+		}
+
+		else { // If blob detection is switched OFF, then use default radius
+			Puncta pNew = new Puncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t, model.getDefaultRadius() );
+			addPunctaToGraph( t, g, pOld, pNew );
+
+		}
 		///Blob detection routine starts here
 
-        Img<T> image = view.getImage();
-        Views.extendMirrorSingle(image);
-		patchSize = 15;
-        FinalInterval cropped = Intervals.createMinMax((long) (pos.getDoublePosition(0) - patchSize / 2), (long) (pos.getDoublePosition(1) - patchSize / 2), 0, (long) (pos.getDoublePosition(0) + patchSize / 2), (long) (pos.getDoublePosition(1) + patchSize / 2), 0);
-        RandomAccessibleInterval<T> croppedImage = Views.interval(image, cropped);
-        ImagePlus imgPlus = ImageJFunctions.wrap(croppedImage, "cropped");
-//		ImageJFunctions.show( croppedImage );
-        Img<T> newImage = ImageJFunctions.wrap(imgPlus);
 
-        Puncta pNew = detectFeatures(newImage);
-
-		///Blob detection routine ends 
-        pNew.setT(t);
-        pNew.setX((float) (pos.getDoublePosition(0) - patchSize / 2) + pNew.getX());
-        pNew.setY((float) (pos.getDoublePosition(1) - patchSize / 2) + pNew.getY());
-
-        model.getGraph().addPuncta(pNew);
-        model.getGraph().setLeadSelectedPuncta(pNew);
-        pNew.setSelected(true);
-        if (pOld != null && pOld.getT() == t - 1) {
-            addSelectedEdge(g, pOld, pNew);
-        } else {
-            model.getGraph().unselectAll();
-            pNew.setSelected(true);
-        }
-        view.getBdv().getViewerPanel().nextTimePoint();
     }
+
+	private void addPunctaToGraph( int t, Graph g, Puncta pOld, Puncta pNew ) {
+		model.getGraph().addPuncta( pNew );
+		model.getGraph().setLeadSelectedPuncta( pNew );
+		pNew.setSelected( true );
+		if ( pOld != null && pOld.getT() == t - 1 ) {
+			addSelectedEdge( g, pOld, pNew );
+		} else {
+			model.getGraph().unselectAll();
+			pNew.setSelected( true );
+		}
+		view.getBdv().getViewerPanel().nextTimePoint();
+	}
 
     private void addSelectedEdge(Graph g, Puncta p1, Puncta p2) {
         Edge newE = new Edge(p1, p2);
@@ -237,7 +257,7 @@ public class PunctaPickerController {
     private <T extends RealType<T> & NativeType<T>> Puncta detectFeatures(Img<T> image) {
         double minScale = 2;
         double stepScale = 1;
-        double maxScale = 5;
+		double maxScale = 15;
         boolean brightBlobs = true;
         int axis = 0;
         double samplingFactor = 1;
