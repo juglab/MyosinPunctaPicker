@@ -59,7 +59,7 @@ public class PunctaPickerModel {
 	}
 
 	public float getDefaultRadius() {
-		return 15f;
+		return 7f;
 	}
 }
 
