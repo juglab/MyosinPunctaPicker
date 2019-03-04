@@ -13,7 +13,7 @@ import org.scijava.thread.ThreadService;
 
 import bdv.util.BdvOverlay;
 import net.imglib2.RealPoint;
-import net.imglib2.realtransform.AffineTransform2D;
+import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.util.Pair;
 
 public class Overlay extends BdvOverlay {
@@ -37,16 +37,16 @@ public class Overlay extends BdvOverlay {
 	@Override
 	protected void draw( final Graphics2D g ) {
 
-		final AffineTransform2D t = new AffineTransform2D();
-		getCurrentTransform2D( t );
+		final AffineTransform3D t = new AffineTransform3D();
+		getCurrentTransform3D( t );
 		double scale = extractScale( t, 0 );
 
-		final double[] lPos = new double[ 2 ];
-		final double[] gPos = new double[ 2 ];
-		final double[] lPos1 = new double[ 2 ];
-		final double[] lPos2 = new double[ 2 ];
-		final double[] gPos1 = new double[ 2 ];
-		final double[] gPos2 = new double[ 2 ];
+		final double[] lPos = new double[ 3 ];
+		final double[] gPos = new double[ 3 ];
+		final double[] lPos1 = new double[ 3 ];
+		final double[] lPos2 = new double[ 3 ];
+		final double[] gPos1 = new double[ 3 ];
+		final double[] gPos2 = new double[ 3 ];
 
 		float transparency;
 		final int curentTime = info.getTimePointIndex();
@@ -60,7 +60,7 @@ public class Overlay extends BdvOverlay {
 			if ( p.equals( model.getGraph().getLeadSelectedPuncta() ) ) {
 				g.setStroke( new BasicStroke( 2 * lineThickness ) );
 			}
-			RealPoint planarPoint = new RealPoint( p.getX(), p.getY() );
+			RealPoint planarPoint = new RealPoint( p.getX(), p.getY(), 0 );
 			planarPoint.localize( lPos );
 			t.apply( lPos, gPos );
 
@@ -181,11 +181,11 @@ public class Overlay extends BdvOverlay {
 		g.drawLine( ( int ) x1_prime, ( int ) y1_prime, ( int ) x2_prime, ( int ) y2_prime );
 	}
 
-	public static double extractScale( final AffineTransform2D transform, final int axis ) {
+	public static double extractScale( final AffineTransform3D t, final int axis ) {
 		double sqSum = 0;
 		final int c = axis;
 		for ( int r = 0; r < 4; ++r ) {
-			final double x = transform.get( r, c );
+			final double x = t.get( r, c );
 			sqSum += x * x;
 		}
 		return Math.sqrt( sqSum );
@@ -215,9 +215,12 @@ public class Overlay extends BdvOverlay {
 			if ( closest.getB() <= closest.getA().getR() ) {
 				model.getGraph().setMouseSelectedPuncta( closest.getA() );
 			} else {
-				if ( closest.getA().getT() > model.getGraph().getLeadSelectedPuncta().getT() ) {
-					model.getGraph().setMouseSelectedPuncta( closest.getA() );
+				if ( model.getGraph().getLeadSelectedPuncta() != null ) {
+					if ( closest.getA().getT() > model.getGraph().getLeadSelectedPuncta().getT() ) {
+						model.getGraph().setMouseSelectedPuncta( closest.getA() );
+					}
 				}
+
 			}
 		}
 		
