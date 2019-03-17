@@ -74,27 +74,36 @@ public class Overlay extends BdvOverlay {
 				g.setColor( new Color( defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), transparency ) );
 			}
 
-
-
-
-
-
-
-
-			g.drawOval(
-					( int ) ( gPos[ 0 ] - ( p.getR() * scale ) ),
-					( int ) ( gPos[ 1 ] - ( p.getR() * scale ) ),
-					( int ) ( p.getR() * scale * 2 ),
-					( int ) ( p.getR() * scale * 2 ) );  // moves from pixel coords to BDV coords by extractScale method (courtesy Tobi and Manan)
+//			g.drawOval(
+//					( int ) ( gPos[ 0 ] - ( p.getR() * scale ) ),
+//					( int ) ( gPos[ 1 ] - ( p.getR() * scale ) ),
+//					( int ) ( p.getR() * scale * 2 ),
+//					( int ) ( p.getR() * scale * 2 ) );  // moves from pixel coords to BDV coords by extractScale method 
 
 			if ( p.getT() == curentTime ) {
+				if ( p.equals( model.getGraph().getLeadSelectedPuncta() ) ) {
+					g.setColor( new Color( 0, 1, 0, transparency ) );
+				}
 				g.setStroke( new BasicStroke( lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
 					g.drawOval(
 						( int ) ( gPos[ 0 ] - (p.getR()*scale) - 4 ),
 						( int ) ( gPos[ 1 ] - (p.getR()*scale) - 4 ),
 						( int ) ( p.getR() * scale * 2 + 8 ),
 						( int ) ( p.getR() * scale * 2 + 8 ) );
+				g.setStroke( new BasicStroke( lineThickness ) );
+				g.drawOval(
+						( int ) ( gPos[ 0 ] - ( p.getR() * scale ) ),
+						( int ) ( gPos[ 1 ] - ( p.getR() * scale ) ),
+						( int ) ( p.getR() * scale * 2 ),
+						( int ) ( p.getR() * scale * 2 ) );
+			} else {
+				if ( p.equals( model.getGraph().getLeadSelectedPuncta() ) ) {
+					g.setColor( new Color( 0, 1, 0, transparency ) );
 				}
+				int s = 4;
+				g.drawLine( ( int ) gPos[ 0 ] - s, ( int ) gPos[ 1 ], ( int ) gPos[ 0 ] + s, ( int ) gPos[ 1 ] );
+				g.drawLine( ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] - s, ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] + s );
+			}
 
 		}
 
@@ -127,14 +136,20 @@ public class Overlay extends BdvOverlay {
 				g.setColor( new Color( defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), transparency ) );
 			}
 
-			drawPeripheralLine(
-					g,
-					( float ) gPos1[ 0 ],
-					( float ) gPos1[ 1 ],
-					( float ) gPos2[ 0 ],
-					( float ) gPos2[ 1 ],
-					( float ) ( edge.getA().getR() * scale ),
-					( float ) ( edge.getB().getR() * scale ) );
+//			drawPeripheralLine(
+//					g,
+//					( float ) gPos1[ 0 ],
+//					( float ) gPos1[ 1 ],
+//					( float ) gPos2[ 0 ],
+//					( float ) gPos2[ 1 ],
+//					( float ) ( edge.getA().getR() * scale ),
+//					( float ) ( edge.getB().getR() * scale ) );
+//			
+			g.drawLine(
+					( int ) gPos1[ 0 ],
+					( int ) gPos1[ 1 ],
+					( int ) gPos2[ 0 ],
+					( int ) gPos2[ 1 ] );
 		}
 	}
 
