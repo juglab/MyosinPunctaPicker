@@ -49,6 +49,8 @@ public class PunctaPickerView {
 
 	private Overlay overlay;
 
+	private GhostOverlay ghostOverlay;
+
 	public CSVReader getReader() {
 		return reader;
 	}
@@ -61,13 +63,13 @@ public class PunctaPickerView {
 	public PunctaPickerView( PunctaPickerModel m, Dataset image, OpService os ) {
 		this.model = m;
 		this.image=image;
+		this.ghostOverlay = new GhostOverlay( this );
 		this.controller = new PunctaPickerController( m, this, os );
 		model.setController( controller );
 		model.setView( this );
 		this.opService = os;
 		this.overlay = new Overlay( model );
 		bdv = initBdv( model.getRawData() );
-		controller.defineBehaviour();
 	}
 
 	private < T extends RealType< T > & NativeType< T > > BdvHandlePanel initBdv( final RandomAccessibleInterval< T > img ) {
@@ -79,6 +81,7 @@ public class PunctaPickerView {
 		source.setDisplayRangeBounds( 0, max.getRealFloat() );
 		source.setDisplayRange( min.getRealFloat(), max.getRealFloat() );
 		BdvFunctions.showOverlay( overlay, "overlay", Bdv.options().addTo( bdv ) );
+		BdvFunctions.showOverlay( ghostOverlay, "ghostoverlay", Bdv.options().addTo( bdv ) );
 		return bdv;
 	}
 
@@ -133,6 +136,11 @@ public class PunctaPickerView {
 	public < T extends RealType< T > & NativeType< T > > Img getImage()
 	{
 		return this.image;}
+
+	public GhostOverlay getGhostOverlay() {
+
+		return ghostOverlay;
+	}
 
 }
 

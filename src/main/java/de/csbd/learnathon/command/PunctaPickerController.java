@@ -1,5 +1,7 @@
 package de.csbd.learnathon.command;
 
+import java.awt.Cursor;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ import javax.swing.KeyStroke;
 import org.scijava.table.Column;
 import org.scijava.table.GenericTable;
 import org.scijava.ui.behaviour.ClickBehaviour;
+import org.scijava.ui.behaviour.DragBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
 
@@ -47,15 +50,17 @@ public class PunctaPickerController {
     private PunctaPickerView view;
     private OpService os;
 	private int patchSize;
+	final private GhostOverlay ghostOverlay;
 
 	public PunctaPickerController( PunctaPickerModel model, PunctaPickerView punctaPickerView, OpService os ) {
         this.model = model;
         this.view = punctaPickerView;
-
+		this.ghostOverlay = view.getGhostOverlay();
         this.os = os;
+		installBehaviour();
     }
 
-    public void defineBehaviour() {
+	public void installBehaviour() {
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
 		behaviours.install( view.getBdv().getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
@@ -67,6 +72,7 @@ public class PunctaPickerController {
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			actionMoveLeadPuncta( x, y );
 		}, "Move", "SPACE" );
+		behaviours.behaviour( new GhostCircle(), "Ghost Circle", "W" );
 
         registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0), "IncreaseRadius", new AbstractAction() {
 
@@ -134,6 +140,35 @@ public class PunctaPickerController {
 			}
 		} );
     }
+
+	private class GhostCircle implements DragBehaviour {
+
+		private Point mousePos;
+
+		@Override
+		public void init( final int x, final int y ) {
+			System.out.println( x );
+
+			ghostOverlay.setPosition( x, y );
+			ghostOverlay.setVisible( true );
+			view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.CROSSHAIR_CURSOR ) );
+			ghostOverlay.requestRepaint();
+		}
+
+		@Override
+		public void drag( final int x, final int y ) {
+			ghostOverlay.setPosition( x, y );
+		}
+
+		@Override
+		public void end( final int x, final int y ) {
+			ghostOverlay.setVisible( false );
+			view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR ) );
+			ghostOverlay.requestRepaint();
+
+		}
+
+	}
 
     public void registerKeyBinding(KeyStroke keyStroke, String name, Action action) {
 
@@ -223,8 +258,6 @@ public class PunctaPickerController {
 			addPunctaToGraph( t, g, pOld, pNew );
 
 		}
-		///Blob detection routine starts here
-
 
     }
 
