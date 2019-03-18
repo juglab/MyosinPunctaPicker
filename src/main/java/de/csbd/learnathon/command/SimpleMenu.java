@@ -101,14 +101,17 @@ public class SimpleMenu implements ActionListener, ItemListener {
 
 		//Build the blob detection on/off menu.
 		blobmenu = new JMenu( "Automatic Blob Detection" );
-		JRadioButtonMenuItem on = new JRadioButtonMenuItem( "Blob Detection ON" );
-		JRadioButtonMenuItem off = new JRadioButtonMenuItem( "Blob Detection OFF" );
+		JRadioButtonMenuItem autoSize = new JRadioButtonMenuItem( "Automatically select blob size" );
+		JRadioButtonMenuItem autoSizeAndPosition = new JRadioButtonMenuItem( "Automatically select blob size and position" );
+		JRadioButtonMenuItem manual = new JRadioButtonMenuItem( "Manually add blob" );
 		buttonGroup = new ButtonGroup();
-		buttonGroup.add( on );
-		buttonGroup.add( off );
-		on.setSelected( true );
-		blobmenu.add( on );
-		blobmenu.add( off );
+		buttonGroup.add( autoSize );
+		buttonGroup.add( autoSizeAndPosition );
+		buttonGroup.add( manual );
+		manual.setSelected( true );
+		blobmenu.add( autoSize );
+		blobmenu.add( autoSizeAndPosition );
+		blobmenu.add( manual );
 		menuBar.add( blobmenu );
 
 		//Build the help menu.
@@ -121,6 +124,9 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		helpmenu.add( helpsubmenu );
 
 		menuItem = new JMenuItem( "Add puncta -> A" );
+		menuItem.getAccessibleContext().setAccessibleDescription( "" );
+		helpsubmenu.add( menuItem );
+		menuItem = new JMenuItem( "Preview puncta -> P" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		menuItem = new JMenuItem( "Select puncta/tracklet -> C" );
