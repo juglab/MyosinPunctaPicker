@@ -9,7 +9,7 @@ import net.imglib2.realtransform.AffineTransform3D;
 
 public class GhostOverlay extends BdvOverlay {
 
-	private double x, y;
+	private double x, y, r;
 	private boolean visible;
 	private PunctaPickerView view;
 	private Color defaultColor = new Color( 255, 0, 0 );
@@ -19,8 +19,14 @@ public class GhostOverlay extends BdvOverlay {
 	}
 
 	public void setPosition( final double x, final double y ) {
+
 		this.x = x;
 		this.y = y;
+	}
+
+	public void setRadius( final float r ) {
+		this.r = r;
+
 	}
 
 	public void setVisible( final boolean visible ) {
@@ -35,26 +41,33 @@ public class GhostOverlay extends BdvOverlay {
 	protected void draw( final Graphics2D g ) {
 		final AffineTransform3D t = new AffineTransform3D();
 		getCurrentTransform3D( t );
+		double scale = extractScale( t, 0 );
 
 		final double[] lPos = new double[ 3 ];
 		final double[] gPos = new double[ 3 ];
-
-		final int curentTime = info.getTimePointIndex();
-
 		RealPoint planarPoint = new RealPoint( x, y, 0 );
 		planarPoint.localize( lPos );
 		t.apply( lPos, gPos );
-//		System.out.println( gPos[ 0 ] );
-
+		
 		if ( visible ) {
 			g.setColor( defaultColor );
 			g.drawOval(
-					( int ) ( x - 10 ),
-					( int ) ( y - 10 ),
-					( 20 ),
-					( 20 ) );
+					( int ) ( gPos[ 0 ] - ( r * scale ) ),
+					( int ) ( gPos[ 1 ] - ( r * scale ) ),
+					( int ) ( r * scale * 2 ),
+					( int ) ( r * scale * 2 ) );
 		}
 
+	}
+
+	public static double extractScale( final AffineTransform3D t, final int axis ) { //TODO Move this method to Utils
+		double sqSum = 0;
+		final int c = axis;
+		for ( int r = 0; r < 4; ++r ) {
+			final double x = t.get( r, c );
+			sqSum += x * x;
+		}
+		return Math.sqrt( sqSum );
 	}
 
 
