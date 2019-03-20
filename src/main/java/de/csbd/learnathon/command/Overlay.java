@@ -25,8 +25,9 @@ public class Overlay extends BdvOverlay {
 	public static float FADE_OUT_ALPHA = 0.2f;
 	public int radius = 12;
 	public int lineThickness = 2;
-	public Color defaultColor = new Color( 0, 1, 1 );
-	public Color selectedColor = new Color( 1, 0, 0 );
+	private final Color defaultColor = new Color( 0, 1, 1 );
+	private final Color selectedColor = new Color( 1, 0, 0 );
+	private final Color selectedPunctaColor = new Color( 1, ( float ) 0.6, 0 );
 
 	public Overlay( PunctaPickerModel model ) {
 		super();
@@ -82,7 +83,7 @@ public class Overlay extends BdvOverlay {
 
 			if ( p.getT() == curentTime ) {
 				if ( p.equals( model.getGraph().getLeadSelectedPuncta() ) ) {
-					g.setColor( new Color( 0, 1, 0, transparency ) );
+					g.setColor( selectedPunctaColor );
 				}
 				g.setStroke( new BasicStroke( lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
 					g.drawOval(
@@ -96,9 +97,12 @@ public class Overlay extends BdvOverlay {
 						( int ) ( gPos[ 1 ] - ( p.getR() * scale ) ),
 						( int ) ( p.getR() * scale * 2 ),
 						( int ) ( p.getR() * scale * 2 ) );
+				int s = 4;
+				g.drawLine( ( int ) gPos[ 0 ] - s, ( int ) gPos[ 1 ], ( int ) gPos[ 0 ] + s, ( int ) gPos[ 1 ] );
+				g.drawLine( ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] - s, ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] + s );
 			} else {
 				if ( p.equals( model.getGraph().getLeadSelectedPuncta() ) ) {
-					g.setColor( new Color( 0, 1, 0, transparency ) );
+					g.setColor( selectedPunctaColor );
 				}
 				int s = 4;
 				g.drawLine( ( int ) gPos[ 0 ] - s, ( int ) gPos[ 1 ], ( int ) gPos[ 0 ] + s, ( int ) gPos[ 1 ] );
