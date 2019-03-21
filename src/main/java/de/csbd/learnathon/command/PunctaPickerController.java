@@ -60,12 +60,9 @@ public class PunctaPickerController {
     }
 
 	private void setBlobDetectionPatchSize() {
-		if ( SimpleMenu.getBlobDetectionModuleStatus() == "Automatically select blob size and position" ) {
-			autoOrManualPatchSize = 35; //TODO expose this as parameter
-		} else if ( SimpleMenu.getBlobDetectionModuleStatus() == "Automatically select blob size" ) {
-			autoOrManualPatchSize = 10; //TODO expose this as parameter
-		}
+		autoOrManualPatchSize = 55;
 	}
+	
 
 	public void installBehaviour() {
 		Behaviours behaviours = new Behaviours( new InputTriggerConfig() );
@@ -148,6 +145,7 @@ public class PunctaPickerController {
 		} );
     }
 
+
 	private class GhostCircle implements DragBehaviour {
 
 
@@ -213,7 +211,7 @@ public class PunctaPickerController {
                 Puncta minDistPuncta = minEval.getA();
                 double minDist = Math.sqrt(minEval.getB());
                 if (minDistPuncta.getR() >= minDist) {
-                    minDistPuncta.setSelected(true);
+					minDistPuncta.setSelected( true );
                     g.setLeadSelectedPuncta(minDistPuncta);
                     g.selectSubgraphContaining(minDistPuncta);
                     view.getBdv().getViewerPanel().setTimepoint(minDistPuncta.getT());
@@ -254,14 +252,23 @@ public class PunctaPickerController {
 			Puncta pNew = new Puncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t, model.getDefaultRadius() );
 			addPunctaToGraph( t, g, pOld, pNew );
 
-		} else {
+		} else if ( blobDetectionStatus == "Automatically select blob size and position" ) {
 
 			Puncta pNew = blobDetectedPuncta( t, pos.getDoublePosition( 0 ), pos.getDoublePosition( 1 ) );
 			pNew.setT( t );
 			pNew.setX( ( float ) ( pos.getDoublePosition( 0 ) - autoOrManualPatchSize / 2 ) + pNew.getX() );
 			pNew.setY( ( float ) ( pos.getDoublePosition( 1 ) - autoOrManualPatchSize / 2 ) + pNew.getY() );
 			addPunctaToGraph( t, g, pOld, pNew );
+			System.out.println( pNew.getR() );
 
+		}
+		else {
+			Puncta pNew = blobDetectedPuncta( t, pos.getDoublePosition( 0 ), pos.getDoublePosition( 1 ) );
+			pNew.setT( t );
+			pNew.setX( ( float ) ( pos.getDoublePosition( 0 ) ) );
+			pNew.setY( ( float ) ( pos.getDoublePosition( 1 ) ) );
+			addPunctaToGraph( t, g, pOld, pNew );
+			System.out.println( pNew.getR() );
 		}
 
     }
@@ -277,12 +284,22 @@ public class PunctaPickerController {
 				( long ) ( x + autoOrManualPatchSize / 2 ),
 				( long ) ( y + autoOrManualPatchSize / 2 ),
 				0 );
+		FinalInterval outputInterval;
+		if ( SimpleMenu.getBlobDetectionModuleStatus() == "Automatically select blob size" ) {
+			outputInterval = Intervals.createMinMax(
+					( long ) ( x - 1 / 2 ),
+					( long ) ( y - 1 / 2 ),
+					0,
+					( long ) ( x + 1 / 2 ),
+					( long ) ( y + 1 / 2 ),
+					0 );
+		} else {
+			outputInterval = cropped;
+		}
 		RandomAccessibleInterval< T > croppedImage = Views.interval( image, cropped );
 		ImagePlus imgPlus = ImageJFunctions.wrap( croppedImage, "cropped" );
-//				ImageJFunctions.show( croppedImage );
 		Img< T > newImage = ImageJFunctions.wrap( imgPlus );
-
-		Puncta pNew = detectFeatures( newImage );
+		Puncta pNew = detectFeatures( newImage, outputInterval );
 		return pNew;
 	}
 
@@ -314,16 +331,17 @@ public class PunctaPickerController {
         lsp.setY(pos.getFloatPosition(1));
     }
 
-	private < T extends RealType< T > & NativeType< T > > Puncta detectFeatures( Img< T > newImage ) {
+	private < T extends RealType< T > & NativeType< T > > Puncta detectFeatures( Img< T > newImage, FinalInterval outputInterval ) {
 		double minScale = 2; //TODO expose as parameter
-		double stepScale = 1; //TODO expose as parameter
+		double stepScale = 0.5; //TODO expose as parameter
 		double maxScale = 15;
         boolean brightBlobs = true;
         int axis = 0;
         double samplingFactor = 1;
 
 		BlobDetectionCommand< T > blobDetection =
-				new BlobDetectionCommand<>( newImage, minScale, maxScale, stepScale, brightBlobs, axis, samplingFactor, os );
+				new BlobDetectionCommand<>( newImage, minScale, maxScale, stepScale, brightBlobs, axis, samplingFactor, os, outputInterval );
+
 		final GenericTable resultsTable = blobDetection.getResultsTable();
 
         /*Step Two: Find Otsu Threshold Value on the new List, so obtained*/

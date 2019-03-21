@@ -63,4 +63,5 @@ public class Puncta {
 	public void setSelected( boolean selected ) {
 		this.isSelected = selected;
 	}
+
 }

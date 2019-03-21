@@ -78,6 +78,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 			JSlider x = ( JSlider ) e.getSource();
 			System.out.println( "value is: " + x.getValue() );
 		};
+
 		slider.addChangeListener( cl );
 		filemenu.add( slider );
 

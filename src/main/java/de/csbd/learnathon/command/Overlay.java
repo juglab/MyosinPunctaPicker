@@ -75,12 +75,6 @@ public class Overlay extends BdvOverlay {
 				g.setColor( new Color( defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), transparency ) );
 			}
 
-//			g.drawOval(
-//					( int ) ( gPos[ 0 ] - ( p.getR() * scale ) ),
-//					( int ) ( gPos[ 1 ] - ( p.getR() * scale ) ),
-//					( int ) ( p.getR() * scale * 2 ),
-//					( int ) ( p.getR() * scale * 2 ) );  // moves from pixel coords to BDV coords by extractScale method 
-
 			if ( p.getT() == curentTime ) {
 				if ( p.equals( model.getGraph().getLeadSelectedPuncta() ) ) {
 					g.setColor( selectedPunctaColor );

@@ -10,6 +10,7 @@ import org.scijava.table.GenericTable;
 import org.scijava.table.IntColumn;
 
 import net.imagej.ops.OpService;
+import net.imglib2.Interval;
 import net.imglib2.Point;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
@@ -41,6 +42,7 @@ public class BlobDetectionCommand< T extends RealType< T > & Type< T > > {
     double samplingFactor=1; /*The sampling factor applied on the axis*/
 	OpService ops;
 	private GenericTable resultsTable;
+	private Interval output;
 
 	public BlobDetectionCommand(
 			Img< T > image,
@@ -50,7 +52,8 @@ public class BlobDetectionCommand< T extends RealType< T > & Type< T > > {
 			boolean brightBlobs,
 			int axis,
 			double samplingFactor,
-			OpService ops ) {
+			OpService ops,
+			Interval output ) {
 		this.image = image;
 		this.minScale = minScale;
 		this.maxScale = maxScale;
@@ -59,6 +62,7 @@ public class BlobDetectionCommand< T extends RealType< T > & Type< T > > {
 		this.axis = axis;
 		this.samplingFactor = samplingFactor;
 		this.ops = ops;
+		this.output = output;
 		setUpBlobDetectionCommand();
 	}
 
@@ -67,31 +71,37 @@ public class BlobDetectionCommand< T extends RealType< T > & Type< T > > {
 		 * Step One: Obtain Laplacian reponse, normalize to make
 		 * scale-independent and stack in a pyramid
 		 */
-        Img<FloatType> normalizedExpandedImage = (Img<FloatType>) multiScaleLaplacian(image, minScale, maxScale, stepScale);
-
-
-        /*Step Two: Apply LocalMinima Command to obtain the minima on the normalizedExpandedImage*/
+		List< Point > predictedResult;
+		Img< FloatType > normalizedExpandedImage = ( Img< FloatType > ) multiScaleLaplacian( image, minScale, maxScale, stepScale, image );
 		LocalMinimaCommand localMinimaCommand = new LocalMinimaCommand<>( normalizedExpandedImage );
 		localMinimaCommand.setLocalMinima();
-		List< Point > predictedResult = localMinimaCommand.getOutput();
+		predictedResult = localMinimaCommand.getOutput();
 
-        /*Step Three: Create a (N+7) dimensioned table based on the results */
-        resultsTable=createResultsTable(normalizedExpandedImage, predictedResult);
+		/*
+		 * Step Three: Create a (N+7) dimensioned table based on the results
+		 */
+		resultsTable = createResultsTable( normalizedExpandedImage, predictedResult );
 
         predictedResult=null;
         normalizedExpandedImage=null;
 	}
 
+
 	public GenericTable getResultsTable() {
 		return resultsTable;
 	}
 
-    private RandomAccessibleInterval<FloatType> multiScaleLaplacian(final Img<T> image, final double minScale, final double maxScale, final double stepScale) {
+	private RandomAccessibleInterval< FloatType > multiScaleLaplacian(
+			final Img< T > image,
+			final double minScale,
+			final double maxScale,
+			final double stepScale,
+			final Interval outputInterval ) {
 
         final List<Img<FloatType>> results = new ArrayList<>();
         for (double scale = minScale; scale <= maxScale; scale = scale + stepScale) {
             Img<FloatType> normalizedLaplacianOfGaussian=ops.create().img(image, new FloatType());
-			LaplacianCommand laplacianCommand = new LaplacianCommand<>( image, scale, axis, samplingFactor, ops );
+			LaplacianCommand laplacianCommand = new LaplacianCommand<>( image, scale, axis, samplingFactor, outputInterval, ops );
 			laplacianCommand.runLaplacian();
 			final Img< FloatType > laplacianOfGaussian = laplacianCommand.getOutput();
             final double s = scale;
