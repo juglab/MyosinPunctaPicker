@@ -39,6 +39,7 @@ public class GhostOverlay extends BdvOverlay {
 
 	@Override
 	protected void draw( final Graphics2D g ) {
+
 		final AffineTransform3D t = new AffineTransform3D();
 		getCurrentTransform3D( t );
 		double scale = extractScale( t, 0 );
