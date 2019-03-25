@@ -144,43 +144,26 @@ public class PunctaPickerController {
 
 	private class GhostCircle implements DragBehaviour {
 
-		private boolean ghostOverlayToggle = false;
-
-		private void setGhostOverlayToggle() {
-			if ( ghostOverlayToggle ) {
-				ghostOverlayToggle = false;
-			} else {
-				ghostOverlayToggle = true;
-			}
-		}
 
 		@Override
 		public void init( final int x, final int y ) {
-
-			setGhostOverlayToggle();
-			if ( ghostOverlayToggle ) {
-				overlayBlobDetectionResult();
-				ghostOverlay.setVisible( true );
-				view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.CROSSHAIR_CURSOR ) );
-				ghostOverlay.requestRepaint();
-			} else {
-				ghostOverlay.setVisible( false );
-				view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR ) );
-				ghostOverlay.requestRepaint();
-			}
-
+			overlayBlobDetectionResult();
+			ghostOverlay.setVisible( true );
+			view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.CROSSHAIR_CURSOR ) );
+			ghostOverlay.requestRepaint();
 		}
 
 		@Override
 		public void drag( final int x, final int y ) {
-			if ( ghostOverlayToggle ) {
-				overlayBlobDetectionResult();
-				ghostOverlay.requestRepaint();
-			}
+			overlayBlobDetectionResult();
 		}
 
 		@Override
-		public void end( final int x, final int y ) {}
+		public void end( final int x, final int y ) {
+			ghostOverlay.setVisible( false );
+			view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR ) );
+			ghostOverlay.requestRepaint();
+		}
 
 
 		private void overlayBlobDetectionResult() {
@@ -188,10 +171,10 @@ public class PunctaPickerController {
 			final RealPoint posn = new RealPoint( 3 );
 			view.getBdv().getViewerPanel().getGlobalMouseCoordinates( posn );
 
-			if ( SimpleMenu.getBlobDetectionModuleStatus() == "Manually add blob" ) {
+			if ( view.getTrackingMode() == "manual" ) {
 				ghostOverlay.setPosition( posn.getDoublePosition( 0 ), posn.getDoublePosition( 1 ) );
 				ghostOverlay.setRadius( model.getDefaultRadius() );
-			} else if ( SimpleMenu.getBlobDetectionModuleStatus() == "Automatically select blob size and position" ) {
+			} else if ( view.getTrackingMode() == "automatically select size and position" ) {
 				Puncta ghostPuncta = blobDetectedPuncta( time, posn.getDoublePosition( 0 ), posn.getDoublePosition( 1 ) );
 				double posx = ( posn.getDoublePosition( 0 ) - autoOrManualPatchSize / 2 ) + ghostPuncta.getX();
 				double posy = ( posn.getDoublePosition( 1 ) - autoOrManualPatchSize / 2 ) + ghostPuncta.getY();
@@ -240,11 +223,6 @@ public class PunctaPickerController {
     }
 
     private <T extends RealType<T> & NativeType<T>> void actionClick(int x, int y) {
-		actionClickInThread( x, y );
-    }
-
-
-    private <T extends RealType<T> & NativeType<T>> void actionClickInThread(int x, int y) {
         pos = new RealPoint(3);
         view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates(x, y, pos);
         ViewerState state = view.getBdv().getBdvHandle().getViewerPanel().getState();
@@ -263,13 +241,13 @@ public class PunctaPickerController {
             }
         }
 
-		String blobDetectionStatus = SimpleMenu.getBlobDetectionModuleStatus();
+		String blobDetectionStatus = view.getTrackingMode();
 
-		if ( blobDetectionStatus == "Manually add blob" ) {
+		if ( blobDetectionStatus == "manual" ) {
 			Puncta pNew = new Puncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t, model.getDefaultRadius() );
 			addPunctaToGraph( t, g, pOld, pNew );
 
-		} else if ( blobDetectionStatus == "Automatically select blob size and position" ) {
+		} else if ( blobDetectionStatus == "automatically select size" ) {
 
 			Puncta pNew = blobDetectedPuncta( t, pos.getDoublePosition( 0 ), pos.getDoublePosition( 1 ) );
 			pNew.setT( t );
@@ -302,7 +280,7 @@ public class PunctaPickerController {
 				( long ) ( y + autoOrManualPatchSize / 2 ),
 				0 );
 		FinalInterval outputInterval;
-		if ( SimpleMenu.getBlobDetectionModuleStatus() == "Automatically select blob size" ) {
+		if ( view.getTrackingMode() == "automatically select size" ) {
 			outputInterval = Intervals.createMinMax(
 					( long ) ( x - 1 / 2 ),
 					( long ) ( y - 1 / 2 ),
@@ -349,9 +327,9 @@ public class PunctaPickerController {
     }
 
 	private < T extends RealType< T > & NativeType< T > > Puncta detectFeatures( Img< T > newImage, FinalInterval outputInterval ) {
-		double minScale = 2; //TODO expose as parameter
-		double stepScale = 0.5; //TODO expose as parameter
-		double maxScale = 15;
+		double minScale = view.getMinScale();
+		double stepScale = view.getStepScale();
+		double maxScale = view.getMaxScale();
         boolean brightBlobs = true;
         int axis = 0;
         double samplingFactor = 1;
