@@ -197,7 +197,6 @@ public class Overlay extends BdvOverlay {
 		public void mouseMoved( MouseEvent e ) {
 			mouseInsidePuncta();
 			mouseOnEdge();
-
 		}
 
 	}
