@@ -19,7 +19,6 @@ import javax.swing.KeyStroke;
 import org.scijava.table.Column;
 import org.scijava.table.GenericTable;
 import org.scijava.ui.behaviour.ClickBehaviour;
-import org.scijava.ui.behaviour.DragBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
 
@@ -49,7 +48,8 @@ public class PunctaPickerController {
     private PunctaPickerView view;
     private OpService os;
 	final private GhostOverlay ghostOverlay;
-	private float autoOrManualPatchSize = 55;  //TODO expose this as parameter
+	public float autoOrManualPatchSize = 55;  //TODO expose this as parameter
+	private GhostCircle ghostCircle;
 
 	public PunctaPickerController( PunctaPickerModel model, PunctaPickerView punctaPickerView, OpService os ) {
         this.model = model;
@@ -64,14 +64,16 @@ public class PunctaPickerController {
 		behaviours.install( view.getBdv().getBdvHandle().getTriggerbindings(), "my-new-behaviours" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			actionClick( x, y );
-		}, "Add", "A" );
+		}, "Add", "button1" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			actionSelectClosestSubgraph( x, y );
 		}, "Select", "C" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			actionMoveLeadPuncta( x, y );
 		}, "Move", "SPACE" );
-		behaviours.behaviour( new GhostCircle(), "Ghost Circle", "ctrl A" );
+
+		ghostCircle = new GhostCircle();
+		behaviours.behaviour( ghostCircle, "Ghost Circle", "A" );
 
         registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0), "IncreaseRadius", new AbstractAction() {
 
@@ -142,50 +144,23 @@ public class PunctaPickerController {
     }
 
 
-	private class GhostCircle implements DragBehaviour {
+	private class GhostCircle implements ClickBehaviour {
 
-
-		@Override
-		public void init( final int x, final int y ) {
-			overlayBlobDetectionResult();
-			ghostOverlay.setVisible( true );
-			view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.CROSSHAIR_CURSOR ) );
-			ghostOverlay.requestRepaint();
-		}
+		private boolean isOn = false;
 
 		@Override
-		public void drag( final int x, final int y ) {
-			overlayBlobDetectionResult();
-		}
-
-		@Override
-		public void end( final int x, final int y ) {
-			ghostOverlay.setVisible( false );
-			view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR ) );
-			ghostOverlay.requestRepaint();
-		}
-
-
-		private void overlayBlobDetectionResult() {
-			int time = view.getBdv().getBdvHandle().getViewerPanel().getState().getCurrentTimepoint();
-			final RealPoint posn = new RealPoint( 3 );
-			view.getBdv().getViewerPanel().getGlobalMouseCoordinates( posn );
-
-			if ( view.getTrackingMode() == "manual" ) {
-				ghostOverlay.setPosition( posn.getDoublePosition( 0 ), posn.getDoublePosition( 1 ) );
-				ghostOverlay.setRadius( model.getDefaultRadius() );
-			} else if ( view.getTrackingMode() == "automatically select size and position" ) {
-				Puncta ghostPuncta = blobDetectedPuncta( time, posn.getDoublePosition( 0 ), posn.getDoublePosition( 1 ) );
-				double posx = ( posn.getDoublePosition( 0 ) - autoOrManualPatchSize / 2 ) + ghostPuncta.getX();
-				double posy = ( posn.getDoublePosition( 1 ) - autoOrManualPatchSize / 2 ) + ghostPuncta.getY();
-				ghostOverlay.setPosition( posx, posy );
-				ghostOverlay.setRadius( ghostPuncta.getR() );
+		public void click( int x, int y ) {
+			if ( !isOn ) {
+				isOn = true;
+				ghostOverlay.overlayBlobDetectionResult();
+				ghostOverlay.setVisible( true );
+				view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.CROSSHAIR_CURSOR ) );
+				ghostOverlay.requestRepaint();
 			} else {
-				Puncta ghostPuncta = blobDetectedPuncta( time, posn.getDoublePosition( 0 ), posn.getDoublePosition( 1 ) );
-				double posx = posn.getDoublePosition( 0 );
-				double posy = posn.getDoublePosition( 1 );
-				ghostOverlay.setPosition( posx, posy );
-				ghostOverlay.setRadius( ghostPuncta.getR() );
+				isOn = false;
+				ghostOverlay.setVisible( false );
+				view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR ) );
+				ghostOverlay.requestRepaint();
 			}
 		}
 
@@ -223,6 +198,7 @@ public class PunctaPickerController {
     }
 
     private <T extends RealType<T> & NativeType<T>> void actionClick(int x, int y) {
+    	
         pos = new RealPoint(3);
         view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates(x, y, pos);
         ViewerState state = view.getBdv().getBdvHandle().getViewerPanel().getState();
@@ -241,7 +217,7 @@ public class PunctaPickerController {
             }
         }
 
-		String blobDetectionStatus = view.getTrackingMode();
+		String blobDetectionStatus = view.getDetectionMode();
 
 		if ( blobDetectionStatus == "manual" ) {
 			Puncta pNew = new Puncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t, model.getDefaultRadius() );
@@ -268,7 +244,7 @@ public class PunctaPickerController {
 
     }
 
-	private < T extends RealType< T > & NativeType< T > > Puncta blobDetectedPuncta( int t, double x, double y ) {
+	public < T extends RealType< T > & NativeType< T > > Puncta blobDetectedPuncta( int t, double x, double y ) {
 		Img< T > fullImage = view.getImage();
 		IntervalView< T > image = Views.hyperSlice( fullImage, 2, t );
 		Views.extendMirrorSingle( image );
@@ -280,7 +256,7 @@ public class PunctaPickerController {
 				( long ) ( y + autoOrManualPatchSize / 2 ),
 				0 );
 		FinalInterval outputInterval;
-		if ( view.getTrackingMode() == "automatically select size" ) {
+		if ( view.getDetectionMode() == "automatically select size" ) {
 			outputInterval = Intervals.createMinMax(
 					( long ) ( x - 1 / 2 ),
 					( long ) ( y - 1 / 2 ),
