@@ -6,16 +6,12 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
-import java.util.Enumeration;
 import java.util.List;
 
-import javax.swing.AbstractButton;
-import javax.swing.ButtonGroup;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JSlider;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -24,8 +20,6 @@ import javax.swing.filechooser.FileSystemView;
 public class SimpleMenu implements ActionListener, ItemListener {
 
 	private final PunctaPickerModel model;
-
-	private static ButtonGroup buttonGroup;
 
 	public static String FLOW_NONE = "none";
 	public static String FLOW_TPS = "TPS";
@@ -46,7 +40,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 
 		//create a menubar
 		JMenuBar menuBar;
-		JMenu filemenu, flowmenu, blobmenu, helpmenu;
+		JMenu filemenu, flowmenu, helpmenu;
 		JMenu helpsubmenu;
 		JMenuItem menuItem;
 
@@ -99,21 +93,6 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		menuItem.addActionListener( this );
 		flowmenu.add( menuItem );
-
-		//Build the blob detection on/off menu.
-		blobmenu = new JMenu( "Automatic Blob Detection" );
-		JRadioButtonMenuItem autoSize = new JRadioButtonMenuItem( "Automatically select blob size" );
-		JRadioButtonMenuItem autoSizeAndPosition = new JRadioButtonMenuItem( "Automatically select blob size and position" );
-		JRadioButtonMenuItem manual = new JRadioButtonMenuItem( "Manually add blob" );
-		buttonGroup = new ButtonGroup();
-		buttonGroup.add( autoSize );
-		buttonGroup.add( autoSizeAndPosition );
-		buttonGroup.add( manual );
-		manual.setSelected( true );
-		blobmenu.add( autoSize );
-		blobmenu.add( autoSizeAndPosition );
-		blobmenu.add( manual );
-		menuBar.add( blobmenu );
 
 		//Build the help menu.
 		helpmenu = new JMenu( "Help" );
@@ -236,15 +215,5 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		CSVWriter.writeCsvFile( file, allPuncta, model.getGraph().getEdges() );
 	}
 	
-	public static String getBlobDetectionModuleStatus() {
-        for (Enumeration<AbstractButton> buttons = buttonGroup.getElements(); buttons.hasMoreElements();) {
-            AbstractButton button = buttons.nextElement();
-
-            if (button.isSelected()) {
-                return button.getText();
-            }
-        }
-		return null;
-	}
 }
 
