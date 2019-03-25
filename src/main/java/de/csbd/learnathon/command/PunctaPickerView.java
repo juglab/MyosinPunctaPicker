@@ -51,7 +51,6 @@ public class PunctaPickerView {
 	private PunctaPickerModel model;
 	private PunctaPickerController controller;
 
-	private CSVWriter writer;
 	private CSVReader reader;
 
 	public BdvHandlePanel bdv = new BdvHandlePanel( null, Bdv.options().is2D() );
@@ -310,7 +309,6 @@ public class PunctaPickerView {
 	private JSplitPane initSplitPane( final JPanel left, final JPanel right ) {
 		final JSplitPane splitPane = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, left, right );
 		splitPane.setOneTouchExpandable( true );
-//		splitPane.setDividerLocation( 100 );
 		return splitPane;
 	}
 
@@ -348,6 +346,22 @@ public class PunctaPickerView {
 	public GhostOverlay getGhostOverlay() {
 
 		return ghostOverlay;
+	}
+
+	public void setCheckBoxStatus( boolean status ) {
+		if ( status == true )
+			activeTrackletCheckBox.setSelected( true );
+		else
+			activeTrackletCheckBox.setSelected( false );
+		bdv.getViewerPanel().requestRepaint();
+
+	}
+
+	public float getWindowSize() {
+		if ( txtMaxDist.getText().isEmpty() )
+			return 55f;
+		else
+			return Float.valueOf( txtDefaultPunctaRadius.getText().trim() ).floatValue();
 	}
 
 }
