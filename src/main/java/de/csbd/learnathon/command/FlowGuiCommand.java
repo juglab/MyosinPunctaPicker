@@ -1,5 +1,9 @@
 package de.csbd.learnathon.command;
 
+import java.awt.BorderLayout;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -20,7 +24,6 @@ import net.imglib2.converter.Converters;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.util.Util;
-import net.miginfocom.swing.MigLayout;
 
 /**
  * This is an implementation of manual puncta picking.
@@ -54,10 +57,10 @@ public class FlowGuiCommand implements Command {
 		panel = new PunctaPickerView( model, image, context.getService( OpService.class ) );
 //		JPanel p = panel.getPanel();
 //		p.setMinimumSize( new Dimension( 500, 500 ) );
-		frame = new JFrame( image.getImgPlus().getSource() );
-		frame.setLayout( new MigLayout( "", "[grow]", "[][]" ) );
+		frame = new JFrame();
+		frame.setLayout( new BorderLayout() );
 		
-		frame.add( panel.getPanel(), "h 100%, grow, wrap" );
+		frame.add( panel.getPanel(), BorderLayout.CENTER );
 		frame.addWindowListener( new WindowAdapter() {
 
 			@Override
@@ -65,11 +68,22 @@ public class FlowGuiCommand implements Command {
 				panel.close();
 			}
 		} );
+
 		SimpleMenu smenu = new SimpleMenu( model );
 		frame.setJMenuBar( smenu.createMenuBar() );
-		frame.setSize( 500, 500 );
-		frame.pack();
+		frame.setBounds( getCenteredRectangle( 1200, 900 ) );
 		frame.setVisible( true );
+	}
+
+	public static Rectangle getCenteredRectangle( int w, int h ) {
+		final GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+		final int maxwidth = gd.getDisplayMode().getWidth();
+		final int maxheight = gd.getDisplayMode().getHeight();
+		w = Math.min( w, maxwidth );
+		h = Math.min( h, maxheight );
+		final int x = ( maxwidth - w ) / 2;
+		final int y = ( maxheight - h ) / 2;
+		return new Rectangle( x, y, w, h );
 	}
 
 	private RandomAccessibleInterval< DoubleType > toDoubleType( final RandomAccessibleInterval< ? extends RealType< ? > > image ) {
