@@ -2,6 +2,8 @@ package de.csbd.learnathon.command;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 
 import bdv.util.BdvOverlay;
 import net.imglib2.RealPoint;
@@ -16,6 +18,7 @@ public class GhostOverlay extends BdvOverlay {
 
 	public GhostOverlay( PunctaPickerView view ) {
 		this.view = view;
+		view.getBdv().getViewerPanel().getDisplay().addHandler( new MouseOver() );
 	}
 
 	public void setPosition( final double x, final double y ) {
@@ -71,5 +74,45 @@ public class GhostOverlay extends BdvOverlay {
 		return Math.sqrt( sqSum );
 	}
 
+	private class MouseOver implements MouseMotionListener {
+
+		@Override
+		public void mouseDragged( MouseEvent e ) {}
+
+		@Override
+		public void mouseMoved( MouseEvent e ) {
+			if ( visible ) {
+				overlayBlobDetectionResult();
+				requestRepaint();
+			}
+		}
+
+	}
+
+	public void overlayBlobDetectionResult() {
+		int time = view.getBdv().getBdvHandle().getViewerPanel().getState().getCurrentTimepoint();
+		final RealPoint posn = new RealPoint( 3 );
+		view.getBdv().getViewerPanel().getGlobalMouseCoordinates( posn );
+		System.out.println( view.getDetectionMode() );
+
+		if ( view.getDetectionMode() == "constant radius" ) {
+			setPosition( posn.getDoublePosition( 0 ), posn.getDoublePosition( 1 ) );
+			setRadius( view.getPunctaPickerModel().getDefaultRadius() );
+		} else if ( view.getDetectionMode() == "auto size&pos" ) {
+			Puncta ghostPuncta =
+					view.getPunctaPickerController().blobDetectedPuncta( time, posn.getDoublePosition( 0 ), posn.getDoublePosition( 1 ) );
+			double posx = ( posn.getDoublePosition( 0 ) - view.getPunctaPickerController().autoOrManualPatchSize / 2 ) + ghostPuncta.getX();
+			double posy = ( posn.getDoublePosition( 1 ) - view.getPunctaPickerController().autoOrManualPatchSize / 2 ) + ghostPuncta.getY();
+			setPosition( posx, posy );
+			setRadius( ghostPuncta.getR() );
+		} else {
+			Puncta ghostPuncta =
+					view.getPunctaPickerController().blobDetectedPuncta( time, posn.getDoublePosition( 0 ), posn.getDoublePosition( 1 ) );
+			double posx = posn.getDoublePosition( 0 );
+			double posy = posn.getDoublePosition( 1 );
+			setPosition( posx, posy );
+			setRadius( ghostPuncta.getR() );
+		}
+	}
 
 }
