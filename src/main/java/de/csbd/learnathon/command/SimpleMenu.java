@@ -103,10 +103,10 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		helpsubmenu.getAccessibleContext().setAccessibleDescription( "" );
 		helpmenu.add( helpsubmenu );
 
-		menuItem = new JMenuItem( "Add puncta -> A" );
+		menuItem = new JMenuItem( "Add puncta -> Left mouse button" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
-		menuItem = new JMenuItem( "Preview puncta -> P" );
+		menuItem = new JMenuItem( "Preview puncta -> A" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		menuItem = new JMenuItem( "Select puncta/tracklet -> C" );
@@ -128,6 +128,9 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		menuItem = new JMenuItem( "Delete selected tracklet -> X" );
+		menuItem.getAccessibleContext().setAccessibleDescription( "" );
+		helpsubmenu.add( menuItem );
+		menuItem = new JMenuItem( "Hide all but selected tracklet/Show all  -> H" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		return menuBar;
