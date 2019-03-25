@@ -48,7 +48,6 @@ public class PunctaPickerController {
     private PunctaPickerView view;
     private OpService os;
 	final private GhostOverlay ghostOverlay;
-	public float autoOrManualPatchSize = 55;  //TODO expose this as parameter
 	private GhostCircle ghostCircle;
 
 	public PunctaPickerController( PunctaPickerModel model, PunctaPickerView punctaPickerView, OpService os ) {
@@ -122,6 +121,16 @@ public class PunctaPickerController {
 					model.getView().getBdv().getViewerPanel().requestRepaint();
 				}
 
+			}
+		} );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_H, 0 ), "HideAllButSelected", new AbstractAction() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				if ( view.getCheckBoxStatus() )
+					view.setCheckBoxStatus( false );
+				else
+					view.setCheckBoxStatus( true );
 			}
 		} );
 		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_D, 0 ), "DeletePunctaOrEdge", new AbstractAction() {
@@ -227,8 +236,8 @@ public class PunctaPickerController {
 
 			Puncta pNew = blobDetectedPuncta( t, pos.getDoublePosition( 0 ), pos.getDoublePosition( 1 ) );
 			pNew.setT( t );
-			pNew.setX( ( float ) ( pos.getDoublePosition( 0 ) - autoOrManualPatchSize / 2 ) + pNew.getX() );
-			pNew.setY( ( float ) ( pos.getDoublePosition( 1 ) - autoOrManualPatchSize / 2 ) + pNew.getY() );
+			pNew.setX( ( float ) ( pos.getDoublePosition( 0 ) - view.getWindowSize() / 2 ) + pNew.getX() );
+			pNew.setY( ( float ) ( pos.getDoublePosition( 1 ) - view.getWindowSize() / 2 ) + pNew.getY() );
 			addPunctaToGraph( t, g, pOld, pNew );
 			System.out.println( pNew.getR() );
 
@@ -249,11 +258,11 @@ public class PunctaPickerController {
 		IntervalView< T > image = Views.hyperSlice( fullImage, 2, t );
 		Views.extendMirrorSingle( image );
 		FinalInterval cropped = Intervals.createMinMax(
-				( long ) ( x - autoOrManualPatchSize / 2 ),
-				( long ) ( y - autoOrManualPatchSize / 2 ),
+				( long ) ( x - view.getWindowSize() / 2 ),
+				( long ) ( y - view.getWindowSize() / 2 ),
 				0,
-				( long ) ( x + autoOrManualPatchSize / 2 ),
-				( long ) ( y + autoOrManualPatchSize / 2 ),
+				( long ) ( x + view.getWindowSize() / 2 ),
+				( long ) ( y + view.getWindowSize() / 2 ),
 				0 );
 		FinalInterval outputInterval;
 		if ( view.getDetectionMode() == "automatically select size" ) {
@@ -327,7 +336,7 @@ public class PunctaPickerController {
 		double epsilon = 0.01;
 		for ( int i = 0; i < potentBlobs.size(); i++ ) {
 			double weight =
-					1 * ( 1 / ( computeDistFromClick( potentBlobs.get( i ), autoOrManualPatchSize ) + epsilon ) );
+					1 * ( 1 / ( computeDistFromClick( potentBlobs.get( i ), view.getWindowSize() ) + epsilon ) );
 			weights.add( weight );
 		}
 		Double maxWeight = 0d;
