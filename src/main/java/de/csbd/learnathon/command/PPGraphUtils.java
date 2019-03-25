@@ -75,6 +75,9 @@ public class PPGraphUtils {
 
 	public static Edge pointOnEdge( float x, float y, List< Edge > edges ) {
 		for ( Edge e : edges ) {
+			if ( !isInBoundingBox( e, x, y ) ) {
+				continue;
+			}
 			double num = Math.abs(
 					( e.getA().getY() - e.getB().getY() ) * x - ( e.getA().getX() - e.getB().getX() ) * y + e.getA().getX() * e.getB().getY() - e
 							.getA()
@@ -85,9 +88,17 @@ public class PPGraphUtils {
 							.getX() - e.getB().getX() ) );
 			double dist = num / den;
 			if ( dist < 2 ) { //If mouse hover is lesser than 2 pixels away from the edge
-			return e;
+				return e;
 			}
 		}
 		return null;
+	}
+
+	private static boolean isInBoundingBox( Edge e, float x, float y ) {
+		float minX = Math.min( e.getA().getX(), e.getB().getX() );
+		float maxX = Math.max( e.getA().getX(), e.getB().getX() );
+		float minY = Math.min( e.getA().getY(), e.getB().getY() );
+		float maxY = Math.max( e.getA().getY(), e.getB().getY() );
+		return ( minX <= x && minY <= y ) && ( maxX >= x && maxY >= y );
 	}
 }
