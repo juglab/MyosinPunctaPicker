@@ -7,6 +7,7 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
+import java.util.LinkedList;
 
 import org.scijava.command.CommandService;
 import org.scijava.thread.ThreadService;
@@ -22,12 +23,11 @@ public class Overlay extends BdvOverlay {
 	private CommandService cs;
 	private ThreadService ts;
 
-	public static float FADE_OUT_ALPHA = 0.2f;
-	public int radius = 12;
 	public int lineThickness = 2;
 	private final Color defaultColor = new Color( 0, 1, 1 );
 	private final Color selectedColor = new Color( 1, 0, 0 );
 	private final Color selectedPunctaColor = new Color( 1, ( float ) 0.6, 0 );
+	private float fadeOutAlpha;
 
 	public Overlay( PunctaPickerModel model ) {
 		super();
@@ -49,149 +49,133 @@ public class Overlay extends BdvOverlay {
 		final double[] gPos1 = new double[ 3 ];
 		final double[] gPos2 = new double[ 3 ];
 
-		float transparency;
+		fadeOutAlpha = ( float ) ( model.getView().getFadeOutValue() ) / 15;
 		final int curentTime = info.getTimePointIndex();
 
-		for ( Puncta p : model.getGraph().getPunctas() ) {
-			if ( p.getT() <= info.getTimePointIndex() ) {
-				g.setStroke( new BasicStroke( lineThickness ) );
-			} else {
-				g.setStroke( new BasicStroke( lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
+		if ( model.getView().getCheckBoxStatus() ) {
+			Pair< LinkedList< Puncta >, LinkedList< Edge > > selectedTracklet = model.getGraph().getSelectedTracklet();
+			for ( Puncta p : selectedTracklet.getA() ) {
+				punctaOverlay( g, t, scale, lPos, gPos, curentTime, p );
 			}
-			if ( p.equals( model.getGraph().getLeadSelectedPuncta() ) ) {
-				g.setStroke( new BasicStroke( 2 * lineThickness ) );
+			for ( Edge edge : selectedTracklet.getB() ) {
+				edgeOverlay( g, t, lPos1, lPos2, gPos1, gPos2, curentTime, edge );
 			}
-			RealPoint planarPoint = new RealPoint( p.getX(), p.getY(), 0 );
-			planarPoint.localize( lPos );
-			t.apply( lPos, gPos );
-
-			transparency = Math.abs( curentTime - ( float ) p.getT() );
-			transparency = ( float ) Math.exp( - transparency * FADE_OUT_ALPHA );
-
-
-			if ( p.isSelected() ) {
-				g.setColor( new Color( selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue(), transparency ) );
-			} else {
-				g.setColor( new Color( defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), transparency ) );
-			}
-
-			if ( p.getT() == curentTime ) {
-				if ( p.equals( model.getGraph().getLeadSelectedPuncta() ) ) {
-					g.setColor( selectedPunctaColor );
-				}
-				g.setStroke( new BasicStroke( lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
-					g.drawOval(
-						( int ) ( gPos[ 0 ] - (p.getR()*scale) - 4 ),
-						( int ) ( gPos[ 1 ] - (p.getR()*scale) - 4 ),
-						( int ) ( p.getR() * scale * 2 + 8 ),
-						( int ) ( p.getR() * scale * 2 + 8 ) );
-				g.setStroke( new BasicStroke( lineThickness ) );
-				g.drawOval(
-						( int ) ( gPos[ 0 ] - ( p.getR() * scale ) ),
-						( int ) ( gPos[ 1 ] - ( p.getR() * scale ) ),
-						( int ) ( p.getR() * scale * 2 ),
-						( int ) ( p.getR() * scale * 2 ) );
-				int s = 4;
-				g.drawLine( ( int ) gPos[ 0 ] - s, ( int ) gPos[ 1 ], ( int ) gPos[ 0 ] + s, ( int ) gPos[ 1 ] );
-				g.drawLine( ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] - s, ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] + s );
-			} else {
-				if ( p.equals( model.getGraph().getLeadSelectedPuncta() ) ) {
-					g.setColor( selectedPunctaColor );
-				}
-				int s = 4;
-				g.drawLine( ( int ) gPos[ 0 ] - s, ( int ) gPos[ 1 ], ( int ) gPos[ 0 ] + s, ( int ) gPos[ 1 ] );
-				g.drawLine( ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] - s, ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] + s );
-			}
-
 		}
 
-		for ( Edge edge : model.getGraph().getEdges() ) {
+		else {
 
-			RealPoint point1 = new RealPoint( edge.getA().getX(), edge.getA().getY() );
-			point1.localize( lPos1 );
-			t.apply( lPos1, gPos1 );
-
-			RealPoint point2 = new RealPoint( edge.getB().getX(), edge.getB().getY() );
-			point2.localize( lPos2 );
-			t.apply( lPos2, gPos2 );
-			if ( edge.getA().getT() <= info.getTimePointIndex() && edge.getB().getT() <= info.getTimePointIndex() ) {
-				g.setStroke( new BasicStroke( lineThickness ) );
-			} else {
-				g.setStroke( new BasicStroke( lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
-			}
-			if ( edge.equals( model.getGraph().getMouseSelectedEdge() ) ) {
-				g.setStroke( new BasicStroke( 2 * lineThickness ) );
+			for ( Puncta p : model.getGraph().getPunctas() ) {
+				punctaOverlay( g, t, scale, lPos, gPos, curentTime, p );
 			}
 
-			float d1 = Math.abs( ( float ) curentTime - edge.getA().getT() );
-			float d2 = Math.abs( ( float ) curentTime - edge.getB().getT() );
-			transparency = Math.min( d1, d2 );
-			transparency = ( float ) Math.exp( -transparency * FADE_OUT_ALPHA );
-
-			if ( edge.isSelected() ) {
-				g.setColor( new Color( selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue(), transparency ) );
-			} else {
-				g.setColor( new Color( defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), transparency ) );
+			for ( Edge edge : model.getGraph().getEdges() ) {
+				edgeOverlay( g, t, lPos1, lPos2, gPos1, gPos2, curentTime, edge );
 			}
-
-//			drawPeripheralLine(
-//					g,
-//					( float ) gPos1[ 0 ],
-//					( float ) gPos1[ 1 ],
-//					( float ) gPos2[ 0 ],
-//					( float ) gPos2[ 1 ],
-//					( float ) ( edge.getA().getR() * scale ),
-//					( float ) ( edge.getB().getR() * scale ) );
-//			
-			g.drawLine(
-					( int ) gPos1[ 0 ],
-					( int ) gPos1[ 1 ],
-					( int ) gPos2[ 0 ],
-					( int ) gPos2[ 1 ] );
 		}
+
 	}
 
-	protected void drawPeripheralLine( Graphics2D g, float x1, float y1, float x2, float y2, float r1, float r2 ) {
+	private void edgeOverlay(
+			final Graphics2D g,
+			final AffineTransform3D t,
+			final double[] lPos1,
+			final double[] lPos2,
+			final double[] gPos1,
+			final double[] gPos2,
+			final int curentTime,
+			Edge edge ) {
+		float transparency;
+		RealPoint point1 = new RealPoint( edge.getA().getX(), edge.getA().getY() );
+		point1.localize( lPos1 );
+		t.apply( lPos1, gPos1 );
 
-		float common_factor2 = r2 / ( float ) Math.sqrt( 1 + ( ( y2 - y1 ) * ( y2 - y1 ) ) / ( ( x2 - x1 ) * ( x2 - x1 ) ) );
-		float common_factor1 = r1 / ( float ) Math.sqrt( 1 + ( ( y2 - y1 ) * ( y2 - y1 ) ) / ( ( x2 - x1 ) * ( x2 - x1 ) ) );
-
-		float x1_prime1 = x1 + common_factor1;
-		float x1_prime2 = x1 - common_factor1;
-		float y1_prime1 = ((y2 -y1)/(x2-x1))*(x1_prime1 - x1) + y1;
-		float y1_prime2 = ((y2 -y1)/(x2-x1))*(x1_prime2 - x1) + y1;
-
-
-		float x2_prime1 = x2 + common_factor2;
-		float x2_prime2 = x2 - common_factor2;
-		float y2_prime1 = ( ( y2 - y1 ) / ( x2 - x1 ) ) * ( x2_prime1 - x1 ) + y1;
-		float y2_prime2 = ( ( y2 - y1 ) / ( x2 - x1 ) ) * ( x2_prime2 - x1 ) + y1;
-
-		float x1_prime, y1_prime, x2_prime, y2_prime;
-
-		float d1 = ( x1_prime1 - x2_prime1 ) * ( x1_prime1 - x2_prime1 ) + ( y1_prime1 - y2_prime1 ) * ( y1_prime1 - y2_prime1 );
-		float d2 = ( x1_prime2 - x2_prime1 ) * ( x1_prime2 - x2_prime1 ) + ( y1_prime2 - y2_prime1 ) * ( y1_prime2 - y2_prime1 );
-
-		if ( d1 <= d2 ) {
-			x1_prime = x1_prime1;
-			y1_prime = y1_prime1;
+		RealPoint point2 = new RealPoint( edge.getB().getX(), edge.getB().getY() );
+		point2.localize( lPos2 );
+		t.apply( lPos2, gPos2 );
+		if ( edge.getA().getT() <= info.getTimePointIndex() && edge.getB().getT() <= info.getTimePointIndex() ) {
+			g.setStroke( new BasicStroke( lineThickness ) );
 		} else {
-			x1_prime = x1_prime2;
-			y1_prime = y1_prime2;
+			g.setStroke( new BasicStroke( lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
 		}
-		
-		d1 = ( x2_prime1 - x1_prime1 ) * ( x2_prime1 - x1_prime1 ) + ( y2_prime1 - y1_prime1 ) * ( y2_prime1 - y1_prime1 );
-		d2 = ( x2_prime2 - x1_prime1 ) * ( x2_prime2 - x1_prime1 ) + ( y2_prime2 - y1_prime1 ) * ( y2_prime2 - y1_prime1 );
-		
-		if ( d1 <= d2 ) {
-			x2_prime = x2_prime1;
-			y2_prime = y2_prime1;
+		if ( edge.equals( model.getGraph().getMouseSelectedEdge() ) ) {
+			g.setStroke( new BasicStroke( 2 * lineThickness ) );
+		}
+
+		float d1 = Math.abs( ( float ) curentTime - edge.getA().getT() );
+		float d2 = Math.abs( ( float ) curentTime - edge.getB().getT() );
+		transparency = Math.min( d1, d2 );
+		transparency = ( float ) Math.exp( -transparency * fadeOutAlpha );
+
+		if ( edge.isSelected() ) {
+			g.setColor( new Color( selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue(), transparency ) );
 		} else {
-			x2_prime = x2_prime2;
-			y2_prime = y2_prime2;
+			g.setColor( new Color( defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), transparency ) );
 		}
-		
-		g.drawLine( ( int ) x1_prime, ( int ) y1_prime, ( int ) x2_prime, ( int ) y2_prime );
+		g.drawLine(
+				( int ) gPos1[ 0 ],
+				( int ) gPos1[ 1 ],
+				( int ) gPos2[ 0 ],
+				( int ) gPos2[ 1 ] );
+	}
+
+	private void punctaOverlay(
+			final Graphics2D g,
+			final AffineTransform3D t,
+			double scale,
+			final double[] lPos,
+			final double[] gPos,
+			final int curentTime,
+			Puncta p ) {
+		float transparency;
+		if ( p.getT() <= info.getTimePointIndex() ) {
+			g.setStroke( new BasicStroke( lineThickness ) );
+		} else {
+			g.setStroke( new BasicStroke( lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
+		}
+		if ( p.equals( model.getGraph().getLeadSelectedPuncta() ) ) {
+			g.setStroke( new BasicStroke( 2 * lineThickness ) );
+		}
+		RealPoint planarPoint = new RealPoint( p.getX(), p.getY(), 0 );
+		planarPoint.localize( lPos );
+		t.apply( lPos, gPos );
+
+		transparency = Math.abs( curentTime - ( float ) p.getT() );
+		transparency = ( float ) Math.exp( -transparency * fadeOutAlpha );
+
+
+		if ( p.isSelected() ) {
+			g.setColor( new Color( selectedColor.getRed(), selectedColor.getGreen(), selectedColor.getBlue(), transparency ) );
+		} else {
+			g.setColor( new Color( defaultColor.getRed(), defaultColor.getGreen(), defaultColor.getBlue(), transparency ) );
+		}
+
+		if ( p.getT() == curentTime ) {
+			if ( p.equals( model.getGraph().getLeadSelectedPuncta() ) ) {
+				g.setColor( selectedPunctaColor );
+			}
+			g.setStroke( new BasicStroke( lineThickness, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL, 0, new float[] { 2, 2 }, 0 ) );
+			g.drawOval(
+					( int ) ( gPos[ 0 ] - ( p.getR() * scale ) - 4 ),
+					( int ) ( gPos[ 1 ] - ( p.getR() * scale ) - 4 ),
+					( int ) ( p.getR() * scale * 2 + 8 ),
+					( int ) ( p.getR() * scale * 2 + 8 ) );
+			g.setStroke( new BasicStroke( lineThickness ) );
+			g.drawOval(
+					( int ) ( gPos[ 0 ] - ( p.getR() * scale ) ),
+					( int ) ( gPos[ 1 ] - ( p.getR() * scale ) ),
+					( int ) ( p.getR() * scale * 2 ),
+					( int ) ( p.getR() * scale * 2 ) );
+			int s = 4;
+			g.drawLine( ( int ) gPos[ 0 ] - s, ( int ) gPos[ 1 ], ( int ) gPos[ 0 ] + s, ( int ) gPos[ 1 ] );
+			g.drawLine( ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] - s, ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] + s );
+		} else {
+			if ( p.equals( model.getGraph().getLeadSelectedPuncta() ) ) {
+				g.setColor( selectedPunctaColor );
+			}
+			int s = 4;
+			g.drawLine( ( int ) gPos[ 0 ] - s, ( int ) gPos[ 1 ], ( int ) gPos[ 0 ] + s, ( int ) gPos[ 1 ] );
+			g.drawLine( ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] - s, ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] + s );
+		}
 	}
 
 	public static double extractScale( final AffineTransform3D t, final int axis ) {
@@ -203,7 +187,6 @@ public class Overlay extends BdvOverlay {
 		}
 		return Math.sqrt( sqSum );
 	}
-
 
 	private class MouseOver implements MouseMotionListener {
 
