@@ -48,7 +48,7 @@ public class PunctaPickerController {
     private PunctaPickerView view;
     private OpService os;
 	final private GhostOverlay ghostOverlay;
-	private GhostCircle ghostCircle;
+	private boolean isOn = false;
 
 	public PunctaPickerController( PunctaPickerModel model, PunctaPickerView punctaPickerView, OpService os ) {
         this.model = model;
@@ -70,9 +70,9 @@ public class PunctaPickerController {
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			actionMoveLeadPuncta( x, y );
 		}, "Move", "SPACE" );
-
-		ghostCircle = new GhostCircle();
-		behaviours.behaviour( ghostCircle, "Ghost Circle", "A" );
+		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
+			ghostClick( x, y );
+		}, "Preview", "A" );
 
         registerKeyBinding(KeyStroke.getKeyStroke(KeyEvent.VK_E, 0), "IncreaseRadius", new AbstractAction() {
 
@@ -152,27 +152,19 @@ public class PunctaPickerController {
 		} );
     }
 
-
-	private class GhostCircle implements ClickBehaviour {
-
-		private boolean isOn = false;
-
-		@Override
-		public void click( int x, int y ) {
-			if ( !isOn ) {
-				isOn = true;
-				ghostOverlay.overlayBlobDetectionResult();
-				ghostOverlay.setVisible( true );
-				view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.CROSSHAIR_CURSOR ) );
-				ghostOverlay.requestRepaint();
-			} else {
-				isOn = false;
-				ghostOverlay.setVisible( false );
-				view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR ) );
-				ghostOverlay.requestRepaint();
-			}
+	private void ghostClick( int x, int y ) {
+		if ( !isOn ) {
+			isOn = true;
+			ghostOverlay.overlayBlobDetectionResult();
+			ghostOverlay.setVisible( true );
+			view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.CROSSHAIR_CURSOR ) );
+			ghostOverlay.requestRepaint();
+		} else {
+			isOn = false;
+			ghostOverlay.setVisible( false );
+			view.getBdv().getViewerPanel().setCursor( Cursor.getPredefinedCursor( Cursor.DEFAULT_CURSOR ) );
+			ghostOverlay.requestRepaint();
 		}
-
 	}
 
     public void registerKeyBinding(KeyStroke keyStroke, String name, Action action) {
