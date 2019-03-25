@@ -93,7 +93,6 @@ public class GhostOverlay extends BdvOverlay {
 		int time = view.getBdv().getBdvHandle().getViewerPanel().getState().getCurrentTimepoint();
 		final RealPoint posn = new RealPoint( 3 );
 		view.getBdv().getViewerPanel().getGlobalMouseCoordinates( posn );
-		System.out.println( view.getDetectionMode() );
 
 		if ( view.getDetectionMode() == "constant radius" ) {
 			setPosition( posn.getDoublePosition( 0 ), posn.getDoublePosition( 1 ) );
