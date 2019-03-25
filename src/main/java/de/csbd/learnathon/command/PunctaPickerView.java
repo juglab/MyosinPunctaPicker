@@ -1,7 +1,8 @@
 package de.csbd.learnathon.command;
 
 import java.awt.BorderLayout;
-import java.awt.Font;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
@@ -14,7 +15,6 @@ import javax.swing.JRadioButton;
 import javax.swing.JSlider;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
-import javax.swing.SwingConstants;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -46,39 +46,30 @@ public class PunctaPickerView {
 
 	public Logger log;
 
-	public BdvHandlePanel bdv = new BdvHandlePanel( null, Bdv.options().is2D() );
-
-	private JTextField tMoveTime;
-
-	private PunctaPickerModel model;
-
 	private Dataset image;
 
+	private PunctaPickerModel model;
 	private PunctaPickerController controller;
 
 	private CSVWriter writer;
-
 	private CSVReader reader;
 
+	public BdvHandlePanel bdv = new BdvHandlePanel( null, Bdv.options().is2D() );
 	private Overlay overlay;
-
-	private int fadeOutValue;
-
 	private GhostOverlay ghostOverlay;
 
 	private JCheckBox activeTrackletCheckBox;
-
-	private JTextField txtDefaultPunctaRadius;
+	private int fadeOutValue;
 
 	private ButtonGroup modeButtons;
 
+	private JTextField txtDefaultPunctaRadius;
 	private JTextField txtMinScale;
-
 	private JTextField txtMaxScale;
-
 	private JTextField txtStepScale;
+	private JTextField txtMaxDist;
 
-	public String getTrackingMode() {
+	public String getDetectionMode() {
 		return Utils.getSelectedButtonText( modeButtons );
 	}
 
@@ -196,95 +187,130 @@ public class PunctaPickerView {
 	private JPanel initHelperPanel() {
 		final JPanel helper = new JPanel( new MigLayout() );
 
-		Font font = new Font( "Times", Font.ROMAN_BASELINE, 15 );
+		// OVERLAY PROPS
 
 		JPanel panelOverlayProps = new JPanel( new MigLayout() );
-		panelOverlayProps.setBorder( BorderFactory.createTitledBorder( "overlay props" ) );
-		JLabel lFadeOut = new JLabel( "fadeout:" );
-		lFadeOut.setFont( font );
-		panelOverlayProps.add( lFadeOut, "growx, wrap" );
-		JSlider fadeOutSlider = new JSlider( 0, 20, 0 );
-//		fadeOutSlider.setMajorTickSpacing( 1 );
-//		fadeOutSlider.setPaintTicks( true );
-//		fadeOutSlider.setPaintLabels(true);
-		
-//		Hashtable position = new Hashtable();
-//		for ( int i = 0; i <= 20; i = i + 2 ) {
-//			position.put( i, new JLabel( Integer.toString( i ) ) );
-//		}
-//		fadeOutSlider.setLabelTable( position );
+		panelOverlayProps.setBorder( BorderFactory.createTitledBorder( "overlay" ) );
+
+		activeTrackletCheckBox = new JCheckBox( "hide all but selected" );
+		activeTrackletCheckBox.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				bdv.getViewerPanel().requestRepaint();
+			}
+		} );
+
+		JLabel lFadeOut = new JLabel( "decay:" );
+		JSlider fadeOutSlider = new JSlider( 0, 20, 4 );
 		fadeOutSlider.setVisible( true );
 		fadeOutSlider.addChangeListener( new ChangeListener() {
 
 			@Override
 			public void stateChanged( ChangeEvent e ) {
 				fadeOutValue = ( ( JSlider ) e.getSource() ).getValue();
-
+				bdv.getViewerPanel().requestRepaint();
 			}
 		} );
 
-		activeTrackletCheckBox = new JCheckBox( "show tracklet for active only" );
-		activeTrackletCheckBox.setFont( font );
-		activeTrackletCheckBox.setHorizontalTextPosition( SwingConstants.LEFT );
+		panelOverlayProps.add( activeTrackletCheckBox, "span 2, align left, growx, wrap" );
+		panelOverlayProps.add( lFadeOut, "" );
 		panelOverlayProps.add( fadeOutSlider, "growx, wrap" );
-		panelOverlayProps.add( activeTrackletCheckBox, "growx, wrap" );
 
-		JPanel panelTrackingProps = new JPanel( new MigLayout() );
-		panelTrackingProps.setBorder( BorderFactory.createTitledBorder( "tracking props" ) );
-		txtDefaultPunctaRadius = new JTextField( 2 );
-		txtDefaultPunctaRadius.setText( Integer.toString( 15 ) );
-		txtDefaultPunctaRadius.setFont( font );
-		JLabel lDefaultPunctaRadius = new JLabel( "default radius:" );
-		lDefaultPunctaRadius.setFont( font );
-		panelTrackingProps.add( lDefaultPunctaRadius, "growx, wrap" );
-		panelTrackingProps.add( txtDefaultPunctaRadius, "growx, wrap" );
-		JRadioButton bAutomaticSize = new JRadioButton();
-		JRadioButton bAutomaticSizeAndPos = new JRadioButton();
-		JRadioButton bManual = new JRadioButton();
+		// PICKING PROPS
+
+		JPanel panelPickingProps = new JPanel( new MigLayout() );
+		panelPickingProps.setBorder( BorderFactory.createTitledBorder( "picking" ) );
+
 		modeButtons = new ButtonGroup();
-		bAutomaticSize.setText( "automatically select size" );
-		bAutomaticSizeAndPos.setText( "automatically select size and position" );
-		bManual.setText( "manual" );
-		bManual.setSelected( true );
-		panelTrackingProps.add( bAutomaticSize, "growx, wrap" );
-		panelTrackingProps.add( bAutomaticSizeAndPos, "growx, wrap" );
-		panelTrackingProps.add( bManual, "growx, wrap" );
+		JRadioButton bManual = new JRadioButton( "constant radius" );
+		bManual.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				txtDefaultPunctaRadius.setEnabled( true );
+				txtMinScale.setEnabled( false );
+				txtMaxScale.setEnabled( false );
+				txtStepScale.setEnabled( false );
+				txtMaxDist.setEnabled( false );
+			}
+		} );
+		JRadioButton bAutomaticSize = new JRadioButton( "auto size" );
+		bAutomaticSize.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				txtDefaultPunctaRadius.setEnabled( false );
+				txtMinScale.setEnabled( true );
+				txtMaxScale.setEnabled( true );
+				txtStepScale.setEnabled( true );
+				txtMaxDist.setEnabled( false );
+			}
+		} );
+		JRadioButton bAutomaticSizeAndPos = new JRadioButton( "auto size&pos" );
+		bAutomaticSizeAndPos.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				txtDefaultPunctaRadius.setEnabled( false );
+				txtMinScale.setEnabled( true );
+				txtMaxScale.setEnabled( true );
+				txtStepScale.setEnabled( true );
+				txtMaxDist.setEnabled( true );
+			}
+		} );
+		modeButtons.add( bManual );
 		modeButtons.add( bAutomaticSize );
 		modeButtons.add( bAutomaticSizeAndPos );
-		modeButtons.add( bManual );
 
-		JPanel panelBlobDetectionProps = new JPanel( new MigLayout() );
-		panelBlobDetectionProps.setBorder( BorderFactory.createTitledBorder( "blob detection props" ) );
-		txtMinScale = new JTextField( 2 );
-		txtMinScale.setText( Integer.toString( 2 ) );
-		JLabel lMinScale = new JLabel( "min scale:" );
-		lMinScale.setFont( font );
-		txtMaxScale = new JTextField( 2 );
-		txtMaxScale.setText( Integer.toString( 20 ) );
-		JLabel lMaxScale = new JLabel( "max scale:" );
-		lMaxScale.setFont( font );
-		txtMinScale.setFont( font );
-		txtStepScale = new JTextField( 2 );
-		txtStepScale.setText( Integer.toString( 1 ) );
-		JLabel lStepScale = new JLabel( "step scale:" );
-		lStepScale.setFont( font );
-		panelBlobDetectionProps.add( lMinScale, "growx" );
-		panelBlobDetectionProps.add( txtMinScale, "growx, wrap" );
-		panelBlobDetectionProps.add( lMaxScale, "growx" );
-		panelBlobDetectionProps.add( txtMaxScale, "growx, wrap" );
-		panelBlobDetectionProps.add( lStepScale, "growx" );
-		panelBlobDetectionProps.add( txtStepScale, "growx, wrap" );
+		JLabel lDefaultPunctaRadius = new JLabel( "radius:" );
+		txtDefaultPunctaRadius = new JTextField( 2 );
+		txtDefaultPunctaRadius.setText( Integer.toString( 15 ) );
+
+		JLabel lMinScale = new JLabel( "min \u03C3:" );
+		txtMinScale = new JTextField( 5 );
+		txtMinScale.setText( "2.0" );
+
+		JLabel lMaxScale = new JLabel( "max \u03C3:" );
+		txtMaxScale = new JTextField( 5 );
+		txtMaxScale.setText( "20.0" );
+
+		JLabel lStepScale = new JLabel( "\u0394\u03C3:" );
+		txtStepScale = new JTextField( 5 );
+		txtStepScale.setText( "1.0" );
+
+		JLabel lMaxDist = new JLabel( "max dist:" );
+		txtMaxDist = new JTextField( 5 );
+		txtMaxDist.setText( "55" );
+
+		panelPickingProps.add( bManual, "span 2, growx, wrap" );
+		panelPickingProps.add( bAutomaticSize, "span 2, growx, wrap" );
+		panelPickingProps.add( bAutomaticSizeAndPos, "span 2, gapbottom 15, growx, wrap" );
+
+		panelPickingProps.add( lDefaultPunctaRadius, "" );
+		panelPickingProps.add( txtDefaultPunctaRadius, "growx, wrap" );
+		panelPickingProps.add( lMinScale, "" );
+		panelPickingProps.add( txtMinScale, "growx, wrap" );
+		panelPickingProps.add( lMaxScale, "" );
+		panelPickingProps.add( txtMaxScale, "growx, wrap" );
+		panelPickingProps.add( lStepScale, "" );
+		panelPickingProps.add( txtStepScale, "growx, wrap" );
+		panelPickingProps.add( lMaxDist, "" );
+		panelPickingProps.add( txtMaxDist, "growx, wrap" );
 
 		helper.add( panelOverlayProps, "growx, wrap" );
-		helper.add( panelBlobDetectionProps, "growx, wrap" );
-		helper.add( panelTrackingProps, "growx, wrap" );
+		helper.add( panelPickingProps, "growx, wrap" );
+
+		// make default selection such that action is thrown
+		bAutomaticSize.doClick();
+
 		return helper;
 	}
 
 	private JSplitPane initSplitPane( final JPanel left, final JPanel right ) {
 		final JSplitPane splitPane = new JSplitPane( JSplitPane.HORIZONTAL_SPLIT, left, right );
 		splitPane.setOneTouchExpandable( true );
-		splitPane.setDividerLocation( 100 );
+//		splitPane.setDividerLocation( 100 );
 		return splitPane;
 	}
 
@@ -301,6 +327,10 @@ public class PunctaPickerView {
 
 	public PunctaPickerModel getPunctaPickerModel() {
 		return model;
+	}
+
+	public PunctaPickerController getPunctaPickerController() {
+		return controller;
 	}
 
 	public void setPunctaPickerModel( final PunctaPickerModel model ) {
