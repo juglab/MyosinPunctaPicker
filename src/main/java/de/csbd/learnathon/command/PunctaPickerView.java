@@ -68,6 +68,8 @@ public class PunctaPickerView {
 	private JTextField txtStepScale;
 	private JTextField txtMaxDist;
 
+	private JCheckBox showPreviousMarkerCheckBox;
+
 	public String getDetectionMode() {
 		return Utils.getSelectedButtonText( modeButtons );
 	}
@@ -79,8 +81,12 @@ public class PunctaPickerView {
 			return Float.valueOf( txtDefaultPunctaRadius.getText().trim() ).floatValue();
 	}
 
-	public boolean getCheckBoxStatus() {
+	public boolean getActiveTrackletCheckBoxStatus() {
 		return activeTrackletCheckBox.isSelected();
+	}
+
+	public boolean getPreviousMarkerCheckBoxStatus() {
+		return showPreviousMarkerCheckBox.isSelected();
 	}
 
 	public CSVReader getReader() {
@@ -200,6 +206,15 @@ public class PunctaPickerView {
 			}
 		} );
 
+		showPreviousMarkerCheckBox = new JCheckBox( "show previous marker" );
+		showPreviousMarkerCheckBox.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				bdv.getViewerPanel().requestRepaint();
+			}
+		} );
+
 		JLabel lFadeOut = new JLabel( "decay:" );
 		JSlider fadeOutSlider = new JSlider( 0, 20, 4 );
 		fadeOutSlider.setVisible( true );
@@ -213,6 +228,7 @@ public class PunctaPickerView {
 		} );
 
 		panelOverlayProps.add( activeTrackletCheckBox, "span 2, align left, growx, wrap" );
+		panelOverlayProps.add( showPreviousMarkerCheckBox, "span 2, align left, growx, wrap" );
 		panelOverlayProps.add( lFadeOut, "" );
 		panelOverlayProps.add( fadeOutSlider, "growx, wrap" );
 
@@ -348,11 +364,20 @@ public class PunctaPickerView {
 		return ghostOverlay;
 	}
 
-	public void setCheckBoxStatus( boolean status ) {
+	public void setActiveTrackletCheckBoxStatus( boolean status ) {
 		if ( status == true )
 			activeTrackletCheckBox.setSelected( true );
 		else
 			activeTrackletCheckBox.setSelected( false );
+		bdv.getViewerPanel().requestRepaint();
+
+	}
+
+	public void setShowPreviousMarkerCheckBoxStatus( boolean status ) {
+		if ( status == true )
+			showPreviousMarkerCheckBox.setSelected( true );
+		else
+			showPreviousMarkerCheckBox.setSelected( false );
 		bdv.getViewerPanel().requestRepaint();
 
 	}

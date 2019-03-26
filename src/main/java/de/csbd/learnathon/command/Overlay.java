@@ -52,7 +52,7 @@ public class Overlay extends BdvOverlay {
 		fadeOutAlpha = ( float ) ( model.getView().getFadeOutValue() ) / 15;
 		final int curentTime = info.getTimePointIndex();
 
-		if ( model.getView().getCheckBoxStatus() ) {
+		if ( model.getView().getActiveTrackletCheckBoxStatus() ) {
 			Pair< LinkedList< Puncta >, LinkedList< Edge > > selectedTracklet = model.getGraph().getSelectedTracklet();
 			for ( Puncta p : selectedTracklet.getA() ) {
 				punctaOverlay( g, t, scale, lPos, gPos, curentTime, p );
@@ -172,6 +172,17 @@ public class Overlay extends BdvOverlay {
 			if ( p.equals( model.getGraph().getLeadSelectedPuncta() ) ) {
 				g.setColor( selectedPunctaColor );
 			}
+			int s = 4;
+			g.drawLine( ( int ) gPos[ 0 ] - s, ( int ) gPos[ 1 ], ( int ) gPos[ 0 ] + s, ( int ) gPos[ 1 ] );
+			g.drawLine( ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] - s, ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] + s );
+		}
+		if ( ( p.getT() == curentTime - 1 ) && model.getGraph().punctaInSelectedTracklet( p ) && model.getView().getPreviousMarkerCheckBoxStatus() ) {
+			g.setStroke( new BasicStroke( lineThickness ) );
+			g.drawOval(
+					( int ) ( gPos[ 0 ] - ( p.getR() * scale ) ),
+					( int ) ( gPos[ 1 ] - ( p.getR() * scale ) ),
+					( int ) ( p.getR() * scale * 2 ),
+					( int ) ( p.getR() * scale * 2 ) );
 			int s = 4;
 			g.drawLine( ( int ) gPos[ 0 ] - s, ( int ) gPos[ 1 ], ( int ) gPos[ 0 ] + s, ( int ) gPos[ 1 ] );
 			g.drawLine( ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] - s, ( int ) gPos[ 0 ], ( int ) gPos[ 1 ] + s );

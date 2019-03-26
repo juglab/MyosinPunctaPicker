@@ -130,7 +130,10 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem = new JMenuItem( "Delete selected tracklet -> X" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
-		menuItem = new JMenuItem( "Hide all but selected tracklet/Show all  -> H" );
+		menuItem = new JMenuItem( "Hide all but selected tracklet/Show all -> H" );
+		menuItem.getAccessibleContext().setAccessibleDescription( "" );
+		helpsubmenu.add( menuItem );
+		menuItem = new JMenuItem( "Show puncta marker from previous click -> W" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		return menuBar;

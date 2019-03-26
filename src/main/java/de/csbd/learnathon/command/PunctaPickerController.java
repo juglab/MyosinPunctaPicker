@@ -127,10 +127,20 @@ public class PunctaPickerController {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				if ( view.getCheckBoxStatus() )
-					view.setCheckBoxStatus( false );
+				if ( view.getActiveTrackletCheckBoxStatus() )
+					view.setActiveTrackletCheckBoxStatus( false );
 				else
-					view.setCheckBoxStatus( true );
+					view.setActiveTrackletCheckBoxStatus( true );
+			}
+		} );
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_W, 0 ), "ShowPreviousMarker", new AbstractAction() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				if ( view.getPreviousMarkerCheckBoxStatus() )
+					view.setShowPreviousMarkerCheckBoxStatus( false );
+				else
+					view.setShowPreviousMarkerCheckBoxStatus( true );
 			}
 		} );
 		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_D, 0 ), "DeletePunctaOrEdge", new AbstractAction() {
