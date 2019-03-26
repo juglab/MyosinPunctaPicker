@@ -3,6 +3,7 @@ package de.csbd.learnathon.command;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
@@ -33,6 +34,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 import net.miginfocom.swing.MigLayout;
@@ -93,6 +95,14 @@ public class PunctaPickerView {
 
 	public boolean getPreviousMarkerCheckBoxStatus() {
 		return showPreviousMarkerCheckBox.isSelected();
+	}
+
+	public boolean getFlowToggleCheckBox() {
+		return flowToggleCheckBox.isSelected();
+	}
+
+	public boolean getTrackletToggleCheckBox() {
+		return trackletToggleCheckBox.isSelected();
 	}
 
 	public CSVReader getReader() {
@@ -325,29 +335,42 @@ public class PunctaPickerView {
 
 		JPanel panelFlowProps = new JPanel( new MigLayout() );
 		panelFlowProps.setBorder( BorderFactory.createTitledBorder( "flow" ) );
-		JButton computeFlowButton = new JButton();
+		JButton computeFlowButton = new JButton( "compute flows" );
 		computeFlowButton.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
+				flowToggleCheckBox.setSelected( true );
+				trackletToggleCheckBox.setSelected( true );
 				model.processFlow();
+				ArrayList< FlowVector > sparseFlow = model.getSparseFlow();
+				RandomAccessibleInterval< DoubleType > flowData = model.getDenseFlow();
+				flowOverlay.paintSparseFlow( sparseFlow );
+				flowOverlay.paintDenseFlow( flowData );
+				flowOverlay.setVisible( true );
 			}
 		} );
-		flowToggleCheckBox = new JCheckBox( "flow ON/OFF" );
+		flowToggleCheckBox = new JCheckBox( "show flows" );
 		flowToggleCheckBox.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-
+				if ( getFlowToggleCheckBox() )
+					flowOverlay.setVisible( true );
+				else flowOverlay.setVisible( false);
 				bdv.getViewerPanel().requestRepaint();
 			}
 		} );
 
-		trackletToggleCheckBox = new JCheckBox( "tracklets ON/OFF" );
+		trackletToggleCheckBox = new JCheckBox( "show tracklets with flow" );
 		trackletToggleCheckBox.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
+				if ( getTrackletToggleCheckBox() )
+					overlay.setVisible( true );
+				else
+					overlay.setVisible( false );
 				bdv.getViewerPanel().requestRepaint();
 			}
 		} );
@@ -362,6 +385,8 @@ public class PunctaPickerView {
 
 		// make default selection such that action is thrown
 		bAutomaticSize.doClick();
+		trackletToggleCheckBox.setSelected( false );
+		flowToggleCheckBox.setSelected( false );
 
 		return helper;
 	}
