@@ -3,13 +3,13 @@ package de.csbd.learnathon.command;
 
 public class FlowVector {
 
-	int x;
-	int y;
+	float x;
+	float y;
 	int t;
 	double u;
 	double v;
 
-	public FlowVector( int x, int y, int t, double u, double v ) {
+	public FlowVector( float x, float y, int t, double u, double v ) {
 		this.x = x;
 		this.y = y;
 		this.t = t;
@@ -17,11 +17,11 @@ public class FlowVector {
 		this.v = v;
 	}
 
-	public int getX() {
+	public float getX() {
 		return x;
 	}
 
-	public int getY() {
+	public float getY() {
 		return y;
 	}
 

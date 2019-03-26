@@ -42,19 +42,24 @@ public class PunctaPickerModel {
 	}
 
 	public void processFlow( String flowMethod ) {
-		FlowComputation flowComputation = new FlowComputation();
+		FlowComputation flowComputation = new FlowComputation( this );
 		flowComputation.computeTMFlow( getRawData() );
 		RandomAccessibleInterval< DoubleType > denseFlow = flowComputation.getDenseFlow();
 		ArrayList< FlowVector > sparseFlow = flowComputation.getSparseFlow();
 		ArrayList< LocalMaximaQuartet > localMaxima = flowComputation.getLocalMaxima();
 		ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima = flowComputation.getThresholdedLocalMaxima();
-		
-//		RandomAccessibleInterval< DoubleType > flow=FlowComputation.getRandomFlow(getRawData() );
-		
-		FlowOverlay flowDrawer= new FlowOverlay(view.bdv);
+		FlowOverlay flowDrawer = new FlowOverlay( view );
 		flowDrawer.paintDenseFlow( denseFlow );
 		flowDrawer.paintSparseFlow( sparseFlow );
-		
+	}
+
+	public void processFlow() {
+		FlowComputation flowComputation = new FlowComputation( this );
+		flowComputation.computeGenericFlow( getRawData() );
+		RandomAccessibleInterval< DoubleType > denseFlow = flowComputation.getDenseFlow();
+		FlowOverlay flowDrawer = new FlowOverlay( view );
+		flowDrawer.paintDenseFlow( denseFlow );
+//		RandomAccessibleInterval< DoubleType > flow=FlowComputation.getRandomFlow(getRawData() );
 		//BdvFunctions.show(flow,"flow",Bdv.options().addTo(view.bdv));	
 	}
 

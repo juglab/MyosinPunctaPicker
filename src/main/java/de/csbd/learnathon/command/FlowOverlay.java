@@ -8,23 +8,27 @@ import java.util.ArrayList;
 
 import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
-import bdv.util.BdvHandlePanel;
 import bdv.util.BdvOverlay;
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform2D;
 import net.imglib2.type.numeric.real.DoubleType;
 
-public class FlowOverlay{
+public class FlowOverlay extends BdvOverlay {
 	
 	private RandomAccessibleInterval< DoubleType > flowData;
 
-	private BdvHandlePanel bdv;
+	private PunctaPickerView view;
 	
-	public FlowOverlay( BdvHandlePanel bdv ) {
-		this.bdv = bdv;
+	private boolean visible;
+
+	public FlowOverlay( PunctaPickerView view ) {
+		this.view = view;
 	}
 
+	public void setVisible( final boolean visible ) {
+		this.visible = visible;
+	}
 
 	public void paintDenseFlow( RandomAccessibleInterval< DoubleType > flowData ) {
 		this.flowData = flowData;
@@ -64,7 +68,7 @@ public class FlowOverlay{
 				}
 			}
 		};
-		BdvFunctions.showOverlay( overlay, "overlay", Bdv.options().addTo( bdv ) );
+		BdvFunctions.showOverlay( overlay, "overlay", Bdv.options().addTo( view.getBdv() ) );
 		
 	}
 		
@@ -132,12 +136,18 @@ public class FlowOverlay{
 				final AffineTransform2D trans = new AffineTransform2D();
 				getCurrentTransform2D( trans );
 				for ( FlowVector f : inTimeVectors ) {
-					drawVector( trans, g, f.getX(), f.getY(), f.getU(), f.getV(), Color.BLUE );
+					drawVector( trans, g, ( int ) f.getX(), ( int ) f.getY(), f.getU(), f.getV(), Color.BLUE );
 				}
 
 			}
 		};
-		BdvFunctions.showOverlay( overlay, "overlay2", Bdv.options().addTo( bdv ) );
+		BdvFunctions.showOverlay( overlay, "overlay2", Bdv.options().addTo( view.getBdv() ) );
+	}
+
+	@Override
+	protected void draw( Graphics2D g ) {
+
+
 	}
 		
 }
