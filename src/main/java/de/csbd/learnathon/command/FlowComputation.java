@@ -1,7 +1,7 @@
 package de.csbd.learnathon.command;
 
-
 import java.util.ArrayList;
+import java.util.List;
 
 import jitk.spline.ThinPlateR2LogRSplineKernelTransform;
 import net.imglib2.Cursor;
@@ -31,13 +31,17 @@ import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
 
-
 public class FlowComputation {
 
 	ArrayList< FlowVector > sparseFlow;
 	ArrayList< LocalMaximaQuartet > localMaxima;
 	ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima;
 	RandomAccessibleInterval< DoubleType > denseFlow;
+	PunctaPickerModel model;
+
+	public FlowComputation( PunctaPickerModel model ) {
+		this.model = model;
+	}
 
 	public void computeTMFlow( RandomAccessibleInterval< DoubleType > img ) {
 		float sigma = 2;
@@ -55,6 +59,29 @@ public class FlowComputation {
 		if ( SimpleMenu.getFlowMethod() == "TPS" ) {
 			denseFlow = interpolateFlowTPS( sparseFlow, smoothed_img );
 		}
+	}
+
+	public void computeGenericFlow( RandomAccessibleInterval< DoubleType > img ) { //TODO use picked particles as input/proxy for sparseFlow
+		float sigma = 2;
+		RandomAccessibleInterval< DoubleType > smoothed_img = gaussian_smoothing2D( img, sigma );
+		sparseFlow = extractFlowVectorsFromClicks();
+		denseFlow = interpolateFlowkNN( sparseFlow, smoothed_img );
+	}
+
+	private ArrayList< FlowVector > extractFlowVectorsFromClicks() {
+		ArrayList< FlowVector > featureFlowVectorList = new ArrayList<>();
+		if ( model.getGraph() != null ) {
+
+			List< Edge > edges = model.getGraph().getEdges();
+			for ( Edge edge : edges ) {
+				featureFlowVectorList.add(
+						new FlowVector( edge.getA().getX(), edge.getA().getY(), edge
+								.getA()
+								.getT(), edge.getB().getX() - edge.getA().getX(), edge.getB().getY() - edge.getA().getY() ) );
+			}
+
+		}
+		return featureFlowVectorList;
 	}
 
 	public ArrayList< LocalMaximaQuartet > getLocalMaxima() {
@@ -271,11 +298,7 @@ public class FlowComputation {
     				        }
     						
     					}
-    				}
-    				
-    				
-    				
-    				
+					}
     				
     				flowVectorList.add( new FlowVector( q.getX(), q.getY(), q.getT(), ii, jj ) );
 			}
