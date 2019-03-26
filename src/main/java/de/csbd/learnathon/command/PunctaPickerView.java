@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -56,6 +57,7 @@ public class PunctaPickerView {
 	public BdvHandlePanel bdv = new BdvHandlePanel( null, Bdv.options().is2D() );
 	private Overlay overlay;
 	private GhostOverlay ghostOverlay;
+	private FlowOverlay flowOverlay;
 
 	private JCheckBox activeTrackletCheckBox;
 	private int fadeOutValue;
@@ -69,6 +71,10 @@ public class PunctaPickerView {
 	private JTextField txtMaxDist;
 
 	private JCheckBox showPreviousMarkerCheckBox;
+
+	private JCheckBox flowToggleCheckBox;
+
+	private JCheckBox trackletToggleCheckBox;
 
 	public String getDetectionMode() {
 		return Utils.getSelectedButtonText( modeButtons );
@@ -126,6 +132,7 @@ public class PunctaPickerView {
 		this.model = m;
 		this.image=image;
 		this.ghostOverlay = new GhostOverlay( this );
+		this.flowOverlay = new FlowOverlay( this );
 		this.controller = new PunctaPickerController( m, this, os );
 		model.setController( controller );
 		model.setView( this );
@@ -144,6 +151,7 @@ public class PunctaPickerView {
 		source.setDisplayRange( min.getRealFloat(), max.getRealFloat() );
 		BdvFunctions.showOverlay( overlay, "overlay", Bdv.options().addTo( bdv ) );
 		BdvFunctions.showOverlay( ghostOverlay, "ghostoverlay", Bdv.options().addTo( bdv ) );
+		BdvFunctions.showOverlay( flowOverlay, "flowoverlay", Bdv.options().addTo( bdv ) );
 		return bdv;
 	}
 
@@ -313,8 +321,44 @@ public class PunctaPickerView {
 		panelPickingProps.add( lMaxDist, "" );
 		panelPickingProps.add( txtMaxDist, "growx, wrap" );
 
+		// FLOW PROPS
+
+		JPanel panelFlowProps = new JPanel( new MigLayout() );
+		panelFlowProps.setBorder( BorderFactory.createTitledBorder( "flow" ) );
+		JButton computeFlowButton = new JButton();
+		computeFlowButton.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				model.processFlow();
+			}
+		} );
+		flowToggleCheckBox = new JCheckBox( "flow ON/OFF" );
+		flowToggleCheckBox.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+
+				bdv.getViewerPanel().requestRepaint();
+			}
+		} );
+
+		trackletToggleCheckBox = new JCheckBox( "tracklets ON/OFF" );
+		trackletToggleCheckBox.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				bdv.getViewerPanel().requestRepaint();
+			}
+		} );
+
+		panelFlowProps.add( computeFlowButton, "span 2, align left, growx, wrap" );
+		panelFlowProps.add( flowToggleCheckBox, "span 2, align left, growx, wrap" );
+		panelFlowProps.add( trackletToggleCheckBox, "span 2, align left, growx, wrap" );
+
 		helper.add( panelOverlayProps, "growx, wrap" );
 		helper.add( panelPickingProps, "growx, wrap" );
+		helper.add( panelFlowProps, "growx, wrap" );
 
 		// make default selection such that action is thrown
 		bAutomaticSize.doClick();
