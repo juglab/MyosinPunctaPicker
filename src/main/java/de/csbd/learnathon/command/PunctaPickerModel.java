@@ -13,6 +13,10 @@ public class PunctaPickerModel {
 	private PunctaPickerController controller;
 	private PunctaPickerView view;
 
+	private RandomAccessibleInterval< DoubleType > denseFlow;
+
+	private ArrayList< FlowVector > sparseFlow;
+
 	PunctaPickerModel( RandomAccessibleInterval< DoubleType > image ) {
 		this.rawData = image;
 	}
@@ -50,17 +54,24 @@ public class PunctaPickerModel {
 		ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima = flowComputation.getThresholdedLocalMaxima();
 		FlowOverlay flowDrawer = new FlowOverlay( view );
 		flowDrawer.paintDenseFlow( denseFlow );
-		flowDrawer.paintSparseFlow( sparseFlow );
+//		flowDrawer.paintSparseFlow( sparseFlow );
 	}
 
 	public void processFlow() {
 		FlowComputation flowComputation = new FlowComputation( this );
 		flowComputation.computeGenericFlow( getRawData() );
-		RandomAccessibleInterval< DoubleType > denseFlow = flowComputation.getDenseFlow();
-		FlowOverlay flowDrawer = new FlowOverlay( view );
-		flowDrawer.paintDenseFlow( denseFlow );
+		sparseFlow = flowComputation.getSparseFlow();
+		denseFlow = flowComputation.getDenseFlow();
 //		RandomAccessibleInterval< DoubleType > flow=FlowComputation.getRandomFlow(getRawData() );
 		//BdvFunctions.show(flow,"flow",Bdv.options().addTo(view.bdv));	
+	}
+
+	public RandomAccessibleInterval< DoubleType > getDenseFlow() {
+		return denseFlow;
+	}
+
+	public ArrayList< FlowVector > getSparseFlow() {
+		return sparseFlow;
 	}
 
 	public float getDefaultRadius() {
