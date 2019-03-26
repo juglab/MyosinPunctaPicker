@@ -45,7 +45,7 @@ public class GhostOverlay extends BdvOverlay {
 
 		final AffineTransform3D t = new AffineTransform3D();
 		getCurrentTransform3D( t );
-		double scale = extractScale( t, 0 );
+		double scale = Utils.extractScale( t, 0 );
 
 		final double[] lPos = new double[ 3 ];
 		final double[] gPos = new double[ 3 ];
@@ -62,16 +62,6 @@ public class GhostOverlay extends BdvOverlay {
 					( int ) ( r * scale * 2 ) );
 		}
 
-	}
-
-	public static double extractScale( final AffineTransform3D t, final int axis ) { //TODO Move this method to Utils
-		double sqSum = 0;
-		final int c = axis;
-		for ( int r = 0; r < 4; ++r ) {
-			final double x = t.get( r, c );
-			sqSum += x * x;
-		}
-		return Math.sqrt( sqSum );
 	}
 
 	private class MouseOver implements MouseMotionListener {
