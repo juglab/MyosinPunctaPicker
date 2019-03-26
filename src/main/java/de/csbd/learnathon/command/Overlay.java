@@ -28,6 +28,7 @@ public class Overlay extends BdvOverlay {
 	private final Color selectedColor = new Color( 1, 0, 0 );
 	private final Color selectedPunctaColor = new Color( 1, ( float ) 0.6, 0 );
 	private float fadeOutAlpha;
+	private boolean visible = true;
 
 	public Overlay( PunctaPickerModel model ) {
 		super();
@@ -38,38 +39,40 @@ public class Overlay extends BdvOverlay {
 	@Override
 	protected void draw( final Graphics2D g ) {
 
-		final AffineTransform3D t = new AffineTransform3D();
-		getCurrentTransform3D( t );
-		double scale = extractScale( t, 0 );
+		if ( visible ) {
+			final AffineTransform3D t = new AffineTransform3D();
+			getCurrentTransform3D( t );
+			double scale = extractScale( t, 0 );
 
-		final double[] lPos = new double[ 3 ];
-		final double[] gPos = new double[ 3 ];
-		final double[] lPos1 = new double[ 3 ];
-		final double[] lPos2 = new double[ 3 ];
-		final double[] gPos1 = new double[ 3 ];
-		final double[] gPos2 = new double[ 3 ];
+			final double[] lPos = new double[ 3 ];
+			final double[] gPos = new double[ 3 ];
+			final double[] lPos1 = new double[ 3 ];
+			final double[] lPos2 = new double[ 3 ];
+			final double[] gPos1 = new double[ 3 ];
+			final double[] gPos2 = new double[ 3 ];
 
-		fadeOutAlpha = ( float ) ( model.getView().getFadeOutValue() ) / 15;
-		final int curentTime = info.getTimePointIndex();
+			fadeOutAlpha = ( float ) ( model.getView().getFadeOutValue() ) / 15;
+			final int curentTime = info.getTimePointIndex();
 
-		if ( model.getView().getActiveTrackletCheckBoxStatus() ) {
-			Pair< LinkedList< Puncta >, LinkedList< Edge > > selectedTracklet = model.getGraph().getSelectedTracklet();
-			for ( Puncta p : selectedTracklet.getA() ) {
-				punctaOverlay( g, t, scale, lPos, gPos, curentTime, p );
-			}
-			for ( Edge edge : selectedTracklet.getB() ) {
-				edgeOverlay( g, t, lPos1, lPos2, gPos1, gPos2, curentTime, edge );
-			}
-		}
-
-		else {
-
-			for ( Puncta p : model.getGraph().getPunctas() ) {
-				punctaOverlay( g, t, scale, lPos, gPos, curentTime, p );
+			if ( model.getView().getActiveTrackletCheckBoxStatus() ) {
+				Pair< LinkedList< Puncta >, LinkedList< Edge > > selectedTracklet = model.getGraph().getSelectedTracklet();
+				for ( Puncta p : selectedTracklet.getA() ) {
+					punctaOverlay( g, t, scale, lPos, gPos, curentTime, p );
+				}
+				for ( Edge edge : selectedTracklet.getB() ) {
+					edgeOverlay( g, t, lPos1, lPos2, gPos1, gPos2, curentTime, edge );
+				}
 			}
 
-			for ( Edge edge : model.getGraph().getEdges() ) {
-				edgeOverlay( g, t, lPos1, lPos2, gPos1, gPos2, curentTime, edge );
+			else {
+
+				for ( Puncta p : model.getGraph().getPunctas() ) {
+					punctaOverlay( g, t, scale, lPos, gPos, curentTime, p );
+				}
+
+				for ( Edge edge : model.getGraph().getEdges() ) {
+					edgeOverlay( g, t, lPos1, lPos2, gPos1, gPos2, curentTime, edge );
+				}
 			}
 		}
 
@@ -247,6 +250,10 @@ public class Overlay extends BdvOverlay {
 			}
 		}
 
+	}
+
+	public void setVisible( final boolean visible ) {
+		this.visible = visible;
 	}
 
 }
