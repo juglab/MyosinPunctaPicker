@@ -361,7 +361,7 @@ public class PunctaPickerView {
 		if ( txtMaxDist.getText().isEmpty() )
 			return 55f;
 		else
-			return Float.valueOf( txtDefaultPunctaRadius.getText().trim() ).floatValue();
+			return Float.valueOf( txtMaxDist.getText().trim() ).floatValue();
 	}
 
 }

@@ -220,18 +220,17 @@ public class PunctaPickerController {
 
 		String blobDetectionStatus = view.getDetectionMode();
 
-		if ( blobDetectionStatus == "manual" ) {
+		if ( blobDetectionStatus == "constant radius" ) {
 			Puncta pNew = new Puncta( pos.getFloatPosition( 0 ), pos.getFloatPosition( 1 ), t, model.getDefaultRadius() );
 			addPunctaToGraph( t, g, pOld, pNew );
 
-		} else if ( blobDetectionStatus == "automatically select size" ) {
+		} else if ( blobDetectionStatus == "auto size&pos" ) {
 
 			Puncta pNew = blobDetectedPuncta( t, pos.getDoublePosition( 0 ), pos.getDoublePosition( 1 ) );
 			pNew.setT( t );
 			pNew.setX( ( float ) ( pos.getDoublePosition( 0 ) - view.getWindowSize() / 2 ) + pNew.getX() );
 			pNew.setY( ( float ) ( pos.getDoublePosition( 1 ) - view.getWindowSize() / 2 ) + pNew.getY() );
 			addPunctaToGraph( t, g, pOld, pNew );
-			System.out.println( pNew.getR() );
 
 		}
 		else {
@@ -240,7 +239,6 @@ public class PunctaPickerController {
 			pNew.setX( ( float ) ( pos.getDoublePosition( 0 ) ) );
 			pNew.setY( ( float ) ( pos.getDoublePosition( 1 ) ) );
 			addPunctaToGraph( t, g, pOld, pNew );
-			System.out.println( pNew.getR() );
 		}
 
     }
@@ -257,7 +255,7 @@ public class PunctaPickerController {
 				( long ) ( y + view.getWindowSize() / 2 ),
 				0 );
 		FinalInterval outputInterval;
-		if ( view.getDetectionMode() == "automatically select size" ) {
+		if ( view.getDetectionMode() == "auto size" ) {
 			outputInterval = Intervals.createMinMax(
 					( long ) ( x - 1 / 2 ),
 					( long ) ( y - 1 / 2 ),

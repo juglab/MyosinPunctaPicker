@@ -67,6 +67,7 @@ public class BlobDetectionCommand< T extends RealType< T > & Type< T > > {
 	}
 
 	private void setUpBlobDetectionCommand() {
+
 		/*
 		 * Step One: Obtain Laplacian reponse, normalize to make
 		 * scale-independent and stack in a pyramid
