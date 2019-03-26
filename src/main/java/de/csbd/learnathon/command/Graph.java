@@ -1,6 +1,5 @@
 package de.csbd.learnathon.command;
 
-import java.awt.Paint;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -228,6 +227,21 @@ public class Graph {
 		} else {
 			return false;
 		}
+	}
+
+	public boolean punctaInSelectedTracklet( Puncta p ) {
+		boolean state = false;
+		Pair< LinkedList< Puncta >, LinkedList< Edge > > tracklet = getSelectedTracklet();
+		for ( Puncta pun : tracklet.getA() ) {
+			if ( p.equals( pun ) ) {
+				state = true;
+				break;
+			}
+		}
+		if ( state )
+			return true;
+		else
+			return false;
 	}
 
 }
