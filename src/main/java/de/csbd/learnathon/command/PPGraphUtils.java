@@ -101,4 +101,33 @@ public class PPGraphUtils {
 		float maxY = Math.max( e.getA().getY(), e.getB().getY() );
 		return ( minX <= x && minY <= y ) && ( maxX >= x && maxY >= y );
 	}
+
+	public static FlowVector getClosestFlowVectorAtTimePoint(
+			float x,
+			float y,
+			ArrayList< FlowVector > availableFlowVectors,
+			int time ) {
+
+		for ( FlowVector flowVector : availableFlowVectors ) {
+			if ( flowVector.getT() == time ) {
+				double num = Math.abs(
+						( flowVector.getY() - ( flowVector.getY() + flowVector.getV() ) ) * x - ( flowVector
+								.getX() - ( flowVector.getX() + flowVector.getU() ) ) * y + flowVector
+										.getX() * ( flowVector.getY() + flowVector.getV() ) - flowVector
+												.getY() * ( flowVector.getX() + flowVector.getU() ) );
+
+				double den = Math.sqrt(
+						( flowVector.getY() - ( flowVector.getY() + flowVector.getV() ) ) * ( flowVector
+								.getY() - ( flowVector.getY() + flowVector.getV() ) ) + ( flowVector
+										.getX() - ( flowVector.getX() + flowVector.getU() ) ) * ( flowVector
+												.getX() - ( flowVector.getX() + flowVector.getU() ) ) );
+				double dist = num / den;
+				if ( dist < 4 ) { //If mouse hover is lesser than 4 pixels away from the edge
+					return flowVector;
+				}
+			}
+		}
+
+		return null;
+	}
 }
