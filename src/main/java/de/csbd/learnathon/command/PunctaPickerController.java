@@ -68,7 +68,7 @@ public class PunctaPickerController {
 			actionSelectClosestSubgraph( x, y );
 		}, "Select", "C" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
-			actionMoveLeadPuncta( x, y );
+			actionMoveLeadPunctaOrSelectedFlowVector( x, y );
 		}, "Move", "SPACE" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			ghostClick( x, y );
@@ -133,7 +133,7 @@ public class PunctaPickerController {
 					view.setActiveTrackletCheckBoxStatus( true );
 			}
 		} );
-		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_W, 0 ), "ShowPreviousMarker", new AbstractAction() {
+		registerKeyBinding( KeyStroke.getKeyStroke( KeyEvent.VK_Z, 0 ), "ShowPreviousMarker", new AbstractAction() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
@@ -189,7 +189,6 @@ public class PunctaPickerController {
 
     private void actionSelectClosestSubgraph(int x, int y) {
         Graph g = model.getGraph();
-
         if (!g.getPunctas().isEmpty()) {
             view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates(x, y, pos);
 
@@ -304,11 +303,16 @@ public class PunctaPickerController {
         newE.setSelected(true);
     }
 
-    public void actionMoveLeadPuncta(int x, int y) {
+	public void actionMoveLeadPunctaOrSelectedFlowVector( int x, int y ) {
         view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates(x, y, pos);
-        Puncta lsp = model.getGraph().getLeadSelectedPuncta();
-        lsp.setX(pos.getFloatPosition(0));
-        lsp.setY(pos.getFloatPosition(1));
+		if ( !( model.getGraph().getLeadSelectedPuncta() == null ) ) {
+			model.getGraph().getLeadSelectedPuncta().setX( pos.getFloatPosition( 0 ) );
+			model.getGraph().getLeadSelectedPuncta().setY( pos.getFloatPosition( 1 ) );
+		} else if ( !( model.getFlowVectorsCollection().getOnlySelectedFlowVector() == null ) ) {
+			model.getFlowVectorsCollection().getOnlySelectedFlowVector().setU( pos.getFloatPosition( 0 ) );
+			model.getFlowVectorsCollection().getOnlySelectedFlowVector().setV( pos.getFloatPosition( 1 ) );
+		}
+		view.getBdv().getViewerPanel().requestRepaint();
     }
 
 	private < T extends RealType< T > & NativeType< T > > Puncta detectFeatures( Img< T > newImage, FinalInterval outputInterval ) {
