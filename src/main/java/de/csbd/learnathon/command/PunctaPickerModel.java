@@ -10,12 +10,17 @@ public class PunctaPickerModel {
 	private RandomAccessibleInterval< DoubleType > rawData;
 
 	private Graph graph = new Graph();
+	private FlowVectorsCollection flowVectorsCol = new FlowVectorsCollection();
 	private PunctaPickerController controller;
+	private FlowController flowController;
+	private FlowComputation flowComputation;
 	private PunctaPickerView view;
 
 	private RandomAccessibleInterval< DoubleType > denseFlow;
 
-	private ArrayList< FlowVector > sparseFlow;
+	private ArrayList< FlowVector > handPickedSparseFlow;
+
+	private ArrayList< FlowVector > spacedFlow;
 
 	PunctaPickerModel( RandomAccessibleInterval< DoubleType > image ) {
 		this.rawData = image;
@@ -29,8 +34,16 @@ public class PunctaPickerModel {
 		return view;
 	}
 
+	public FlowComputation getFlowComputation() {
+		return flowComputation;
+	}
+
 	public void setController( PunctaPickerController controller ) {
 		this.controller = controller;
+	}
+
+	public void setFlowController( FlowController flowController ) {
+		this.flowController = flowController;
 	}
 
 	public RandomAccessibleInterval< DoubleType > getRawData() {
@@ -45,34 +58,38 @@ public class PunctaPickerModel {
 		this.graph = g;
 	}
 
-	public void processFlow( String flowMethod ) {
-		FlowComputation flowComputation = new FlowComputation( this );
-		flowComputation.computeTMFlow( getRawData() );
-		RandomAccessibleInterval< DoubleType > denseFlow = flowComputation.getDenseFlow();
-		ArrayList< FlowVector > sparseFlow = flowComputation.getSparseFlow();
-		ArrayList< LocalMaximaQuartet > localMaxima = flowComputation.getLocalMaxima();
-		ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima = flowComputation.getThresholdedLocalMaxima();
-		FlowOverlay flowDrawer = new FlowOverlay( view );
-		flowDrawer.paintDenseFlow( denseFlow );
-//		flowDrawer.paintSparseFlow( sparseFlow );
+	public FlowVectorsCollection getFlowVectorsCollection() {
+		return flowVectorsCol;
 	}
+
+//	public void processFlow( String flowMethod ) {
+//		FlowComputation flowComputation = new FlowComputation( this );
+//		flowComputation.computeTMFlow( getRawData() );
+//		RandomAccessibleInterval< DoubleType > denseFlow = flowComputation.getDenseFlow();
+//		ArrayList< FlowVector > sparseFlow = flowComputation.getSparseHandPickedFlow();
+//		ArrayList< LocalMaximaQuartet > localMaxima = flowComputation.getLocalMaxima();
+//		ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima = flowComputation.getThresholdedLocalMaxima();
+//		FlowOverlay flowDrawer = new FlowOverlay( view );
+//		flowDrawer.setDenseFlow( denseFlow );
+////		flowDrawer.paintSparseFlow( sparseFlow );
+//	}
 
 	public void processFlow() {
-		FlowComputation flowComputation = new FlowComputation( this );
+		flowComputation = new FlowComputation( this );
 		flowComputation.computeGenericFlow( getRawData() );
-		sparseFlow = flowComputation.getSparseFlow();
-		denseFlow = flowComputation.getDenseFlow();
-//		RandomAccessibleInterval< DoubleType > flow=FlowComputation.getRandomFlow(getRawData() );
-		//BdvFunctions.show(flow,"flow",Bdv.options().addTo(view.bdv));	
 	}
 
-	public RandomAccessibleInterval< DoubleType > getDenseFlow() {
-		return denseFlow;
-	}
-
-	public ArrayList< FlowVector > getSparseFlow() {
-		return sparseFlow;
-	}
+//	public RandomAccessibleInterval< DoubleType > getDenseFlow() {
+//		return denseFlow;
+//	}
+//
+//	public ArrayList< FlowVector > getHandPickedSparseFlow() {
+//		return handPickedSparseFlow;
+//	}
+//
+//	public ArrayList< FlowVector > getSpacedFlow() {
+//		return spacedFlow;
+//	}
 
 	public float getDefaultRadius() {
 		return view.getDefaultPunctaRadius();
