@@ -53,6 +53,7 @@ public class PunctaPickerView {
 
 	private PunctaPickerModel model;
 	private PunctaPickerController controller;
+	private FlowController flowController;
 
 	private CSVReader reader;
 
@@ -77,6 +78,21 @@ public class PunctaPickerView {
 	private JCheckBox flowToggleCheckBox;
 
 	private JCheckBox trackletToggleCheckBox;
+
+	public PunctaPickerView( PunctaPickerModel m, Dataset image, OpService os ) {
+		this.model = m;
+		this.image = image;
+		this.ghostOverlay = new GhostOverlay( this );
+		this.flowOverlay = new FlowOverlay( this );
+		this.controller = new PunctaPickerController( m, this, os );
+		model.setController( controller );
+		model.setView( this );
+		this.opService = os;
+		this.overlay = new Overlay( model );
+		bdv = initBdv( model.getRawData() );
+		this.flowController = new FlowController( m, this );
+		model.setFlowController( flowController );
+	}
 
 	public String getDetectionMode() {
 		return Utils.getSelectedButtonText( modeButtons );
@@ -136,19 +152,6 @@ public class PunctaPickerView {
 			return 1d;
 		else
 			return Double.valueOf( txtStepScale.getText().trim() ).doubleValue();
-	}
-
-	public PunctaPickerView( PunctaPickerModel m, Dataset image, OpService os ) {
-		this.model = m;
-		this.image=image;
-		this.ghostOverlay = new GhostOverlay( this );
-		this.flowOverlay = new FlowOverlay( this );
-		this.controller = new PunctaPickerController( m, this, os );
-		model.setController( controller );
-		model.setView( this );
-		this.opService = os;
-		this.overlay = new Overlay( model );
-		bdv = initBdv( model.getRawData() );
 	}
 
 	private < T extends RealType< T > & NativeType< T > > BdvHandlePanel initBdv( final RandomAccessibleInterval< T > img ) {
@@ -343,11 +346,14 @@ public class PunctaPickerView {
 				flowToggleCheckBox.setSelected( true );
 				trackletToggleCheckBox.setSelected( true );
 				model.processFlow();
-				ArrayList< FlowVector > sparseFlow = model.getSparseFlow();
-				RandomAccessibleInterval< DoubleType > flowData = model.getDenseFlow();
-				flowOverlay.paintSparseFlow( sparseFlow );
-				flowOverlay.paintDenseFlow( flowData );
+				ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
+				RandomAccessibleInterval< DoubleType > flowData = model.getFlowVectorsCollection().getDenseFlow();
+				ArrayList< FlowVector > spacedFlow = model.getFlowVectorsCollection().getSpacedFlowVectors();
+				flowOverlay.setHandPickedSparseFlow( handPickedSparseFlow );
+				flowOverlay.setSpacedFlow( spacedFlow );
+				flowOverlay.setDenseFlow( flowData );
 				flowOverlay.setVisible( true );
+				flowOverlay.requestRepaint();
 			}
 		} );
 		flowToggleCheckBox = new JCheckBox( "show flows" );
@@ -456,6 +462,10 @@ public class PunctaPickerView {
 			return 55f;
 		else
 			return Float.valueOf( txtMaxDist.getText().trim() ).floatValue();
+	}
+
+	public FlowOverlay getFlowOverlay() {
+		return flowOverlay;
 	}
 
 }
