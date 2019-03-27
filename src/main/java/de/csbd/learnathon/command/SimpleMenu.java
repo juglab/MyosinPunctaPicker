@@ -12,8 +12,6 @@ import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-import javax.swing.JSlider;
-import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.filechooser.FileSystemView;
 
@@ -65,16 +63,6 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		menuItem.addActionListener( this );
 		filemenu.add( menuItem );
-
-		JSlider slider = new JSlider( JSlider.HORIZONTAL );
-		slider.setVisible( true );
-		ChangeListener cl = e -> {
-			JSlider x = ( JSlider ) e.getSource();
-			System.out.println( "value is: " + x.getValue() );
-		};
-
-		slider.addChangeListener( cl );
-		filemenu.add( slider );
 
 		//Build the flow menu.
 		flowmenu = new JMenu( "Compute flows" );
@@ -133,7 +121,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem = new JMenuItem( "Hide all but selected tracklet/Show all -> H" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
-		menuItem = new JMenuItem( "Show puncta marker from previous click -> W" );
+		menuItem = new JMenuItem( "Show puncta marker from previous click -> Z" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		return menuBar;
@@ -193,18 +181,18 @@ public class SimpleMenu implements ActionListener, ItemListener {
 			}
 
 		}
-		if ( jmi.getText() == "Nearest Neighbor flow" ) {
-			flowMethod = FLOW_NN;
-			model.processFlow( flowMethod );
-		}
-		if ( jmi.getText() == "k-Nearest Neighbor flow" ) {
-			flowMethod = FLOW_kNN;
-			model.processFlow( flowMethod );
-		}
-		if ( jmi.getText() == "Thin Plate Splines Flow" ) {
-			flowMethod = FLOW_TPS;
-			model.processFlow( flowMethod );
-		}
+//		if ( jmi.getText() == "Nearest Neighbor flow" ) {
+//			flowMethod = FLOW_NN;
+//			model.processFlow( flowMethod );
+//		}
+//		if ( jmi.getText() == "k-Nearest Neighbor flow" ) {
+//			flowMethod = FLOW_kNN;
+//			model.processFlow( flowMethod );
+//		}
+//		if ( jmi.getText() == "Thin Plate Splines Flow" ) {
+//			flowMethod = FLOW_TPS;
+//			model.processFlow( flowMethod );
+//		}
 		if ( jmi.getText() == "Key bindings" ) {}
 	}
 
