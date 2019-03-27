@@ -33,39 +33,76 @@ import net.imglib2.view.Views;
 
 public class FlowComputation {
 
-	ArrayList< FlowVector > sparseFlow;
-	ArrayList< LocalMaximaQuartet > localMaxima;
-	ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima;
-	RandomAccessibleInterval< DoubleType > denseFlow;
-	PunctaPickerModel model;
+
+	private ArrayList< LocalMaximaQuartet > localMaxima;
+	private ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima;
+	private PunctaPickerModel model;
+	private FlowVectorsCollection flowVecCol;
 
 	public FlowComputation( PunctaPickerModel model ) {
 		this.model = model;
+		this.flowVecCol = model.getFlowVectorsCollection();
 	}
 
-	public void computeTMFlow( RandomAccessibleInterval< DoubleType > img ) {
+	public FlowComputation() {}
+
+//	public ArrayList< FlowVector > getSparseHandPickedFlow() {
+//		return sparseHandPickedFlow;
+//	}
+//
+//	public RandomAccessibleInterval< DoubleType > getDenseFlow() {
+//		return denseFlow;
+//	}
+//
+//	public ArrayList< FlowVector > getSpacedFlow() {
+//		return spacedFlow;
+//	}
+
+	public void computeGenericFlow( RandomAccessibleInterval< DoubleType > img ) {
 		float sigma = 2;
 		RandomAccessibleInterval< DoubleType > smoothed_img = gaussian_smoothing2D( img, sigma );
-		localMaxima = findLocalMax( img, 20 );
-		thresholdedLocalMaxima = thresholdedMaxima( localMaxima, 150 );
-		sparseFlow = templateMatching( smoothed_img, thresholdedLocalMaxima );
-		if ( SimpleMenu.getFlowMethod() == "NN" ) {
-			System.out.println( "NN!" );
-			denseFlow = interpolateFlowNN( sparseFlow, smoothed_img );
-		}
-		if ( SimpleMenu.getFlowMethod() == "kNN" ) {
-			denseFlow = interpolateFlowkNN( sparseFlow, smoothed_img );
-		}
-		if ( SimpleMenu.getFlowMethod() == "TPS" ) {
-			denseFlow = interpolateFlowTPS( sparseFlow, smoothed_img );
-		}
+		ArrayList< FlowVector > sparseHandPickedFlow = extractFlowVectorsFromClicks();
+		RandomAccessibleInterval< DoubleType > denseFlow = interpolateFlowkNN( sparseHandPickedFlow, smoothed_img );
+		ArrayList< FlowVector > spacedFlow = prepareSpacedVectors( denseFlow );
+		flowVecCol.setSparseHandPickedFlow( sparseHandPickedFlow );
+		flowVecCol.setDenseFlow( denseFlow );
+		flowVecCol.setSpacedFlow( spacedFlow );
 	}
 
-	public void computeGenericFlow( RandomAccessibleInterval< DoubleType > img ) { //TODO use picked particles as input/proxy for sparseFlow
-		float sigma = 2;
-		RandomAccessibleInterval< DoubleType > smoothed_img = gaussian_smoothing2D( img, sigma );
-		sparseFlow = extractFlowVectorsFromClicks();
-		denseFlow = interpolateFlowkNN( sparseFlow, smoothed_img );
+	private ArrayList< FlowVector > prepareSpacedVectors( RandomAccessibleInterval< DoubleType > flowData ) { //Might move to Flow Computation
+		ArrayList< FlowVector > spacedFlowVectors = new ArrayList<>();
+		final long sizeX = flowData.dimension( 0 );
+		final long sizeY = flowData.dimension( 1 );
+		int spacing = 100; // spacing between pixels for flow display //TODO expose this as parameter
+		spacing = Math.max( spacing, ( int ) Math.max( sizeX, sizeY ) / 25 ); // but if large image only 25 vecs along longer side
+
+		for ( int t = 0; t < flowData.dimension( 2 ) / 2; t++ ) {
+			int startx = ( int ) ( sizeX % spacing ) / 2;
+			startx = ( startx == 0 ) ? spacing / 2 : startx;
+			int starty = ( int ) ( sizeY % spacing ) / 2;
+			starty = ( starty == 0 ) ? spacing / 2 : starty;
+			for ( int x = startx; x < sizeX; x += spacing ) {
+				for ( int y = starty; y < sizeY; y += spacing ) {
+					FlowVector flowVec = getFlowVector( flowData, x, y, t );
+					spacedFlowVectors.add( flowVec );
+				}
+			}
+		}
+		return spacedFlowVectors;
+	}
+
+	private FlowVector getFlowVector( RandomAccessibleInterval< DoubleType > f, int x, int y, int t ) {
+		RandomAccess< DoubleType > ra = f.randomAccess();
+		ra.setPosition( x, 0 );
+		ra.setPosition( y, 1 );
+		ra.setPosition( 2 * t, 2 );
+		Double u = ra.get().getRealDouble();
+		ra.setPosition( x, 0 );
+		ra.setPosition( y, 1 );
+		ra.setPosition( 2 * t + 1, 2 );
+		Double v = ra.get().getRealDouble();
+		FlowVector flowVector = new FlowVector( x, y, t, u, v );
+		return flowVector;
 	}
 
 	private ArrayList< FlowVector > extractFlowVectorsFromClicks() {
@@ -84,20 +121,19 @@ public class FlowComputation {
 		return featureFlowVectorList;
 	}
 
-	public ArrayList< LocalMaximaQuartet > getLocalMaxima() {
-		return localMaxima;
-	}
+	private static RandomAccessibleInterval< DoubleType > gaussian_smoothing2D( RandomAccessibleInterval< DoubleType > img, float sigma ) {
 
-	public ArrayList< FlowVector > getSparseFlow() {
-		return sparseFlow;
-	}
+		float[] s = new float[ img.numDimensions() - 1 ];
 
-	public RandomAccessibleInterval< DoubleType > getDenseFlow() {
-		return denseFlow;
-	}
+		for ( int d = 0; d < s.length; ++d )
+			s[ d ] = sigma;
 
-	public ArrayList< LocalMaximaQuartet > getThresholdedLocalMaxima() {
-		return thresholdedLocalMaxima;
+		for ( long pos = 0; pos < img.dimension( 2 ); pos++ ) {
+			RandomAccessibleInterval< DoubleType > slice = Views.hyperSlice( img, 2, pos );
+			Gauss3.gauss( sigma, Views.extendMirrorSingle( slice ), slice );
+		}
+
+		return img;
 	}
 
 	private static RandomAccessibleInterval< DoubleType > interpolateFlowNN( ArrayList< FlowVector > sparseFlow, RandomAccessibleInterval< DoubleType > img ) {
@@ -196,6 +232,34 @@ public class FlowComputation {
 		return stack;
 	}
 
+	/////////////////////////////////////////////////////////////........Not the most important bits below this...................////////////////////////////////////////////////////////////////////////////////////
+
+//	public void computeTMFlow( RandomAccessibleInterval< DoubleType > img ) {
+//		float sigma = 2;
+//		RandomAccessibleInterval< DoubleType > smoothed_img = gaussian_smoothing2D( img, sigma );
+//		localMaxima = findLocalMax( img, 20 );
+//		thresholdedLocalMaxima = thresholdedMaxima( localMaxima, 150 );
+//		sparseHandPickedFlow = templateMatching( smoothed_img, thresholdedLocalMaxima );
+//		if ( SimpleMenu.getFlowMethod() == "NN" ) {
+//			System.out.println( "NN!" );
+//			denseFlow = interpolateFlowNN( sparseHandPickedFlow, smoothed_img );
+//		}
+//		if ( SimpleMenu.getFlowMethod() == "kNN" ) {
+//			denseFlow = interpolateFlowkNN( sparseHandPickedFlow, smoothed_img );
+//		}
+//		if ( SimpleMenu.getFlowMethod() == "TPS" ) {
+//			denseFlow = interpolateFlowTPS( sparseHandPickedFlow, smoothed_img );
+//		}
+//	}
+
+	public ArrayList< LocalMaximaQuartet > getLocalMaxima() {
+		return localMaxima;
+	}
+
+	public ArrayList< LocalMaximaQuartet > getThresholdedLocalMaxima() {
+		return thresholdedLocalMaxima;
+	}
+
 	private static ArrayList< LocalMaximaQuartet > findLocalMax( RandomAccessibleInterval< DoubleType > img, int r ) {
 
 		ArrayList< LocalMaximaQuartet > localMaxList = new ArrayList<>();
@@ -226,21 +290,6 @@ public class FlowComputation {
 
 		}
 		return localMaxList;
-	}
-
-	private static RandomAccessibleInterval< DoubleType > gaussian_smoothing2D( RandomAccessibleInterval< DoubleType > img, float sigma ) {
-
-		float[] s = new float[ img.numDimensions() - 1 ];
-
-		for ( int d = 0; d < s.length; ++d )
-			s[ d ] = sigma;
-
-		for ( long pos = 0; pos < img.dimension( 2 ); pos++ ) {
-			RandomAccessibleInterval< DoubleType > slice = Views.hyperSlice( img, 2, pos );
-			Gauss3.gauss( sigma, Views.extendMirrorSingle( slice ), slice );
-		}
-
-		return img;
 	}
 
 	private static ArrayList< LocalMaximaQuartet > thresholdedMaxima( ArrayList< LocalMaximaQuartet > a, float threshold ) {
