@@ -68,7 +68,7 @@ public class PunctaPickerController {
 			actionSelectClosestSubgraph( x, y );
 		}, "Select", "C" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
-			actionMoveLeadPunctaOrSelectedFlowVector( x, y );
+			actionMoveLeadPuncta( x, y );
 		}, "Move", "SPACE" );
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			ghostClick( x, y );
@@ -303,15 +303,11 @@ public class PunctaPickerController {
         newE.setSelected(true);
     }
 
-	public void actionMoveLeadPunctaOrSelectedFlowVector( int x, int y ) {
+	public void actionMoveLeadPuncta( int x, int y ) {
         view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates(x, y, pos);
 		if ( !( model.getGraph().getLeadSelectedPuncta() == null ) ) {
 			model.getGraph().getLeadSelectedPuncta().setX( pos.getFloatPosition( 0 ) );
 			model.getGraph().getLeadSelectedPuncta().setY( pos.getFloatPosition( 1 ) );
-		} else if ( !( model.getFlowVectorsCollection().getOnlySelectedFlowVector() == null ) ) {
-			model.getFlowVectorsCollection().getOnlySelectedFlowVector().setU( pos.getFloatPosition( 0 ) );
-			model.getFlowVectorsCollection().getOnlySelectedFlowVector().setV( pos.getFloatPosition( 1 ) );
-			model.getFlowVectorsCollection().getOnlySelectedFlowVector().setEdited( true );
 		}
 		view.getBdv().getViewerPanel().requestRepaint();
     }
