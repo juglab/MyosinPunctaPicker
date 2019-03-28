@@ -11,7 +11,9 @@ import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
@@ -78,6 +80,8 @@ public class PunctaPickerView {
 	private JCheckBox flowToggleCheckBox;
 
 	private JCheckBox trackletToggleCheckBox;
+
+	private JTextField txtNeighbors;
 
 	public PunctaPickerView( PunctaPickerModel m, Dataset image, OpService os ) {
 		this.model = m;
@@ -152,6 +156,13 @@ public class PunctaPickerView {
 			return 1d;
 		else
 			return Double.valueOf( txtStepScale.getText().trim() ).doubleValue();
+	}
+
+	public int getKNeighbors() {
+		if ( txtNeighbors.getText().isEmpty() )
+			return 3;
+		else
+			return Double.valueOf( txtNeighbors.getText().trim() ).intValue();
 	}
 
 	private < T extends RealType< T > & NativeType< T > > BdvHandlePanel initBdv( final RandomAccessibleInterval< T > img ) {
@@ -338,24 +349,55 @@ public class PunctaPickerView {
 
 		JPanel panelFlowProps = new JPanel( new MigLayout() );
 		panelFlowProps.setBorder( BorderFactory.createTitledBorder( "flow" ) );
-		JButton computeFlowButton = new JButton( "compute flows" );
+		JButton computeFlowButton = new JButton( "(re)compute kNN flows" );
 		computeFlowButton.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				flowToggleCheckBox.setSelected( true );
-				trackletToggleCheckBox.setSelected( true );
-				model.processFlow();
-				ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
-				RandomAccessibleInterval< DoubleType > flowData = model.getFlowVectorsCollection().getDenseFlow();
-				ArrayList< FlowVector > spacedFlow = model.getFlowVectorsCollection().getSpacedFlowVectors();
-				flowOverlay.setHandPickedSparseFlow( handPickedSparseFlow );
-				flowOverlay.setSpacedFlow( spacedFlow );
-				flowOverlay.setDenseFlow( flowData );
-				flowOverlay.setVisible( true );
-				flowOverlay.requestRepaint();
+				model.extractAndInitializeControlVectorsFromHandPickedTracklets();
+				if ( ( model.getFlowVectorsCollection().getSparsehandPickedFlowVectors().isEmpty() ) ) {
+					JOptionPane optionPane =
+							new JOptionPane( "Please select at least one point in each time frame for computing kNN based flows", JOptionPane.ERROR_MESSAGE );
+					JDialog dialog =
+							optionPane.createDialog( "Error!" );
+					dialog.setAlwaysOnTop( true );
+					dialog.setVisible( true );
+					return;
+				} else {
+					for ( int t = 0; t < image.dimension( 2 ) - 1; t++ ) {
+						ArrayList< FlowVector > vecs = model
+								.getFlowVectorsCollection()
+								.getFlowVectorsAtTime( t, model.getFlowVectorsCollection().getSparsehandPickedFlowVectors() );
+						if ( vecs.isEmpty() ) {
+							JOptionPane optionPane =
+									new JOptionPane( "Please select at least one point in each time frame for computing kNN based flows", JOptionPane.ERROR_MESSAGE );
+							JDialog dialog =
+									optionPane.createDialog( "Error!" );
+							dialog.setAlwaysOnTop( true );
+							dialog.setVisible( true );
+							break;
+						}
+
+					}
+					flowToggleCheckBox.setSelected( true );
+					trackletToggleCheckBox.setSelected( true );
+					model.processFlow(); //If edited something, add it to sparseHandPicked and also add another tracklet there
+					ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
+					RandomAccessibleInterval< DoubleType > flowData = model.getFlowVectorsCollection().getDenseFlow();
+					ArrayList< FlowVector > spacedFlow = model.getFlowVectorsCollection().getSpacedFlowVectors();
+					flowOverlay.setHandPickedSparseFlow( handPickedSparseFlow );
+					flowOverlay.setSpacedFlow( spacedFlow );
+					flowOverlay.setDenseFlow( flowData );
+					flowOverlay.setVisible( true );
+					flowOverlay.requestRepaint();
+				}
 			}
 		} );
+
+		JLabel lNeighbors = new JLabel( "k neighbors:" );
+		txtNeighbors = new JTextField( 5 );
+		txtNeighbors.setText( "3" );
+
 		flowToggleCheckBox = new JCheckBox( "show flows" );
 		flowToggleCheckBox.addActionListener( new ActionListener() {
 
@@ -382,6 +424,8 @@ public class PunctaPickerView {
 		} );
 
 		panelFlowProps.add( computeFlowButton, "span 2, align left, growx, wrap" );
+		panelFlowProps.add( lNeighbors, "" );
+		panelFlowProps.add( txtNeighbors, "wrap" );
 		panelFlowProps.add( flowToggleCheckBox, "span 2, align left, growx, wrap" );
 		panelFlowProps.add( trackletToggleCheckBox, "span 2, align left, growx, wrap" );
 
