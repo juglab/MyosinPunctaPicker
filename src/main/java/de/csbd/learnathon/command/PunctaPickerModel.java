@@ -24,6 +24,7 @@ public class PunctaPickerModel {
 
 	PunctaPickerModel( RandomAccessibleInterval< DoubleType > image ) {
 		this.rawData = image;
+		flowComputation = new FlowComputation( this );
 	}
 
 	public void setView( PunctaPickerView v ) {
@@ -74,22 +75,14 @@ public class PunctaPickerModel {
 ////		flowDrawer.paintSparseFlow( sparseFlow );
 //	}
 
-	public void processFlow() {
-		flowComputation = new FlowComputation( this );
-		flowComputation.computeGenericFlow( getRawData() );
+	public ArrayList< FlowVector > extractAndInitializeControlVectorsFromHandPickedTracklets() {
+		ArrayList< FlowVector > controlVecs = flowComputation.initializeControlVectorsForFlow();
+		return controlVecs;
 	}
 
-//	public RandomAccessibleInterval< DoubleType > getDenseFlow() {
-//		return denseFlow;
-//	}
-//
-//	public ArrayList< FlowVector > getHandPickedSparseFlow() {
-//		return handPickedSparseFlow;
-//	}
-//
-//	public ArrayList< FlowVector > getSpacedFlow() {
-//		return spacedFlow;
-//	}
+	public void processFlow() {
+		flowComputation.computeGenericFlow( getRawData() );
+	}
 
 	public float getDefaultRadius() {
 		return view.getDefaultPunctaRadius();
