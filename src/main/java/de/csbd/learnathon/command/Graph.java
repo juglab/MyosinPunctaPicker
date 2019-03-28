@@ -19,6 +19,8 @@ public class Graph {
 	private Puncta punctaLeadSelected;
 	// Holds the latest puncta that was hovered over.
 	private Puncta punctaMouseSelected;
+	//Puncta corresponding to latest edited flow vectors
+	private Puncta punctaOfEditedFlow;
 	// Holds the latest edge that was hovered over.
 	private Edge edgeMouseSelected;
 
@@ -188,12 +190,20 @@ public class Graph {
 		return punctaMouseSelected;
 	}
 
+	public void getEditedFlowPuncta( Puncta p ) {
+		punctaOfEditedFlow = p;
+	}
+
 	public void setLeadSelectedPuncta( Puncta p ) {
 		punctaLeadSelected = p;
 	}
 
 	public void setMouseSelectedPuncta( Puncta p ) {
 		punctaMouseSelected = p;
+	}
+
+	public void setEditedFlowPuncta( Puncta p ) {
+		punctaOfEditedFlow = p;
 	}
 
 	public void deleteSelectedPuncta() {

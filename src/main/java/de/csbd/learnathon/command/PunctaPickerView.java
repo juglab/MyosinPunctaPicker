@@ -354,7 +354,20 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
+//				System.out.println( model.getGraph().getEdges().size() );
+//				if ( !( model.getFlowVectorsCollection().getEditedSpacedFlow() == null ) ) {
+//
+//					for ( FlowVector fv : model.getFlowVectorsCollection().getEditedSpacedFlow() ) {
+//						Puncta pA = new Puncta( fv.getX(), fv.getY(), fv.getT(), 1 );
+//						Puncta pB = new Puncta( ( float ) ( fv.getX() + fv.getU() ), ( float ) ( fv.getY() + fv.getV() ), fv.getT() + 1, 1 );
+//						model.getGraph().addPuncta( pA );
+//						model.getGraph().addPuncta( pB );
+//						model.getGraph().addEdge( new Edge( pB, pA ) ); //Check this again, do
+//					}
+//					
+//				}
 				model.extractAndInitializeControlVectorsFromHandPickedTracklets();
+//				System.out.println( "Handpicked edges number is:" + model.extractAndInitializeControlVectorsFromHandPickedTracklets().size() );
 				if ( ( model.getFlowVectorsCollection().getSparsehandPickedFlowVectors().isEmpty() ) ) {
 					JOptionPane optionPane =
 							new JOptionPane( "Please select at least one point in each time frame for computing kNN based flows", JOptionPane.ERROR_MESSAGE );
@@ -381,7 +394,7 @@ public class PunctaPickerView {
 					}
 					flowToggleCheckBox.setSelected( true );
 					trackletToggleCheckBox.setSelected( true );
-					model.processFlow(); //If edited something, add it to sparseHandPicked and also add another tracklet there
+					model.processFlow();
 					ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
 					RandomAccessibleInterval< DoubleType > flowData = model.getFlowVectorsCollection().getDenseFlow();
 					ArrayList< FlowVector > spacedFlow = model.getFlowVectorsCollection().getSpacedFlowVectors();

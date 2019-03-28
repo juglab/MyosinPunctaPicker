@@ -10,6 +10,7 @@ public class FlowVector {
 	private double v;
 
 	private boolean isSelected;
+	private boolean isEdited;
 
 	public FlowVector( float x, float y, int t, double u, double v ) {
 		this.x = x;
@@ -22,6 +23,10 @@ public class FlowVector {
 
 	public boolean isSelected() {
 		return isSelected;
+	}
+
+	public boolean isEdited() {
+		return isEdited;
 	}
 
 	public float getX() {
@@ -54,6 +59,10 @@ public class FlowVector {
 
 	public void setSelected( boolean selected ) {
 		this.isSelected = selected;
+	}
+
+	public void setEdited( boolean edited ) {
+		this.isEdited = edited;
 	}
 
 }

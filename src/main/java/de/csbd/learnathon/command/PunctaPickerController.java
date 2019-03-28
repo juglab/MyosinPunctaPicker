@@ -311,6 +311,7 @@ public class PunctaPickerController {
 		} else if ( !( model.getFlowVectorsCollection().getOnlySelectedFlowVector() == null ) ) {
 			model.getFlowVectorsCollection().getOnlySelectedFlowVector().setU( pos.getFloatPosition( 0 ) );
 			model.getFlowVectorsCollection().getOnlySelectedFlowVector().setV( pos.getFloatPosition( 1 ) );
+			model.getFlowVectorsCollection().getOnlySelectedFlowVector().setEdited( true );
 		}
 		view.getBdv().getViewerPanel().requestRepaint();
     }

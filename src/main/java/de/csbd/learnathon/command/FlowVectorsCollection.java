@@ -11,6 +11,7 @@ public class FlowVectorsCollection {
 	private ArrayList< FlowVector > sparseHandPickedFlow;
 	private RandomAccessibleInterval< DoubleType > denseFlow;
 	private ArrayList< FlowVector > spacedFlow;
+	private ArrayList< FlowVector > editedFlow = new ArrayList<>();
 
 	public FlowVectorsCollection() {
 	}
@@ -58,5 +59,17 @@ public class FlowVectorsCollection {
 				queriedFlowVectors.add( flowtype.get( i ) );
 		}
 		return queriedFlowVectors;
+	}
+
+	public ArrayList< FlowVector > getEditedSpacedFlow() {
+		if ( !( spacedFlow == null ) ) {
+			for ( FlowVector flowVector : spacedFlow ) {
+				if ( flowVector.isEdited() )
+					editedFlow.add( flowVector );
+			}
+			return editedFlow;
+		}
+		else
+			return null;
 	}
 }
