@@ -109,6 +109,11 @@ public class PPGraphUtils {
 			int time ) {
 
 		for ( FlowVector flowVector : availableFlowVectors ) {
+			Edge virtualEdge = new Edge( new Puncta( flowVector.getX(), flowVector.getY(), flowVector.getT(), 1 ), new Puncta( ( float ) ( flowVector
+					.getX() + flowVector.getU() ), ( float ) ( flowVector.getY() + flowVector.getV() ), flowVector.getT() + 1, 1 ) );
+			if ( !isInBoundingBox( virtualEdge, x, y ) ) {
+				continue;
+			}
 			if ( flowVector.getT() == time ) {
 				double num = Math.abs(
 						( flowVector.getY() - ( flowVector.getY() + flowVector.getV() ) ) * x - ( flowVector
