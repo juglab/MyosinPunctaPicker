@@ -50,4 +50,13 @@ public class FlowVectorsCollection {
 	public ArrayList< FlowVector > getSpacedFlowVectors() {
 		return spacedFlow;
 	}
+
+	public ArrayList< FlowVector > getFlowVectorsAtTime( int t, ArrayList< FlowVector > flowtype ) {
+		ArrayList< FlowVector > queriedFlowVectors = new ArrayList<>();
+		for ( int i = 0; i < flowtype.size(); i++ ) {
+			if ( flowtype.get( i ).getT() == t )
+				queriedFlowVectors.add( flowtype.get( i ) );
+		}
+		return queriedFlowVectors;
+	}
 }
