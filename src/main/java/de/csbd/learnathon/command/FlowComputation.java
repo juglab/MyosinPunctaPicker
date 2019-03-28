@@ -33,7 +33,6 @@ import net.imglib2.view.Views;
 
 public class FlowComputation {
 
-
 	private ArrayList< LocalMaximaQuartet > localMaxima;
 	private ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima;
 	private PunctaPickerModel model;
@@ -58,13 +57,18 @@ public class FlowComputation {
 //		return spacedFlow;
 //	}
 
+	public ArrayList< FlowVector > initializeControlVectorsForFlow() {
+		ArrayList< FlowVector > sparseHandPickedFlow = extractFlowVectorsFromClicks();
+		flowVecCol.setSparseHandPickedFlow( sparseHandPickedFlow );
+		return sparseHandPickedFlow;
+	}
+
 	public void computeGenericFlow( RandomAccessibleInterval< DoubleType > img ) {
 		float sigma = 2;
 		RandomAccessibleInterval< DoubleType > smoothed_img = gaussian_smoothing2D( img, sigma );
-		ArrayList< FlowVector > sparseHandPickedFlow = extractFlowVectorsFromClicks();
-		RandomAccessibleInterval< DoubleType > denseFlow = interpolateFlowkNN( sparseHandPickedFlow, smoothed_img );
+		RandomAccessibleInterval< DoubleType > denseFlow =
+				interpolateFlowkNN( flowVecCol.getSparsehandPickedFlowVectors(), smoothed_img, model.getView().getKNeighbors() );
 		ArrayList< FlowVector > spacedFlow = prepareSpacedVectors( denseFlow );
-		flowVecCol.setSparseHandPickedFlow( sparseHandPickedFlow );
 		flowVecCol.setDenseFlow( denseFlow );
 		flowVecCol.setSpacedFlow( spacedFlow );
 	}
@@ -186,7 +190,8 @@ public class FlowComputation {
 
 	private static RandomAccessibleInterval< DoubleType > interpolateFlowkNN(
 			ArrayList< FlowVector > sparseFlow,
-			RandomAccessibleInterval< DoubleType > img ) {
+			RandomAccessibleInterval< DoubleType > img,
+			int kNeighbors ) {
 
 		ArrayList< RandomAccessibleInterval< DoubleType > > slices = new ArrayList< RandomAccessibleInterval< DoubleType > >();
 
@@ -207,9 +212,9 @@ public class FlowComputation {
 			}
 
 			KNearestNeighborSearch< DoubleType > searchU =
-					new KNearestNeighborSearchOnKDTree<>( new KDTree<>( realIntervalU ), Math.min( 3, ( int ) realIntervalU.size() ) );
+					new KNearestNeighborSearchOnKDTree<>( new KDTree<>( realIntervalU ), Math.min( kNeighbors, ( int ) realIntervalU.size() ) );
 			KNearestNeighborSearch< DoubleType > searchV =
-					new KNearestNeighborSearchOnKDTree<>( new KDTree<>( realIntervalV ), Math.min( 3, ( int ) realIntervalV.size() ) );
+					new KNearestNeighborSearchOnKDTree<>( new KDTree<>( realIntervalV ), Math.min( kNeighbors, ( int ) realIntervalV.size() ) );
 
 			RealRandomAccessible< DoubleType > realRandomAccessibleU =
 					Views.interpolate( searchU, new InverseDistanceWeightingInterpolatorFactory< DoubleType >() );
