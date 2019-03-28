@@ -106,7 +106,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem = new JMenuItem( "Decrease radius of selected puncta -> Q" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
-		menuItem = new JMenuItem( "Move puncta -> SPACE" );
+		menuItem = new JMenuItem( "Move puncta/flow vector -> SPACE" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		menuItem = new JMenuItem( "Link punctas -> L" );
@@ -122,6 +122,9 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		menuItem = new JMenuItem( "Show puncta marker from previous click -> Z" );
+		menuItem.getAccessibleContext().setAccessibleDescription( "" );
+		helpsubmenu.add( menuItem );
+		menuItem = new JMenuItem( "Select flow vector -> W" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		return menuBar;
