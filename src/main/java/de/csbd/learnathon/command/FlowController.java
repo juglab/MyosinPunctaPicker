@@ -3,6 +3,7 @@ package de.csbd.learnathon.command;
 import java.util.ArrayList;
 
 import org.scijava.ui.behaviour.ClickBehaviour;
+import org.scijava.ui.behaviour.DragBehaviour;
 import org.scijava.ui.behaviour.io.InputTriggerConfig;
 import org.scijava.ui.behaviour.util.Behaviours;
 
@@ -26,9 +27,7 @@ public class FlowController {
 		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
 			actionSelectFlowVector( x, y );
 		}, "SelectFlow", " W" );
-//		behaviours.behaviour( ( ClickBehaviour ) ( x, y ) -> {
-//			actionMoveFlowVector( x, y );
-//		}, "MoveFlow", "SPACE" );
+		behaviours.behaviour( new MoveFlow(), "MoveFlow", "SPACE" );
 
 	}
 
@@ -53,15 +52,38 @@ public class FlowController {
 
 	}
 
-//	private void actionMoveFlowVector( int x, int y ) {
-//
-//		FlowVector fv = model.getFlowVectorsCollection().getOnlySelectedFlowVector();
-//		if ( !( fv == null ) ) {
-//			view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
-//			fv.setU( pos.getFloatPosition( 0 ) );
-//			fv.setV( pos.getFloatPosition( 1 ) );
-//			}
-//			view.getFlowOverlay().requestRepaint();
-//	}
+	private class MoveFlow implements DragBehaviour {
+
+		@Override
+		public void init( int x, int y ) {}
+
+		@Override
+		public void drag( int x, int y ) {
+			moveFlowVector();
+		}
+
+		@Override
+		public void end( int x, int y ) {
+			moveFlowVector();
+			FlowVector sel = model.getFlowVectorsCollection().getOnlySelectedFlowVector();
+			Puncta pA = new Puncta( sel.getX(), sel.getY(), sel.getT(), 1 );
+			Puncta pB = new Puncta( ( float ) ( sel.getX() + sel.getU() ), ( float ) ( sel.getY() + sel.getV() ), sel.getT() + 1, 1 );
+			model.getGraph().addPuncta( pA );
+			model.getGraph().addPuncta( pB );
+			model.getGraph().addEdge( new Edge( pA, pB ) );
+
+		}
+
+		private void moveFlowVector() {
+			FlowVector sel = model.getFlowVectorsCollection().getOnlySelectedFlowVector();
+			final RealPoint posn = new RealPoint( 3 );
+			view.getBdv().getViewerPanel().getGlobalMouseCoordinates( posn );
+			sel.setU( posn.getFloatPosition( 0 ) );
+			sel.setV( posn.getFloatPosition( 1 ) );
+		}
+
+
+
+	}
 
 }
