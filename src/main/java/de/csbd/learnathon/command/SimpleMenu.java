@@ -35,10 +35,9 @@ public class SimpleMenu implements ActionListener, ItemListener {
 
 	public JMenuBar createMenuBar() {
 
-
 		//create a menubar
 		JMenuBar menuBar;
-		JMenu filemenu, flowmenu, helpmenu;
+		JMenu filemenu, helpmenu;
 		JMenu helpsubmenu;
 		JMenuItem menuItem;
 
@@ -64,27 +63,9 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem.addActionListener( this );
 		filemenu.add( menuItem );
 
-		//Build the flow menu.
-		flowmenu = new JMenu( "Compute flows" );
-		flowmenu.getAccessibleContext().setAccessibleDescription( "This is the menu to compute different flows" );
-		menuBar.add( flowmenu );
-
-		menuItem = new JMenuItem( "Nearest Neighbor flow" );
-		menuItem.getAccessibleContext().setAccessibleDescription( "" );
-		menuItem.addActionListener( this );
-		flowmenu.add( menuItem );
-		menuItem = new JMenuItem( "k-Nearest Neighbor flow" );
-		menuItem.getAccessibleContext().setAccessibleDescription( "" );
-		menuItem.addActionListener( this );
-		flowmenu.add( menuItem );
-		menuItem = new JMenuItem( "Thin Plate Splines Flow" );
-		menuItem.getAccessibleContext().setAccessibleDescription( "" );
-		menuItem.addActionListener( this );
-		flowmenu.add( menuItem );
-
 		//Build the help menu.
 		helpmenu = new JMenu( "Help" );
-		flowmenu.getAccessibleContext().setAccessibleDescription( "This is the menu for help about different key bindings" );
+		helpmenu.getAccessibleContext().setAccessibleDescription( "This is the menu for help about different key bindings" );
 		menuBar.add( helpmenu );
 
 		helpsubmenu = new JMenu( "Key bindings" );
@@ -184,18 +165,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 			}
 
 		}
-//		if ( jmi.getText() == "Nearest Neighbor flow" ) {
-//			flowMethod = FLOW_NN;
-//			model.processFlow( flowMethod );
-//		}
-//		if ( jmi.getText() == "k-Nearest Neighbor flow" ) {
-//			flowMethod = FLOW_kNN;
-//			model.processFlow( flowMethod );
-//		}
-//		if ( jmi.getText() == "Thin Plate Splines Flow" ) {
-//			flowMethod = FLOW_TPS;
-//			model.processFlow( flowMethod );
-//		}
+
 		if ( jmi.getText() == "Key bindings" ) {}
 	}
 

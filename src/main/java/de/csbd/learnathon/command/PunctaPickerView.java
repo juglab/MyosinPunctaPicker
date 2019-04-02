@@ -66,6 +66,7 @@ public class PunctaPickerView {
 
 	private JCheckBox activeTrackletCheckBox;
 	private int fadeOutValue;
+	private int density;
 
 	private ButtonGroup modeButtons;
 
@@ -77,11 +78,13 @@ public class PunctaPickerView {
 
 	private JCheckBox showPreviousMarkerCheckBox;
 
-	private JCheckBox flowToggleCheckBox;
-
-	private JCheckBox trackletToggleCheckBox;
+	private JCheckBox showFlowCheckBox;
 
 	private JTextField txtNeighbors;
+
+	private JCheckBox showTrackletsCheckBox;
+
+	private JCheckBox hideFlowTrackletsCheckBox;
 
 	public PunctaPickerView( PunctaPickerModel m, Dataset image, OpService os ) {
 		this.model = m;
@@ -96,6 +99,10 @@ public class PunctaPickerView {
 		bdv = initBdv( model.getRawData() );
 		this.flowController = new FlowController( m, this );
 		model.setFlowController( flowController );
+	}
+
+	private boolean getHideFlowTrackletsCheckBox() {
+		return hideFlowTrackletsCheckBox.isSelected();
 	}
 
 	public String getDetectionMode() {
@@ -117,12 +124,12 @@ public class PunctaPickerView {
 		return showPreviousMarkerCheckBox.isSelected();
 	}
 
-	public boolean getFlowToggleCheckBox() {
-		return flowToggleCheckBox.isSelected();
+	public boolean getShowFlowCheckBox() {
+		return showFlowCheckBox.isSelected();
 	}
 
-	public boolean getTrackletToggleCheckBox() {
-		return trackletToggleCheckBox.isSelected();
+	public boolean getShowTrackletsCheckBox() {
+		return showTrackletsCheckBox.isSelected();
 	}
 
 	public CSVReader getReader() {
@@ -224,10 +231,24 @@ public class PunctaPickerView {
 	private JPanel initHelperPanel() {
 		final JPanel helper = new JPanel( new MigLayout() );
 
-		// OVERLAY PROPS
+		// TRACKLETS PROPS
 
-		JPanel panelOverlayProps = new JPanel( new MigLayout() );
-		panelOverlayProps.setBorder( BorderFactory.createTitledBorder( "overlay" ) );
+		JPanel panelTrackletsProps = new JPanel( new MigLayout() );
+		panelTrackletsProps.setBorder( BorderFactory.createTitledBorder( "tracklets" ) );
+
+		showTrackletsCheckBox = new JCheckBox( "show" );
+		showTrackletsCheckBox.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				if ( getShowTrackletsCheckBox() )
+					overlay.setVisible( true );
+				else
+					overlay.setVisible( false );
+				bdv.getViewerPanel().requestRepaint();
+
+			}
+		} );
 
 		activeTrackletCheckBox = new JCheckBox( "hide all but selected" );
 		activeTrackletCheckBox.addActionListener( new ActionListener() {
@@ -259,10 +280,11 @@ public class PunctaPickerView {
 			}
 		} );
 
-		panelOverlayProps.add( activeTrackletCheckBox, "span 2, align left, growx, wrap" );
-		panelOverlayProps.add( showPreviousMarkerCheckBox, "span 2, align left, growx, wrap" );
-		panelOverlayProps.add( lFadeOut, "" );
-		panelOverlayProps.add( fadeOutSlider, "growx, wrap" );
+		panelTrackletsProps.add( showTrackletsCheckBox, "span 2, align left, growx, wrap" );
+		panelTrackletsProps.add( activeTrackletCheckBox, "span 2, align left, growx, wrap" );
+		panelTrackletsProps.add( showPreviousMarkerCheckBox, "span 2, align left, growx, wrap" );
+		panelTrackletsProps.add( lFadeOut, "" );
+		panelTrackletsProps.add( fadeOutSlider, "growx, wrap" );
 
 		// PICKING PROPS
 
@@ -349,6 +371,45 @@ public class PunctaPickerView {
 
 		JPanel panelFlowProps = new JPanel( new MigLayout() );
 		panelFlowProps.setBorder( BorderFactory.createTitledBorder( "flow" ) );
+
+		showFlowCheckBox = new JCheckBox( "show" );
+		showFlowCheckBox.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				if ( getShowFlowCheckBox() )
+					flowOverlay.setVisible( true );
+				else
+					flowOverlay.setVisible( false );
+				bdv.getViewerPanel().requestRepaint();
+			}
+		} );
+
+		hideFlowTrackletsCheckBox = new JCheckBox( "hide FTs" );
+		hideFlowTrackletsCheckBox.addActionListener( new ActionListener() { //TODO implement functionality
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				if ( getHideFlowTrackletsCheckBox() )
+					flowOverlay.setVisible( true );
+				else
+					flowOverlay.setVisible( false );
+				bdv.getViewerPanel().requestRepaint();
+			}
+		} );
+
+		JLabel lDensity = new JLabel( "density:" );
+		JSlider densitySlider = new JSlider( 0, 20, 4 );
+		densitySlider.setVisible( true );
+		densitySlider.addChangeListener( new ChangeListener() {
+
+			@Override
+			public void stateChanged( ChangeEvent e ) {
+				density = ( ( JSlider ) e.getSource() ).getValue();
+				bdv.getViewerPanel().requestRepaint();
+			}
+		} );
+
 		JButton computeFlowButton = new JButton( "(re)compute kNN flows" );
 		computeFlowButton.addActionListener( new ActionListener() {
 
@@ -380,8 +441,7 @@ public class PunctaPickerView {
 						}
 
 					}
-					flowToggleCheckBox.setSelected( true );
-					trackletToggleCheckBox.setSelected( true );
+					showFlowCheckBox.setSelected( true );
 					model.processFlow();
 					ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
 					RandomAccessibleInterval< DoubleType > flowData = model.getFlowVectorsCollection().getDenseFlow();
@@ -395,49 +455,28 @@ public class PunctaPickerView {
 			}
 		} );
 
-		JLabel lNeighbors = new JLabel( "k neighbors:" );
-		txtNeighbors = new JTextField( 5 );
+		JLabel lInterpolate = new JLabel( "interpolate" );
+		txtNeighbors = new JTextField( 3 );
 		txtNeighbors.setText( "3" );
+		JLabel lNeighbors = new JLabel( "neighbors" );
 
-		flowToggleCheckBox = new JCheckBox( "show flows" );
-		flowToggleCheckBox.addActionListener( new ActionListener() {
-
-			@Override
-			public void actionPerformed( ActionEvent e ) {
-				if ( getFlowToggleCheckBox() )
-					flowOverlay.setVisible( true );
-				else flowOverlay.setVisible( false);
-				bdv.getViewerPanel().requestRepaint();
-			}
-		} );
-
-		trackletToggleCheckBox = new JCheckBox( "show tracklets with flow" );
-		trackletToggleCheckBox.addActionListener( new ActionListener() {
-
-			@Override
-			public void actionPerformed( ActionEvent e ) {
-				if ( getTrackletToggleCheckBox() )
-					overlay.setVisible( true );
-				else
-					overlay.setVisible( false );
-				bdv.getViewerPanel().requestRepaint();
-			}
-		} );
-
+		panelFlowProps.add( showFlowCheckBox, "w 5%" );
+		panelFlowProps.add( hideFlowTrackletsCheckBox, "w 5%, wrap, growx" );
+		panelFlowProps.add( lDensity, "w 5%" );
+		panelFlowProps.add( densitySlider, "growx, wrap" );
 		panelFlowProps.add( computeFlowButton, "span 2, align left, growx, wrap" );
-		panelFlowProps.add( lNeighbors, "" );
-		panelFlowProps.add( txtNeighbors, "wrap" );
-		panelFlowProps.add( flowToggleCheckBox, "span 2, align left, growx, wrap" );
-		panelFlowProps.add( trackletToggleCheckBox, "span 2, align left, growx, wrap" );
+		panelFlowProps.add( lInterpolate, "" );
+		panelFlowProps.add( txtNeighbors, "w 5%" );
+		panelFlowProps.add( lNeighbors, "wrap" );
 
-		helper.add( panelOverlayProps, "growx, wrap" );
+		helper.add( panelTrackletsProps, "growx, wrap" );
 		helper.add( panelPickingProps, "growx, wrap" );
 		helper.add( panelFlowProps, "growx, wrap" );
 
 		// make default selection such that action is thrown
 		bAutomaticSize.doClick();
-		trackletToggleCheckBox.setSelected( false );
-		flowToggleCheckBox.setSelected( false );
+		showTrackletsCheckBox.setSelected( true );
+		showFlowCheckBox.setSelected( false );
 
 		return helper;
 	}
