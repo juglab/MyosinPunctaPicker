@@ -45,18 +45,6 @@ public class FlowComputation {
 
 	public FlowComputation() {}
 
-//	public ArrayList< FlowVector > getSparseHandPickedFlow() {
-//		return sparseHandPickedFlow;
-//	}
-//
-//	public RandomAccessibleInterval< DoubleType > getDenseFlow() {
-//		return denseFlow;
-//	}
-//
-//	public ArrayList< FlowVector > getSpacedFlow() {
-//		return spacedFlow;
-//	}
-
 	public ArrayList< FlowVector > initializeControlVectorsForFlow() {
 		ArrayList< FlowVector > sparseHandPickedFlow = extractFlowVectorsFromClicks();
 		flowVecCol.setSparseHandPickedFlow( sparseHandPickedFlow );
@@ -73,12 +61,28 @@ public class FlowComputation {
 		flowVecCol.setSpacedFlow( spacedFlow );
 	}
 
+	public void computeHybridFlow( RandomAccessibleInterval< DoubleType > img ) {
+		float sigma = 6;
+		RandomAccessibleInterval< DoubleType > smoothed_img = gaussian_smoothing2D( img, sigma );
+		ArrayList< FlowVector > handPicked = flowVecCol.getSparsehandPickedFlowVectors();
+		ArrayList< FlowVector > autoFeatures = computeTMFeatures( img, sigma );
+		ArrayList< FlowVector > concatenatedList = new ArrayList<>();
+		concatenatedList.addAll( handPicked );
+		concatenatedList.addAll( autoFeatures );
+		RandomAccessibleInterval< DoubleType > denseFlow =
+				interpolateFlowkNN( concatenatedList, smoothed_img, model.getView().getKNeighbors() );
+		ArrayList< FlowVector > spacedFlow = prepareSpacedVectors( denseFlow );
+		flowVecCol.setAutoFeatureFlow( autoFeatures );
+		flowVecCol.setDenseFlow( denseFlow );
+		flowVecCol.setSpacedFlow( spacedFlow );
+	}
+
 	private ArrayList< FlowVector > prepareSpacedVectors( RandomAccessibleInterval< DoubleType > flowData ) { //Might move to Flow Computation
 		ArrayList< FlowVector > spacedFlowVectors = new ArrayList<>();
 		final long sizeX = flowData.dimension( 0 );
 		final long sizeY = flowData.dimension( 1 );
-		int spacing = 100; // spacing between pixels for flow display //TODO expose this as parameter
-		spacing = Math.max( spacing, ( int ) Math.max( sizeX, sizeY ) / 25 ); // but if large image only 25 vecs along longer side
+		int density = model.getView().getDensity(); // spacing between pixels for flow display 
+		int spacing = 4;
 
 		for ( int t = 0; t < flowData.dimension( 2 ) / 2; t++ ) {
 			int startx = ( int ) ( sizeX % spacing ) / 2;
@@ -257,6 +261,14 @@ public class FlowComputation {
 //		}
 //	}
 
+	public ArrayList< FlowVector > computeTMFeatures( RandomAccessibleInterval< DoubleType > img, float sigma ) {
+		RandomAccessibleInterval< DoubleType > smoothed_img = gaussian_smoothing2D( img, sigma );
+		localMaxima = findLocalMax( img, 20 );
+		thresholdedLocalMaxima = thresholdedMaxima( localMaxima, 50 );
+		ArrayList< FlowVector > pts = templateMatching( smoothed_img, thresholdedLocalMaxima );
+		return pts;
+	}
+
 	public ArrayList< LocalMaximaQuartet > getLocalMaxima() {
 		return localMaxima;
 	}
@@ -432,6 +444,12 @@ public class FlowComputation {
 
 		RandomAccessibleInterval< DoubleType > stack = Views.stack( slices );
 		return stack;
+	}
+
+	public void plotAutoFeaturesOnly( RandomAccessibleInterval< DoubleType > img ) { //TODO remove it later, for preliminary experimentation only
+		float sigma = 6;
+		ArrayList< FlowVector > autoFeatures = computeTMFeatures( img, sigma );
+		flowVecCol.setAutoFeatureFlow( autoFeatures );
 	}
 
 }
