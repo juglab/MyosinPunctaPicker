@@ -29,11 +29,14 @@ import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvHandlePanel;
 import bdv.util.BdvSource;
+import ij.IJ;
+import ij.ImagePlus;
 import net.imagej.Dataset;
 import net.imagej.ops.OpService;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
@@ -85,6 +88,8 @@ public class PunctaPickerView {
 	private JCheckBox showTrackletsCheckBox;
 
 	private JCheckBox hideFlowTrackletsCheckBox;
+
+	private JCheckBox showAutoFlowOnlyCheckBox;
 
 	public PunctaPickerView( PunctaPickerModel m, Dataset image, OpService os ) {
 		this.model = m;
@@ -144,6 +149,10 @@ public class PunctaPickerView {
 		return fadeOutValue;
 	}
 
+	public int getDensity() {
+		return density;
+	}
+
 	public double getMinScale() {
 		if ( txtMinScale.getText().isEmpty() )
 			return 0d;
@@ -185,7 +194,6 @@ public class PunctaPickerView {
 		BdvFunctions.showOverlay( flowOverlay, "flowoverlay", Bdv.options().addTo( bdv ) );
 		return bdv;
 	}
-
 
 	private < T extends RealType< T > & NativeType< T > > void computeMinMax(
 			final IterableInterval< T > iterableInterval,
@@ -399,7 +407,7 @@ public class PunctaPickerView {
 		} );
 
 		JLabel lDensity = new JLabel( "density:" );
-		JSlider densitySlider = new JSlider( 0, 20, 4 );
+		JSlider densitySlider = new JSlider( 1, 100, 50 );
 		densitySlider.setVisible( true );
 		densitySlider.addChangeListener( new ChangeListener() {
 
@@ -444,9 +452,11 @@ public class PunctaPickerView {
 					showFlowCheckBox.setSelected( true );
 					model.processFlow();
 					ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
+					ArrayList< FlowVector > autoFeatureFlow = model.getFlowVectorsCollection().getAutofeatureFlowVectors();
 					RandomAccessibleInterval< DoubleType > flowData = model.getFlowVectorsCollection().getDenseFlow();
 					ArrayList< FlowVector > spacedFlow = model.getFlowVectorsCollection().getSpacedFlowVectors();
 					flowOverlay.setHandPickedSparseFlow( handPickedSparseFlow );
+					flowOverlay.setAutoFeatureFlow( autoFeatureFlow );
 					flowOverlay.setSpacedFlow( spacedFlow );
 					flowOverlay.setDenseFlow( flowData );
 					flowOverlay.setVisible( true );
@@ -455,28 +465,107 @@ public class PunctaPickerView {
 			}
 		} );
 
-		JLabel lInterpolate = new JLabel( "interpolate" );
+		JButton saveFlowsButton = new JButton( "save" );
+		saveFlowsButton.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				RandomAccessibleInterval< DoubleType > denseFlow = model.getFlowVectorsCollection().getDenseFlow();
+				ImagePlus imagePlus = ImageJFunctions.wrap( denseFlow, null );
+				IJ.save( imagePlus, "res/denseFlow.tif" );
+			}
+		} );
+
+
+		JLabel lInterpolate = new JLabel( "interpolate neighbors:" );
 		txtNeighbors = new JTextField( 3 );
 		txtNeighbors.setText( "3" );
-		JLabel lNeighbors = new JLabel( "neighbors" );
 
 		panelFlowProps.add( showFlowCheckBox, "w 5%" );
 		panelFlowProps.add( hideFlowTrackletsCheckBox, "w 5%, wrap, growx" );
 		panelFlowProps.add( lDensity, "w 5%" );
 		panelFlowProps.add( densitySlider, "growx, wrap" );
-		panelFlowProps.add( computeFlowButton, "span 2, align left, growx, wrap" );
 		panelFlowProps.add( lInterpolate, "" );
-		panelFlowProps.add( txtNeighbors, "w 5%" );
-		panelFlowProps.add( lNeighbors, "wrap" );
+		panelFlowProps.add( txtNeighbors, "wrap, growx" );
+		panelFlowProps.add( computeFlowButton, "w 5%" );
+		panelFlowProps.add( saveFlowsButton, "w 5%, wrap, growx" );
+
+		// EXPERIMENTAL FLOW PROPS
+
+		JPanel panelAutoFlowProps = new JPanel( new MigLayout() );
+		panelAutoFlowProps.setBorder( BorderFactory.createTitledBorder( "experimental flow" ) );
+
+		showAutoFlowOnlyCheckBox = new JCheckBox( "show auto" );
+		showAutoFlowOnlyCheckBox.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				if ( getShowAutoFlowOnlyCheckBox() )
+					flowOverlay.setVisible( true );
+				else
+					flowOverlay.setVisible( false );
+
+				bdv.getViewerPanel().requestRepaint();
+			}
+
+		} );
+
+		JButton bComputeAutoFeatures = new JButton( "compute auto" );
+		bComputeAutoFeatures.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				model.processExperimentalFlow();
+				ArrayList< FlowVector > autoFeatureFlow = model.getFlowVectorsCollection().getAutofeatureFlowVectors();
+				flowOverlay.setAutoFeatureFlow( autoFeatureFlow );
+				flowOverlay.setVisible( true );
+				flowOverlay.requestRepaint();
+			}
+		} );
+
+		JButton bSaveFeatures = new JButton( "save auto+man" );
+		bSaveFeatures.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				ArrayList< FlowVector > autofeatures = model.getFlowVectorsCollection().getAutofeatureFlowVectors();
+				model.extractAndInitializeControlVectorsFromHandPickedTracklets();
+				ArrayList< FlowVector > manualfeatures = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
+				if ( !( manualfeatures == null ) && !( autofeatures == null ) )
+					Utils.saveExperimentalFlowVectors( autofeatures, manualfeatures );
+			}
+		} );
+
+		JButton bSaveAll = new JButton( "save all" );
+		bSaveAll.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				RandomAccessibleInterval< DoubleType > denseflow = model.getFlowVectorsCollection().getDenseFlow();
+				model.extractAndInitializeControlVectorsFromHandPickedTracklets();
+				ArrayList< FlowVector > manualfeatures = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
+				ArrayList< FlowVector > densefeatures = model.getFlowVectorsCollection().getDenseFlowVectors();
+				if ( !( manualfeatures == null ) && !( densefeatures == null ) )
+					Utils.saveExperimentalFlowVectors( densefeatures, manualfeatures );
+			}
+		} );
+
+
+		panelAutoFlowProps.add( showAutoFlowOnlyCheckBox, "growx, wrap" );
+		panelAutoFlowProps.add( bComputeAutoFeatures, "w 5%" );
+		panelAutoFlowProps.add( bSaveFeatures, "w 5%" ); 
+		panelAutoFlowProps.add( bSaveAll, "w 5%, growx, wrap" );
 
 		helper.add( panelTrackletsProps, "growx, wrap" );
 		helper.add( panelPickingProps, "growx, wrap" );
 		helper.add( panelFlowProps, "growx, wrap" );
+		helper.add( panelAutoFlowProps, "growx, wrap" );
 
 		// make default selection such that action is thrown
 		bAutomaticSize.doClick();
 		showTrackletsCheckBox.setSelected( true );
 		showFlowCheckBox.setSelected( false );
+		showAutoFlowOnlyCheckBox.setSelected( true );
 
 		return helper;
 	}
@@ -550,6 +639,10 @@ public class PunctaPickerView {
 
 	public FlowOverlay getFlowOverlay() {
 		return flowOverlay;
+	}
+
+	public boolean getShowAutoFlowOnlyCheckBox() {
+		return showAutoFlowOnlyCheckBox.isSelected();
 	}
 
 }

@@ -81,11 +81,16 @@ public class PunctaPickerModel {
 	}
 
 	public void processFlow() {
-		flowComputation.computeGenericFlow( getRawData() );
+//		flowComputation.computeGenericFlow( getRawData() );
+		flowComputation.computeHybridFlow( getRawData() );
 	}
 
 	public float getDefaultRadius() {
 		return view.getDefaultPunctaRadius();
+	}
+
+	public void processExperimentalFlow() { // Only for the purpose of experimentation, remove it later
+		flowComputation.plotAutoFeaturesOnly( getRawData() );
 	}
 }
 
