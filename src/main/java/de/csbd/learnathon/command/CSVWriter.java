@@ -27,7 +27,7 @@ public class CSVWriter {
 			//Add a new line separator after the header
 			fileWriter.append( NEW_LINE_SEPARATOR );
 
-			//Write a new student object list to the CSV file
+			//Write a new object list to the CSV file
 			int id=-1;
 			for ( final Puncta puncta : punctaList ) {
 				id++;
