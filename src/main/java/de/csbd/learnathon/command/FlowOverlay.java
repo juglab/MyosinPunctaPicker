@@ -23,6 +23,8 @@ public class FlowOverlay extends BdvOverlay {
 
 	private ArrayList< FlowVector > spacedFlowVectors;
 
+	private ArrayList< FlowVector > autoFeatureFlowVectors;
+
 	public FlowOverlay( PunctaPickerView view ) {
 		this.view = view;
 	}
@@ -39,6 +41,10 @@ public class FlowOverlay extends BdvOverlay {
 		this.handPickedSparseFlowVectors = sparseFlow;
 	}
 
+	public void setAutoFeatureFlow( ArrayList< FlowVector > autoFeatureFlow ) {
+		this.autoFeatureFlowVectors = autoFeatureFlow;
+	}
+
 	public void setSpacedFlow( ArrayList< FlowVector > spacedFlow ) {
 		this.spacedFlowVectors = spacedFlow;
 	}
@@ -52,8 +58,24 @@ public class FlowOverlay extends BdvOverlay {
 		int t = info.getTimePointIndex();
 
 		if ( visible ) {
-			drawSparseHandPickedFlow( g, t );
-			drawSpacedFlow( g, t );
+			if ( !( handPickedSparseFlowVectors == null ) )
+				drawSparseHandPickedFlow( g, t );
+			if ( view.getShowAutoFlowOnlyCheckBox() && !( autoFeatureFlowVectors == null ) )
+				drawAutoFeatureFlow( g, t );
+			if ( !( spacedFlowVectors == null ) )
+				drawSpacedFlow( g, t );
+		}
+
+	}
+
+	private void drawAutoFeatureFlow( Graphics2D g, int t ) {
+		ArrayList< FlowVector > flowVectors = new ArrayList<>();
+		for ( FlowVector flowVector : autoFeatureFlowVectors ) {
+			if ( flowVector.getT() == t )
+				flowVectors.add( flowVector );
+		}
+		for ( FlowVector f : flowVectors ) {
+			drawVector( g, ( int ) f.getX(), ( int ) f.getY(), f.getU(), f.getV(), Color.GREEN );
 		}
 
 	}
@@ -65,7 +87,7 @@ public class FlowOverlay extends BdvOverlay {
 				sparseFlowVectors.add( flowVector );
 		}
 		for ( FlowVector f : sparseFlowVectors ) {
-			drawVector( g, ( int ) f.getX(), ( int ) f.getY(), f.getU(), f.getV(), Color.BLUE );
+			drawVector( g, ( int ) f.getX(), ( int ) f.getY(), f.getU(), f.getV(), Color.ORANGE );
 		}
 	}
 
