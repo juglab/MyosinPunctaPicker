@@ -1,10 +1,19 @@
 package de.csbd.learnathon.command;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
+import org.scijava.table.Column;
+import org.scijava.table.GenericTable;
+
+import circledetection.command.BlobDetectionCommand;
+import ij.ImagePlus;
 import jitk.spline.ThinPlateR2LogRSplineKernelTransform;
+import net.imagej.ops.OpService;
 import net.imglib2.Cursor;
+import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.KDTree;
 import net.imglib2.RandomAccess;
@@ -18,17 +27,25 @@ import net.imglib2.algorithm.neighborhood.Neighborhood;
 import net.imglib2.algorithm.neighborhood.RectangleShape;
 import net.imglib2.algorithm.neighborhood.RectangleShape.NeighborhoodsAccessible;
 import net.imglib2.algorithm.region.hypersphere.HyperSphere;
+import net.imglib2.histogram.Histogram1d;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgFactory;
 import net.imglib2.img.cell.CellImgFactory;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.neighborsearch.InverseDistanceWeightingInterpolatorFactory;
 import net.imglib2.interpolation.neighborsearch.NearestNeighborSearchInterpolatorFactory;
 import net.imglib2.neighborsearch.KNearestNeighborSearch;
 import net.imglib2.neighborsearch.KNearestNeighborSearchOnKDTree;
 import net.imglib2.neighborsearch.NearestNeighborSearch;
 import net.imglib2.neighborsearch.NearestNeighborSearchOnKDTree;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
+import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
+import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 
 public class FlowComputation {
@@ -37,6 +54,7 @@ public class FlowComputation {
 	private ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima;
 	private PunctaPickerModel model;
 	private FlowVectorsCollection flowVecCol;
+	private OpService os;
 
 	public FlowComputation( PunctaPickerModel model ) {
 		this.model = model;
@@ -77,7 +95,87 @@ public class FlowComputation {
 		flowVecCol.setSpacedFlow( spacedFlow );
 	}
 
-	private ArrayList< FlowVector > prepareSpacedVectors( RandomAccessibleInterval< DoubleType > flowData ) { //Might move to Flow Computation
+	public < T extends RealType< T > & NativeType< T > > void computeBlobBasedFlow( RandomAccessibleInterval< T > im ) { //Experimental, may be deleted later
+
+		float sigma = 6;
+		RandomAccessibleInterval< T > smoothed_img = gaussian_smoothing2D( im, sigma );
+		ArrayList< FlowVector > handPicked = flowVecCol.getSparsehandPickedFlowVectors();
+		Img< T > img = model.getView().getImage();
+		ArrayList< Puncta > allFlowBlobs = new ArrayList<>();
+		for ( int time = 0; time < img.dimension( 2 ); time++ ) {
+			IntervalView< T > image = Views.hyperSlice( img, 2, time );
+			Views.extendMirrorSingle( image );
+			FinalInterval cropped = Intervals.createMinMax(
+					( 0 ),
+					( 0 ),
+					0,
+					( img.dimension( 0 ) - 5 ),
+					( img.dimension( 1 ) - 5 ),
+					0 );
+			RandomAccessibleInterval< T > croppedImage = Views.interval( image, cropped );
+			ImagePlus imgPlus = ImageJFunctions.wrap( croppedImage, "cropped" );
+			Img< T > newImage = ImageJFunctions.wrap( imgPlus );
+			List< Puncta > pun_per_frame = computeBlobBasedTMFeatures( newImage, time );
+			System.out.println( pun_per_frame.size() );
+			allFlowBlobs.addAll( pun_per_frame );
+		}
+		ArrayList< FlowVector > autoFeatures = blobTemplateMatching( im, allFlowBlobs );
+		System.out.println( autoFeatures.size() );
+		ArrayList< FlowVector > concatenatedList = new ArrayList<>();
+		concatenatedList.addAll( handPicked );
+		concatenatedList.addAll( autoFeatures );
+		RandomAccessibleInterval< T > denseFlow =
+				interpolateFlowkNN( concatenatedList, smoothed_img, model.getView().getKNeighbors() );
+		ArrayList< FlowVector > spacedFlow = prepareSpacedVectors( denseFlow );
+		flowVecCol.setAutoFeatureFlow( autoFeatures );
+		flowVecCol.setDenseFlow( denseFlow );
+		flowVecCol.setSpacedFlow( spacedFlow );
+
+	}
+
+	private List< Puncta > getFlowBlobsAtTime( int t, ArrayList< Puncta > flowBlobs ) {
+		ArrayList< Puncta > ret = new ArrayList< Puncta >();
+		for ( Puncta p : flowBlobs ) {
+			if ( p.getT() == t )
+				ret.add( p );
+		}
+		return ret;
+	}
+
+	private < T extends RealType< T > & NativeType< T > > ArrayList< FlowVector > blobTemplateMatching(
+			RandomAccessibleInterval< T > img,
+			ArrayList< Puncta > flowBlobs ) {  //Experimental, may be deleted later, very simplistic only considers distance and can be one-to many matches
+		ArrayList< FlowVector > flowVectorList = new ArrayList<>();
+		int ii = 0;
+		int jj = 0;
+		double window = 25;
+		
+		for ( int pos = 0; pos < img.dimension( 2 ) - 1; pos++ ) {
+			List< Puncta > blobs_current = getFlowBlobsAtTime( pos, flowBlobs );
+			List< Puncta > blobs_next = getFlowBlobsAtTime( pos + 1, flowBlobs );
+			for ( Puncta blob : blobs_current ) {
+				double min_dist = Double.MAX_VALUE;
+				Puncta closest = null;
+				for(Puncta p: blobs_next) {
+					double computed_distance = compute_dist( blob, p );
+					if ( ( computed_distance < window ) && ( computed_distance < min_dist ) ) {
+						min_dist = compute_dist( blob, p );
+						closest = p;
+					}
+				}
+				if ( !( closest == null ) )
+					flowVectorList
+						.add( new FlowVector( blob.getX(), blob.getY(), blob.getT(), closest.getX() - blob.getX(), closest.getY() - blob.getY() ) );
+			}
+		}
+		return flowVectorList;
+	}
+
+	private double compute_dist( Puncta blob, Puncta p ) {
+		return ( ( blob.getX() - p.getX() ) * ( blob.getX() - p.getX() ) + ( blob.getY() - p.getY() ) * ( blob.getY() - p.getY() ) );
+	}
+
+	private < T extends RealType< T > & NativeType< T > > ArrayList< FlowVector > prepareSpacedVectors( RandomAccessibleInterval< T > flowData ) { //Might move to Flow Computation
 		ArrayList< FlowVector > spacedFlowVectors = new ArrayList<>();
 		final long sizeX = flowData.dimension( 0 );
 		final long sizeY = flowData.dimension( 1 );
@@ -99,8 +197,8 @@ public class FlowComputation {
 		return spacedFlowVectors;
 	}
 
-	private FlowVector getFlowVector( RandomAccessibleInterval< DoubleType > f, int x, int y, int t ) {
-		RandomAccess< DoubleType > ra = f.randomAccess();
+	private < T extends RealType< T > & NativeType< T > > FlowVector getFlowVector( RandomAccessibleInterval< T > f, int x, int y, int t ) {
+		RandomAccess< T > ra = f.randomAccess();
 		ra.setPosition( x, 0 );
 		ra.setPosition( y, 1 );
 		ra.setPosition( 2 * t, 2 );
@@ -129,7 +227,9 @@ public class FlowComputation {
 		return featureFlowVectorList;
 	}
 
-	private static RandomAccessibleInterval< DoubleType > gaussian_smoothing2D( RandomAccessibleInterval< DoubleType > img, float sigma ) {
+	private static < T extends RealType< T > & NativeType< T > > RandomAccessibleInterval< T > gaussian_smoothing2D(
+			RandomAccessibleInterval< T > img,
+			float sigma ) {
 
 		float[] s = new float[ img.numDimensions() - 1 ];
 
@@ -137,7 +237,7 @@ public class FlowComputation {
 			s[ d ] = sigma;
 
 		for ( long pos = 0; pos < img.dimension( 2 ); pos++ ) {
-			RandomAccessibleInterval< DoubleType > slice = Views.hyperSlice( img, 2, pos );
+			RandomAccessibleInterval< T > slice = Views.hyperSlice( img, 2, pos );
 			Gauss3.gauss( sigma, Views.extendMirrorSingle( slice ), slice );
 		}
 
@@ -192,51 +292,51 @@ public class FlowComputation {
 		return stack;
 	}
 
-	private static RandomAccessibleInterval< DoubleType > interpolateFlowkNN(
+	private static < T extends RealType< T > & NativeType< T > > RandomAccessibleInterval< T > interpolateFlowkNN(
 			ArrayList< FlowVector > sparseFlow,
-			RandomAccessibleInterval< DoubleType > img,
+			RandomAccessibleInterval< T > img,
 			int kNeighbors ) {
 
-		ArrayList< RandomAccessibleInterval< DoubleType > > slices = new ArrayList< RandomAccessibleInterval< DoubleType > >();
+		ArrayList< RandomAccessibleInterval< T > > slices = new ArrayList< RandomAccessibleInterval< T > >();
 
 		for ( long pos = 0; pos < img.dimension( 2 ) - 1; ++pos ) {
-			RandomAccessibleInterval< DoubleType > slice = Views.hyperSlice( img, 2, pos );
+			RandomAccessibleInterval< T > slice = Views.hyperSlice( img, 2, pos );
 
-			RealPointSampleList< DoubleType > realIntervalU = new RealPointSampleList<>( 2 );
-			RealPointSampleList< DoubleType > realIntervalV = new RealPointSampleList<>( 2 );
+			RealPointSampleList< T > realIntervalU = new RealPointSampleList<>( 2 );
+			RealPointSampleList< T > realIntervalV = new RealPointSampleList<>( 2 );
 			for ( FlowVector f : sparseFlow ) {
 				if ( f.getT() == pos ) {
 					RealPoint point = new RealPoint( 2 );
 					point.setPosition( f.getX(), 0 );
 					point.setPosition( f.getY(), 1 );
 
-					realIntervalU.add( point, new DoubleType( f.getU() ) );
-					realIntervalV.add( point, new DoubleType( f.getV() ) );
+					realIntervalU.add( point, ( T ) new DoubleType( f.getU() ) );
+					realIntervalV.add( point, ( T ) new DoubleType( f.getV() ) );
 				}
 			}
 
-			KNearestNeighborSearch< DoubleType > searchU =
+			KNearestNeighborSearch< T > searchU =
 					new KNearestNeighborSearchOnKDTree<>( new KDTree<>( realIntervalU ), Math.min( kNeighbors, ( int ) realIntervalU.size() ) );
-			KNearestNeighborSearch< DoubleType > searchV =
+			KNearestNeighborSearch< T > searchV =
 					new KNearestNeighborSearchOnKDTree<>( new KDTree<>( realIntervalV ), Math.min( kNeighbors, ( int ) realIntervalV.size() ) );
 
-			RealRandomAccessible< DoubleType > realRandomAccessibleU =
-					Views.interpolate( searchU, new InverseDistanceWeightingInterpolatorFactory< DoubleType >() );
-			RealRandomAccessible< DoubleType > realRandomAccessibleV =
-					Views.interpolate( searchV, new InverseDistanceWeightingInterpolatorFactory< DoubleType >() );
+			RealRandomAccessible< T > realRandomAccessibleU =
+					Views.interpolate( searchU, new InverseDistanceWeightingInterpolatorFactory< T >() );
+			RealRandomAccessible< T > realRandomAccessibleV =
+					Views.interpolate( searchV, new InverseDistanceWeightingInterpolatorFactory< T >() );
 
-			RandomAccessible< DoubleType > randomAccessibleU = Views.raster( realRandomAccessibleU );
-			RandomAccessible< DoubleType > randomAccessibleV = Views.raster( realRandomAccessibleV );
+			RandomAccessible< T > randomAccessibleU = Views.raster( realRandomAccessibleU );
+			RandomAccessible< T > randomAccessibleV = Views.raster( realRandomAccessibleV );
 
-			RandomAccessibleInterval< DoubleType > sliceU = Views.interval( randomAccessibleU, slice );
-			RandomAccessibleInterval< DoubleType > sliceV = Views.interval( randomAccessibleV, slice );
+			RandomAccessibleInterval< T > sliceU = Views.interval( randomAccessibleU, slice );
+			RandomAccessibleInterval< T > sliceV = Views.interval( randomAccessibleV, slice );
 
 			slices.add( sliceU );
 			slices.add( sliceV );
 
 		}
 
-		RandomAccessibleInterval< DoubleType > stack = Views.stack( slices );
+		RandomAccessibleInterval< T > stack = Views.stack( slices );
 
 		return stack;
 	}
@@ -267,6 +367,63 @@ public class FlowComputation {
 		thresholdedLocalMaxima = thresholdedMaxima( localMaxima, 50 );
 		ArrayList< FlowVector > pts = templateMatching( smoothed_img, thresholdedLocalMaxima );
 		return pts;
+	}
+
+	public < T extends RealType< T > & NativeType< T > > List< Puncta > computeBlobBasedTMFeatures( Img< T > img, int t ) { //Just for experimental purpose, maybe deleted later
+		double minScale = 1;
+		double stepScale = 1;
+		double maxScale = 5;
+        boolean brightBlobs = true;
+        int axis = 0;
+        double samplingFactor = 1;
+
+		FinalInterval outputInterval = Intervals.createMinMax(
+				( 0 ),
+				( 0 ),
+				0,
+				( img.dimension( 0 ) ),
+				( img.dimension( 1 ) ),
+				0 );
+		BlobDetectionCommand< T > blobDetection =
+				new BlobDetectionCommand<>( img, minScale, maxScale, stepScale, brightBlobs, axis, samplingFactor, model
+						.getView()
+						.getOs(), outputInterval );
+
+		final GenericTable resultsTable = blobDetection.getResultsTable();
+
+        /*Step Two: Find Otsu Threshold Value on the new List, so obtained*/
+        SampleList<FloatType> localMinimaResponse = createIterableList(resultsTable.get("Value"));
+		Histogram1d< FloatType > hist = model.getView().getOs().image().histogram( localMinimaResponse );
+		float otsuThreshold = model.getView().getOs().threshold().otsu( hist ).getRealFloat();
+		Pair< List< Puncta >, List< Float > > thresholdedPairList = getThresholdedLocalMinima( otsuThreshold, resultsTable, t );
+		return thresholdedPairList.getA();
+	}
+
+	private Pair< List< Puncta >, List< Float > > getThresholdedLocalMinima( float threshold, GenericTable resultsTable, int t ) { //Just for experimental purpose, maybe deleted later
+		Column< ? > valueOld = resultsTable.get( "Value" );
+		Column< ? > XOld = resultsTable.get( "X" );
+		Column< ? > YOld = resultsTable.get( "Y" );
+		Column< ? > radiusOld = resultsTable.get( "Radius" );
+		List< Puncta > listPuncta = new LinkedList<>();
+		List< Float > listVal = new LinkedList<>();
+
+		for ( int i = 0; i < resultsTable.getRowCount(); i++ ) {
+			if ( ( float ) valueOld.get( i ) <= threshold ) {
+				listPuncta.add( new Puncta( ( int ) XOld.get( i ), ( int ) YOld.get( i ), t, ( float ) radiusOld.get( i ) ) );
+				listVal.add( ( float ) valueOld.get( i ) );
+			}
+		}
+		return new ValuePair<>( listPuncta, listVal );
+	}
+
+	private SampleList< FloatType > createIterableList( final Column column ) { //Just for experimental purpose, maybe deleted later
+		final Iterator< Float > iterator = column.iterator();
+		final List< FloatType > imageResponse = new ArrayList<>();
+		while ( iterator.hasNext() ) {
+			imageResponse.add( new FloatType( iterator.next().floatValue() ) );
+		}
+
+		return new SampleList<>( imageResponse );
 	}
 
 	public ArrayList< LocalMaximaQuartet > getLocalMaxima() {
