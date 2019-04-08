@@ -4,6 +4,8 @@ import java.util.ArrayList;
 
 import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
@@ -13,7 +15,7 @@ public class FlowVectorsCollection {
 	private FlowVector onlySelectedFlowVector; //The only flow vector which is set as selected at a given time, can be null as well
 	private ArrayList< FlowVector > sparseHandPickedFlow;
 	private ArrayList< FlowVector > autoFeatureFlow;
-	private RandomAccessibleInterval< DoubleType > denseFlow;
+	private RandomAccessibleInterval denseFlow;
 	private ArrayList< FlowVector > spacedFlow;
 	private ArrayList< FlowVector > editedFlow = new ArrayList<>();
 
@@ -40,7 +42,7 @@ public class FlowVectorsCollection {
 		this.autoFeatureFlow = autoFeatureFlow;
 	}
 
-	public void setDenseFlow( RandomAccessibleInterval< DoubleType > denseFlow ) {
+	public < T extends RealType< T > & NativeType< T > > void setDenseFlow( RandomAccessibleInterval< T > denseFlow ) {
 		this.denseFlow = denseFlow;
 	}
 
@@ -94,7 +96,7 @@ public class FlowVectorsCollection {
 			IntervalView< DoubleType > v = Views.hyperSlice( df, 2, slice+1 );
 			RandomAccess< DoubleType > ura = u.randomAccess();
 			RandomAccess< DoubleType > vra = v.randomAccess();
-			for(int x =0; x < df.dimension( 0 ); x++) {
+			for ( int x = 0; x < df.dimension( 0 ); x++ ) {
 				for(int y = 0; y < df.dimension( 1 ); y++) {
 					ura.setPosition( x, 0 );
 					ura.setPosition( y, 1 );
