@@ -106,6 +106,7 @@ public class PunctaPickerView {
 		model.setFlowController( flowController );
 	}
 
+
 	private boolean getHideFlowTrackletsCheckBox() {
 		return hideFlowTrackletsCheckBox.isSelected();
 	}
@@ -643,6 +644,11 @@ public class PunctaPickerView {
 
 	public boolean getShowAutoFlowOnlyCheckBox() {
 		return showAutoFlowOnlyCheckBox.isSelected();
+	}
+
+	public OpService getOs() {
+		// TODO Auto-generated method stub
+		return opService;
 	}
 
 }
