@@ -82,7 +82,8 @@ public class PunctaPickerModel {
 
 	public void processFlow() {
 //		flowComputation.computeGenericFlow( getRawData() );
-		flowComputation.computeHybridFlow( getRawData() );
+//		flowComputation.computeHybridFlow( getRawData() );
+		flowComputation.computeBlobBasedFlow( getRawData() );
 	}
 
 	public float getDefaultRadius() {
