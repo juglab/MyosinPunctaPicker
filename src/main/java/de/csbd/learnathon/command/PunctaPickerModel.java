@@ -63,27 +63,13 @@ public class PunctaPickerModel {
 		return flowVectorsCol;
 	}
 
-//	public void processFlow( String flowMethod ) {
-//		FlowComputation flowComputation = new FlowComputation( this );
-//		flowComputation.computeTMFlow( getRawData() );
-//		RandomAccessibleInterval< DoubleType > denseFlow = flowComputation.getDenseFlow();
-//		ArrayList< FlowVector > sparseFlow = flowComputation.getSparseHandPickedFlow();
-//		ArrayList< LocalMaximaQuartet > localMaxima = flowComputation.getLocalMaxima();
-//		ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima = flowComputation.getThresholdedLocalMaxima();
-//		FlowOverlay flowDrawer = new FlowOverlay( view );
-//		flowDrawer.setDenseFlow( denseFlow );
-////		flowDrawer.paintSparseFlow( sparseFlow );
-//	}
-
 	public ArrayList< FlowVector > extractAndInitializeControlVectorsFromHandPickedTracklets() {
 		ArrayList< FlowVector > controlVecs = flowComputation.initializeControlVectorsForFlow();
 		return controlVecs;
 	}
 
 	public void processFlow() {
-//		flowComputation.computeGenericFlow( getRawData() );
-//		flowComputation.computeHybridFlow( getRawData() );
-		flowComputation.computeBlobBasedFlow( getRawData() );
+		flowComputation.computeSemiAutoInterpolatedFlow( getRawData() );
 	}
 
 	public float getDefaultRadius() {
@@ -91,7 +77,7 @@ public class PunctaPickerModel {
 	}
 
 	public void processExperimentalFlow() { // Only for the purpose of experimentation, remove it later
-		flowComputation.plotAutoFeaturesOnly( getRawData() );
+		flowComputation.plotAutoFeaturesOnly();
 	}
 }
 
