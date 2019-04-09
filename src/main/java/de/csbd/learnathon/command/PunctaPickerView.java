@@ -524,8 +524,8 @@ public class PunctaPickerView {
 			}
 		} );
 
-		JButton bSaveFeatures = new JButton( "save auto+man" );
-		bSaveFeatures.addActionListener( new ActionListener() {
+		JButton bSaveAutoManFeatures = new JButton( "save auto+man" );
+		bSaveAutoManFeatures.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
@@ -554,7 +554,7 @@ public class PunctaPickerView {
 
 		panelAutoFlowProps.add( showAutoFlowOnlyCheckBox, "growx, wrap" );
 		panelAutoFlowProps.add( bComputeAutoFeatures, "w 5%" );
-		panelAutoFlowProps.add( bSaveFeatures, "w 5%" ); 
+		panelAutoFlowProps.add( bSaveAutoManFeatures, "w 5%" ); 
 		panelAutoFlowProps.add( bSaveAll, "w 5%, growx, wrap" );
 
 		helper.add( panelTrackletsProps, "growx, wrap" );
