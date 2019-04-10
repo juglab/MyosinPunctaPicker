@@ -68,7 +68,7 @@ public class PunctaPickerModel {
 		return controlVecs;
 	}
 
-	public void processFlow() {
+	public void processSemiAutomatedFlow() {
 		flowComputation.computeSemiAutoInterpolatedFlow( getRawData() );
 	}
 
@@ -76,9 +76,6 @@ public class PunctaPickerModel {
 		return view.getDefaultPunctaRadius();
 	}
 
-	public void processExperimentalFlow() { // Only for the purpose of experimentation, remove it later
-		flowComputation.plotAutoFeaturesOnly();
-	}
 }
 
 

@@ -7,8 +7,11 @@ import java.awt.Graphics2D;
 import java.util.ArrayList;
 
 import bdv.util.BdvOverlay;
+import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.realtransform.AffineTransform2D;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
 
 public class FlowOverlay extends BdvOverlay {
@@ -45,12 +48,46 @@ public class FlowOverlay extends BdvOverlay {
 		this.autoFeatureFlowVectors = autoFeatureFlow;
 	}
 
-	public void setSpacedFlow( ArrayList< FlowVector > spacedFlow ) {
-		this.spacedFlowVectors = spacedFlow;
-	}
-
 	public void requestRepaint() {
 		view.getBdv().getViewerPanel().requestRepaint();
+	}
+
+	public < T extends RealType< T > & NativeType< T > > ArrayList< FlowVector > prepareSpacedFlow() {
+		spacedFlowVectors = new ArrayList<>();
+		if ( !( flowData == null ) ) {
+			final long sizeX = flowData.dimension( 0 );
+			final long sizeY = flowData.dimension( 1 );
+			int spacing = view.getDensity(); // spacing between pixels for flow display 
+
+			for ( int t = 0; t < flowData.dimension( 2 ) / 2; t++ ) {
+				int startx = ( int ) ( sizeX % spacing ) / 2;
+				startx = ( startx == 0 ) ? spacing / 2 : startx;
+				int starty = ( int ) ( sizeY % spacing ) / 2;
+				starty = ( starty == 0 ) ? spacing / 2 : starty;
+				for ( int x = startx; x < sizeX; x += spacing ) {
+					for ( int y = starty; y < sizeY; y += spacing ) {
+						FlowVector flowVec = getFlowVector( flowData, x, y, t );
+						spacedFlowVectors.add( flowVec );
+					}
+				}
+			}
+		}
+		view.getPunctaPickerModel().getFlowVectorsCollection().setSpacedFlow( spacedFlowVectors );
+		return spacedFlowVectors;
+	}
+
+	private < T extends RealType< T > & NativeType< T > > FlowVector getFlowVector( RandomAccessibleInterval< T > f, int x, int y, int t ) {
+		RandomAccess< T > ra = f.randomAccess();
+		ra.setPosition( x, 0 );
+		ra.setPosition( y, 1 );
+		ra.setPosition( 2 * t, 2 );
+		Double u = ra.get().getRealDouble();
+		ra.setPosition( x, 0 );
+		ra.setPosition( y, 1 );
+		ra.setPosition( 2 * t + 1, 2 );
+		Double v = ra.get().getRealDouble();
+		FlowVector flowVector = new FlowVector( x, y, t, u, v );
+		return flowVector;
 	}
 
 	@Override
@@ -58,12 +95,16 @@ public class FlowOverlay extends BdvOverlay {
 		int t = info.getTimePointIndex();
 
 		if ( visible ) {
-			if ( !( handPickedSparseFlowVectors == null ) )
-				drawSparseHandPickedFlow( g, t );
-			if ( view.getShowAutoFlowOnlyCheckBox() && !( autoFeatureFlowVectors == null ) )
+			if ( view.getShowAutoFlowOnlyFlag() && !( autoFeatureFlowVectors == null ) ) {
 				drawAutoFeatureFlow( g, t );
+				return;
+			} else if ( view.getShowAutoFlowOnlyFlag() == false )
+				if ( !( handPickedSparseFlowVectors == null ) )
+					drawSparseHandPickedFlow( g, t );
 			if ( !( spacedFlowVectors == null ) )
 				drawSpacedFlow( g, t );
+			if ( !( autoFeatureFlowVectors == null ) )
+				drawAutoFeatureFlow( g, t );
 		}
 
 	}

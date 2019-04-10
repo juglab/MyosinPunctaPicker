@@ -2,13 +2,10 @@ package de.csbd.learnathon.command;
 
 import java.util.ArrayList;
 
-import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
-import net.imglib2.view.IntervalView;
-import net.imglib2.view.Views;
 
 public class FlowVectorsCollection {
 
@@ -27,9 +24,11 @@ public class FlowVectorsCollection {
 	}
 
 	public FlowVector getOnlySelectedFlowVector() {
-		for ( FlowVector flowVector : spacedFlow ) {
-			if ( flowVector.isSelected() )
-				setOnlySelectedFlowVector( flowVector );
+		if ( !( spacedFlow == null ) ) {
+			for ( FlowVector flowVector : spacedFlow ) {
+				if ( flowVector.isSelected() )
+					setOnlySelectedFlowVector( flowVector );
+			}
 		}
 		return onlySelectedFlowVector;
 	}
@@ -87,26 +86,4 @@ public class FlowVectorsCollection {
 			return null;
 	}
 
-	public ArrayList< FlowVector > getDenseFlowVectors() { //Only experimental, needs deletion later
-		ArrayList< FlowVector > dfvec = new ArrayList<>();
-		RandomAccessibleInterval< DoubleType > df = getDenseFlow();
-		int count = 0;
-		for ( int slice = 0; slice < df.dimension( 2 ); slice = slice + 2 ) {
-			IntervalView< DoubleType > u = Views.hyperSlice( df, 2, slice );
-			IntervalView< DoubleType > v = Views.hyperSlice( df, 2, slice+1 );
-			RandomAccess< DoubleType > ura = u.randomAccess();
-			RandomAccess< DoubleType > vra = v.randomAccess();
-			for ( int x = 0; x < df.dimension( 0 ); x++ ) {
-				for(int y = 0; y < df.dimension( 1 ); y++) {
-					ura.setPosition( x, 0 );
-					ura.setPosition( y, 1 );
-					vra.setPosition( x, 0 );
-					vra.setPosition( y, 1 );
-					dfvec.add( new FlowVector( x, y, count, ura.get().getRealDouble(), vra.get().getRealDouble() ) );
-				}
-			}
-			count = count + 1;
-		}
-		return dfvec;
-	}
 }

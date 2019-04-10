@@ -90,8 +90,8 @@ public class GhostOverlay extends BdvOverlay {
 		} else if ( view.getDetectionMode() == "auto size&pos" ) {
 			Puncta ghostPuncta =
 					view.getPunctaPickerController().blobDetectedPuncta( time, posn.getDoublePosition( 0 ), posn.getDoublePosition( 1 ) );
-			double posx = ( posn.getDoublePosition( 0 ) - view.getWindowSize() / 2 ) + ghostPuncta.getX();
-			double posy = ( posn.getDoublePosition( 1 ) - view.getWindowSize() / 2 ) + ghostPuncta.getY();
+			double posx = ( posn.getDoublePosition( 0 ) - view.getPickingWindowSize() / 2 ) + ghostPuncta.getX();
+			double posy = ( posn.getDoublePosition( 1 ) - view.getPickingWindowSize() / 2 ) + ghostPuncta.getY();
 			setPosition( posx, posy );
 			setRadius( ghostPuncta.getR() );
 		} else {

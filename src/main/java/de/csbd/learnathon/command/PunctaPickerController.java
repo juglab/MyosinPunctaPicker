@@ -237,8 +237,8 @@ public class PunctaPickerController {
 
 			Puncta pNew = blobDetectedPuncta( t, pos.getDoublePosition( 0 ), pos.getDoublePosition( 1 ) );
 			pNew.setT( t );
-			pNew.setX( ( float ) ( pos.getDoublePosition( 0 ) - view.getWindowSize() / 2 ) + pNew.getX() );
-			pNew.setY( ( float ) ( pos.getDoublePosition( 1 ) - view.getWindowSize() / 2 ) + pNew.getY() );
+			pNew.setX( ( float ) ( pos.getDoublePosition( 0 ) - view.getPickingWindowSize() / 2 ) + pNew.getX() );
+			pNew.setY( ( float ) ( pos.getDoublePosition( 1 ) - view.getPickingWindowSize() / 2 ) + pNew.getY() );
 			addPunctaToGraph( t, g, pOld, pNew );
 
 		}
@@ -257,11 +257,11 @@ public class PunctaPickerController {
 		IntervalView< T > image = Views.hyperSlice( fullImage, 2, t );
 		Views.extendMirrorSingle( image );
 		FinalInterval cropped = Intervals.createMinMax(
-				( long ) ( x - view.getWindowSize() / 2 ),
-				( long ) ( y - view.getWindowSize() / 2 ),
+				( long ) ( x - view.getPickingWindowSize() / 2 ),
+				( long ) ( y - view.getPickingWindowSize() / 2 ),
 				0,
-				( long ) ( x + view.getWindowSize() / 2 ),
-				( long ) ( y + view.getWindowSize() / 2 ),
+				( long ) ( x + view.getPickingWindowSize() / 2 ),
+				( long ) ( y + view.getPickingWindowSize() / 2 ),
 				0 );
 		FinalInterval outputInterval;
 		if ( view.getDetectionMode() == "auto size" ) {
@@ -304,7 +304,8 @@ public class PunctaPickerController {
     }
 
 	public void actionMoveLeadPuncta( int x, int y ) {
-        view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates(x, y, pos);
+		if ( !( pos == null ) )
+			view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
 		if ( !( model.getGraph().getLeadSelectedPuncta() == null ) ) {
 			model.getGraph().getLeadSelectedPuncta().setX( pos.getFloatPosition( 0 ) );
 			model.getGraph().getLeadSelectedPuncta().setY( pos.getFloatPosition( 1 ) );
@@ -337,7 +338,7 @@ public class PunctaPickerController {
 		double epsilon = 0.01;
 		for ( int i = 0; i < potentBlobs.size(); i++ ) {
 			double weight =
-					1 * ( 1 / ( computeDistFromClick( potentBlobs.get( i ), view.getWindowSize() ) + epsilon ) );
+					1 * ( 1 / ( computeDistFromClick( potentBlobs.get( i ), view.getPickingWindowSize() ) + epsilon ) );
 			weights.add( weight );
 		}
 		Double maxWeight = 0d;
