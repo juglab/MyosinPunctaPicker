@@ -28,14 +28,11 @@ import bdv.util.Bdv;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvHandlePanel;
 import bdv.util.BdvSource;
-import ij.IJ;
-import ij.ImagePlus;
 import net.imagej.Dataset;
 import net.imagej.ops.OpService;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
@@ -69,7 +66,7 @@ public class PunctaPickerView {
 	private JCheckBox activeTrackletCheckBox;
 	private JSlider windowSizeSlider;
 
-	private ButtonGroup modeButtons;
+	private ButtonGroup pickingModeButtons;
 
 	private JTextField txtDefaultPunctaRadius;
 	private JTextField txtMinScale;
@@ -93,6 +90,12 @@ public class PunctaPickerView {
 
 	private JSlider densitySlider;
 
+	private JSlider thresholdingSlider;
+
+	private ButtonGroup matchingModeButtons;
+
+	private ButtonGroup thresholdingModeButtons;
+
 	public PunctaPickerView( PunctaPickerModel m, Dataset image, OpService os ) {
 		this.model = m;
 		this.image = image;
@@ -109,7 +112,15 @@ public class PunctaPickerView {
 	}
 
 	public String getDetectionMode() {
-		return Utils.getSelectedButtonText( modeButtons );
+		return Utils.getSelectedButtonText( pickingModeButtons );
+	}
+
+	public String getMatchingMode() {
+		return Utils.getSelectedButtonText( matchingModeButtons );
+	}
+
+	public String getThresholdingMode() {
+		return Utils.getSelectedButtonText( thresholdingModeButtons );
 	}
 
 	public int getAutoFlowMatchingWindowSize() {
@@ -118,6 +129,10 @@ public class PunctaPickerView {
 
 	public double getRelWeight() {
 		return relWeightSlider.getValue();
+	}
+
+	public float getThreshold() {
+		return thresholdingSlider.getValue();
 	}
 
 	public float getDefaultPunctaRadius() {
@@ -293,8 +308,8 @@ public class PunctaPickerView {
 		fadeOutSlider.addChangeListener( e -> sliderChanged( fadeOutSlider ) );
 		fadeOutSlider.setVisible( true );
 
-		panelTrackletsProps.add( showTrackletsCheckBox, "span 2, align left, growx, wrap" );
-		panelTrackletsProps.add( activeTrackletCheckBox, "span 2, align left, growx, wrap" );
+		panelTrackletsProps.add( showTrackletsCheckBox, "w 5%" );
+		panelTrackletsProps.add( activeTrackletCheckBox, "w 5%, growx, wrap" );
 		panelTrackletsProps.add( showPreviousMarkerCheckBox, "span 2, align left, growx, wrap" );
 		panelTrackletsProps.add( lFadeOut, "" );
 		panelTrackletsProps.add( fadeOutSlider, "growx, wrap" );
@@ -304,7 +319,7 @@ public class PunctaPickerView {
 		JPanel panelPickingProps = new JPanel( new MigLayout() );
 		panelPickingProps.setBorder( BorderFactory.createTitledBorder( "picking" ) );
 
-		modeButtons = new ButtonGroup();
+		pickingModeButtons = new ButtonGroup();
 		JRadioButton bManual = new JRadioButton( "constant radius" );
 		bManual.addActionListener( new ActionListener() {
 
@@ -341,9 +356,9 @@ public class PunctaPickerView {
 				txtMaxDist.setEnabled( true );
 			}
 		} );
-		modeButtons.add( bManual );
-		modeButtons.add( bAutomaticSize );
-		modeButtons.add( bAutomaticSizeAndPos );
+		pickingModeButtons.add( bManual );
+		pickingModeButtons.add( bAutomaticSize );
+		pickingModeButtons.add( bAutomaticSizeAndPos );
 
 		JLabel lDefaultPunctaRadius = new JLabel( "radius:" );
 		txtDefaultPunctaRadius = new JTextField( 2 );
@@ -418,6 +433,56 @@ public class PunctaPickerView {
 			}
 
 		} );
+
+		matchingModeButtons = new ButtonGroup();
+		JRadioButton bGreedy = new JRadioButton( "greedy" );
+		bGreedy.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				relWeightSlider.setEnabled( false );
+			}
+		} );
+
+		JRadioButton bHungarian = new JRadioButton( "hungarian" );
+		bHungarian.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				windowSizeSlider.setEnabled( true );
+				relWeightSlider.setEnabled( true );
+			}
+		} );
+
+		matchingModeButtons.add( bGreedy );
+		matchingModeButtons.add( bHungarian );
+
+		JLabel lThreshold = new JLabel( "threshold:" );
+		thresholdingSlider = new JSlider( 10, 180, 20 ); //Negative of threshold is made while running blob detection
+		thresholdingSlider.addChangeListener( e -> sliderChanged( thresholdingSlider ) );
+		thresholdingSlider.setVisible( true );
+
+		thresholdingModeButtons = new ButtonGroup();
+		JRadioButton bCustom = new JRadioButton( "custom threshold" );
+		bCustom.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				thresholdingSlider.setEnabled( true );
+			}
+		} );
+
+		JRadioButton bOtsu = new JRadioButton( "otsu" );
+		bOtsu.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				thresholdingSlider.setEnabled( false );
+			}
+		} );
+
+		thresholdingModeButtons.add( bCustom );
+		thresholdingModeButtons.add( bOtsu );
 
 		JLabel lWindowSize = new JLabel( "window:" );
 		windowSizeSlider = new JSlider( 1, 11, 5 );
@@ -498,11 +563,9 @@ public class PunctaPickerView {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
 				RandomAccessibleInterval< DoubleType > denseFlow = model.getFlowVectorsCollection().getDenseFlow();
-				ImagePlus imagePlus = ImageJFunctions.wrap( denseFlow, null );
-				IJ.save( imagePlus, "res/denseFlow.tif" );
+				TiffSaver.chooseFlowFieldSaveDirectory( denseFlow );
 			}
 		} );
-
 
 		JLabel lInterpolate = new JLabel( "Neighbors kNN:" );
 		txtNeighbors = new JTextField( 2 );
@@ -510,6 +573,12 @@ public class PunctaPickerView {
 
 		panelFlowProps.add( showFlowCheckBox, " w 5%" );
 		panelFlowProps.add( showAutoFlowOnlyCheckBox, "w 5%, growx, wrap" );
+		panelFlowProps.add( bGreedy, "w 5%" );
+		panelFlowProps.add( bHungarian, "w 5%, growx, wrap" );
+		panelFlowProps.add( bCustom, "w 5%" );
+		panelFlowProps.add( bOtsu, "w 5%, growx, wrap" );
+		panelFlowProps.add( lThreshold, "" );
+		panelFlowProps.add( thresholdingSlider, "growx, wrap" );
 		panelFlowProps.add( lWindowSize, "" );
 		panelFlowProps.add( windowSizeSlider, "growx, wrap" );
 		panelFlowProps.add( lRelativeWeight, "" );
@@ -527,6 +596,8 @@ public class PunctaPickerView {
 
 		// make default selection such that action is thrown
 		bAutomaticSize.doClick();
+		bHungarian.doClick();
+		bOtsu.doClick();
 		showTrackletsCheckBox.setSelected( true );
 
 		return helper;

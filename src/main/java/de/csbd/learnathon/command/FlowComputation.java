@@ -92,8 +92,13 @@ public class FlowComputation {
 			List< Puncta > pun_per_frame = computeAllBlobs( newImage, time );
 			allFlowBlobs.addAll( pun_per_frame );
 		}
-		ArrayList< FlowVector > features = hungarianMatching( img, allFlowBlobs );
-//		ArrayList< FlowVector > features = greedyMatching( img, allFlowBlobs );
+		ArrayList< FlowVector > features;
+		String matchingMode = model.getView().getMatchingMode();
+		if ( matchingMode == "greedy" ) {
+			features = greedyMatching( img, allFlowBlobs );
+		} else {
+			features = hungarianMatching( img, allFlowBlobs );
+		}
 		return features;
 	}
 
@@ -156,7 +161,9 @@ public class FlowComputation {
 			Img< T > img,
 			ArrayList< Puncta > flowBlobs ) {  //Experimental, may be deleted later, very simplistic only considers distance and can be one-to many matches
 		ArrayList< FlowVector > flowVectorList = new ArrayList<>();
-		double window = 25;
+		double window = ( model.getView().getAutoFlowMatchingWindowSize() * model
+				.getView()
+				.getAutoFlowMatchingWindowSize() );
 
 		for ( int pos = 0; pos < img.dimension( 2 ) - 1; pos++ ) {
 			List< Puncta > blobs_current = getFlowBlobsAtTime( pos, flowBlobs );
@@ -271,7 +278,7 @@ public class FlowComputation {
 	public < T extends RealType< T > & NativeType< T > > List< Puncta > computeAllBlobs( Img< T > img, int t ) { //Just for experimental purpose, maybe deleted later
 		double minScale = 1;
 		double stepScale = 1;
-		double maxScale = 5;
+		double maxScale = 15;
         boolean brightBlobs = true;
         int axis = 0;
         double samplingFactor = 1;
@@ -293,8 +300,15 @@ public class FlowComputation {
         /*Step Two: Find Otsu Threshold Value on the new List, so obtained*/
         SampleList<FloatType> localMinimaResponse = createIterableList(resultsTable.get("Value"));
 		Histogram1d< FloatType > hist = model.getView().getOs().image().histogram( localMinimaResponse );
-		float otsuThreshold = model.getView().getOs().threshold().otsu( hist ).getRealFloat();
-		Pair< List< Puncta >, List< Float > > thresholdedPairList = getThresholdedLocalMinima( otsuThreshold, resultsTable, t );
+		String thresholdingMode = model.getView().getThresholdingMode();
+		float threshold;
+		if ( thresholdingMode == "custom threshold" ) {
+			threshold = -1f * ( model.getView().getThreshold() );
+		} else {
+			threshold = model.getView().getOs().threshold().otsu( hist ).getRealFloat();
+		}
+		System.out.println( "Threshold used for time " + t + " :" + threshold );
+		Pair< List< Puncta >, List< Float > > thresholdedPairList = getThresholdedLocalMinima( threshold, resultsTable, t );
 		return thresholdedPairList.getA();
 	}
 
