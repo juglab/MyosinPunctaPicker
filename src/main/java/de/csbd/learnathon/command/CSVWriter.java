@@ -40,9 +40,10 @@ public class CSVWriter {
 				fileWriter.append( String.valueOf( puncta.getT() ) );
 				fileWriter.append( NEW_LINE_SEPARATOR );
 			}
-			
+
 			fileWriter.append( "edgep1,edgep2" );
 			fileWriter.append( NEW_LINE_SEPARATOR );
+
 			
 			for ( final Edge e : edgeList ) {
 				fileWriter.append( String.valueOf( punctaList.indexOf( e.getA() ) ) );

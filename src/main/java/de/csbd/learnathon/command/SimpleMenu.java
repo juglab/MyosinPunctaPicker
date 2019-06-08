@@ -109,7 +109,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		return menuBar;
-	
+
 	}
 
 	@Override
@@ -153,6 +153,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 			final FileNameExtensionFilter filter = new FileNameExtensionFilter( "*.csv", "csv" );
 			jfc.setFileFilter( filter );
 			jfc.addChoosableFileFilter( filter );
+      
 			int returnValue = jfc.showOpenDialog( null );
 			if ( returnValue == JFileChooser.APPROVE_OPTION ) {
 				final File[] selectedFiles = jfc.getSelectedFiles();
