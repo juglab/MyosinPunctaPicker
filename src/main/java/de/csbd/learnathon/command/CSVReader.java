@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 public class CSVReader {
 
-	public static float defaultRadius = 15f; // TODO this need thinking
+	public static float defaultRadius = 3f; // TODO this need thinking
 
 	public static Graph loadCSV( String filename ) {
 
@@ -29,7 +29,6 @@ public class CSVReader {
 				}
 				if(!indicator) {
 					String[] values = line.split( COMMA_DELIMITER );
-					System.out.println( values[ 0 ] );
 					Puncta p = new Puncta( Float.parseFloat( values[ 1 ] ), Float.parseFloat( values[ 2 ] ), Integer
 							.parseInt( values[ 3 ] ), defaultRadius );
 					loadedPunctas.add( p );
@@ -89,10 +88,10 @@ public class CSVReader {
 				loadedPunctas.add( p );
 			}
 			for ( int count = 0; count < lineCounter; count++ ) {
-				System.out.println( loadedPunctas.get( count ).getX() );
 				Edge e = new Edge( loadedPunctas.get( count ), loadedPunctas.get( count + lineCounter ) );
 				loadedEdges.add( e );
 			}
+			
 
 		} catch ( FileNotFoundException e ) {
 			System.out.println( "File not found!" );

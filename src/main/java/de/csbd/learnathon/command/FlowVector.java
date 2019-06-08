@@ -3,25 +3,37 @@ package de.csbd.learnathon.command;
 
 public class FlowVector {
 
-	int x;
-	int y;
-	int t;
-	double u;
-	double v;
+	private float x;
+	private float y;
+	private int t;
+	private double u;
+	private double v;
 
-	public FlowVector( int x, int y, int t, double u, double v ) {
+	private boolean isSelected;
+	private boolean isEdited;
+
+	public FlowVector( float x, float y, int t, double u, double v ) {
 		this.x = x;
 		this.y = y;
 		this.t = t;
 		this.u = u;
 		this.v = v;
+		this.isSelected = false;
 	}
 
-	public int getX() {
+	public boolean isSelected() {
+		return isSelected;
+	}
+
+	public boolean isEdited() {
+		return isEdited;
+	}
+
+	public float getX() {
 		return x;
 	}
 
-	public int getY() {
+	public float getY() {
 		return y;
 	}
 
@@ -35,6 +47,22 @@ public class FlowVector {
 
 	public double getV() {
 		return v;
+	}
+
+	public void setU( float x1 ) {
+		u = x1 - getX();
+	}
+
+	public void setV( float y1 ) {
+		v = y1 - getY();
+	}
+
+	public void setSelected( boolean selected ) {
+		this.isSelected = selected;
+	}
+
+	public void setEdited( boolean edited ) {
+		this.isEdited = edited;
 	}
 
 }

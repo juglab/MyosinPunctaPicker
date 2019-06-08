@@ -10,11 +10,21 @@ public class PunctaPickerModel {
 	private RandomAccessibleInterval< DoubleType > rawData;
 
 	private Graph graph = new Graph();
+	private FlowVectorsCollection flowVectorsCol = new FlowVectorsCollection();
 	private PunctaPickerController controller;
+	private FlowController flowController;
+	private FlowComputation flowComputation;
 	private PunctaPickerView view;
+
+	private RandomAccessibleInterval< DoubleType > denseFlow;
+
+	private ArrayList< FlowVector > handPickedSparseFlow;
+
+	private ArrayList< FlowVector > spacedFlow;
 
 	PunctaPickerModel( RandomAccessibleInterval< DoubleType > image ) {
 		this.rawData = image;
+		flowComputation = new FlowComputation( this );
 	}
 
 	public void setView( PunctaPickerView v ) {
@@ -25,8 +35,16 @@ public class PunctaPickerModel {
 		return view;
 	}
 
+	public FlowComputation getFlowComputation() {
+		return flowComputation;
+	}
+
 	public void setController( PunctaPickerController controller ) {
 		this.controller = controller;
+	}
+
+	public void setFlowController( FlowController flowController ) {
+		this.flowController = flowController;
 	}
 
 	public RandomAccessibleInterval< DoubleType > getRawData() {
@@ -41,26 +59,23 @@ public class PunctaPickerModel {
 		this.graph = g;
 	}
 
-	public void processFlow( String flowMethod ) {
-		FlowComputation flowComputation = new FlowComputation();
-		flowComputation.computeTMFlow( getRawData() );
-		RandomAccessibleInterval< DoubleType > denseFlow = flowComputation.getDenseFlow();
-		ArrayList< FlowVector > sparseFlow = flowComputation.getSparseFlow();
-		ArrayList< LocalMaximaQuartet > localMaxima = flowComputation.getLocalMaxima();
-		ArrayList< LocalMaximaQuartet > thresholdedLocalMaxima = flowComputation.getThresholdedLocalMaxima();
-		
-//		RandomAccessibleInterval< DoubleType > flow=FlowComputation.getRandomFlow(getRawData() );
-		
-		FlowOverlay flowDrawer= new FlowOverlay(view.bdv);
-		flowDrawer.paintDenseFlow( denseFlow );
-		flowDrawer.paintSparseFlow( sparseFlow );
-		
-		//BdvFunctions.show(flow,"flow",Bdv.options().addTo(view.bdv));	
+	public FlowVectorsCollection getFlowVectorsCollection() {
+		return flowVectorsCol;
+	}
+
+	public ArrayList< FlowVector > extractAndInitializeControlVectorsFromHandPickedTracklets() {
+		ArrayList< FlowVector > controlVecs = flowComputation.initializeControlVectorsForFlow();
+		return controlVecs;
+	}
+
+	public void processSemiAutomatedFlow() {
+		flowComputation.computeSemiAutoInterpolatedFlow( getRawData() );
 	}
 
 	public float getDefaultRadius() {
-		return 15f;
+		return view.getDefaultPunctaRadius();
 	}
+
 }
 
 

@@ -75,6 +75,9 @@ public class PPGraphUtils {
 
 	public static Edge pointOnEdge( float x, float y, List< Edge > edges ) {
 		for ( Edge e : edges ) {
+			if ( !isInBoundingBox( e, x, y ) ) {
+				continue;
+			}
 			double num = Math.abs(
 					( e.getA().getY() - e.getB().getY() ) * x - ( e.getA().getX() - e.getB().getX() ) * y + e.getA().getX() * e.getB().getY() - e
 							.getA()
@@ -84,10 +87,52 @@ public class PPGraphUtils {
 							.getA()
 							.getX() - e.getB().getX() ) );
 			double dist = num / den;
-			if ( dist < 5 ) { //If mouse hover is lesser than 5 pixels away from the edge
-			return e;
+			if ( dist < 2 ) { //If mouse hover is lesser than 2 pixels away from the edge
+				return e;
 			}
 		}
+		return null;
+	}
+
+	private static boolean isInBoundingBox( Edge e, float x, float y ) {
+		float minX = Math.min( e.getA().getX(), e.getB().getX() );
+		float maxX = Math.max( e.getA().getX(), e.getB().getX() );
+		float minY = Math.min( e.getA().getY(), e.getB().getY() );
+		float maxY = Math.max( e.getA().getY(), e.getB().getY() );
+		return ( minX <= x && minY <= y ) && ( maxX >= x && maxY >= y );
+	}
+
+	public static FlowVector getClosestFlowVectorAtTimePoint(
+			float x,
+			float y,
+			ArrayList< FlowVector > availableFlowVectors,
+			int time ) {
+
+		for ( FlowVector flowVector : availableFlowVectors ) {
+			Edge virtualEdge = new Edge( new Puncta( flowVector.getX(), flowVector.getY(), flowVector.getT(), 1 ), new Puncta( ( float ) ( flowVector
+					.getX() + flowVector.getU() ), ( float ) ( flowVector.getY() + flowVector.getV() ), flowVector.getT() + 1, 1 ) );
+			if ( !isInBoundingBox( virtualEdge, x, y ) ) {
+				continue;
+			}
+			if ( flowVector.getT() == time ) {
+				double num = Math.abs(
+						( flowVector.getY() - ( flowVector.getY() + flowVector.getV() ) ) * x - ( flowVector
+								.getX() - ( flowVector.getX() + flowVector.getU() ) ) * y + flowVector
+										.getX() * ( flowVector.getY() + flowVector.getV() ) - flowVector
+												.getY() * ( flowVector.getX() + flowVector.getU() ) );
+
+				double den = Math.sqrt(
+						( flowVector.getY() - ( flowVector.getY() + flowVector.getV() ) ) * ( flowVector
+								.getY() - ( flowVector.getY() + flowVector.getV() ) ) + ( flowVector
+										.getX() - ( flowVector.getX() + flowVector.getU() ) ) * ( flowVector
+												.getX() - ( flowVector.getX() + flowVector.getU() ) ) );
+				double dist = num / den;
+				if ( dist < 4 ) { //If mouse hover is lesser than 4 pixels away from the edge
+					return flowVector;
+				}
+			}
+		}
+
 		return null;
 	}
 }

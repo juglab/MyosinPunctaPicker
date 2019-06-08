@@ -1,5 +1,6 @@
 package de.csbd.learnathon.command;
 
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -34,10 +35,9 @@ public class SimpleMenu implements ActionListener, ItemListener {
 
 	public JMenuBar createMenuBar() {
 
-
 		//create a menubar
 		JMenuBar menuBar;
-		JMenu filemenu, flowmenu, helpmenu;
+		JMenu filemenu, helpmenu;
 		JMenu helpsubmenu;
 		JMenuItem menuItem;
 
@@ -47,6 +47,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		//Build the file menu.
 		filemenu = new JMenu( "File" );
 		filemenu.getAccessibleContext().setAccessibleDescription( "This is the menu to load/save tracklets" );
+		filemenu.setLayout( new FlowLayout() );
 		menuBar.add( filemenu );
 
 		menuItem = new JMenuItem( "Load tracklets from CSV" );
@@ -62,34 +63,19 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem.addActionListener( this );
 		filemenu.add( menuItem );
 
-		//Build the file menu.
-		flowmenu = new JMenu( "Compute flows" );
-		flowmenu.getAccessibleContext().setAccessibleDescription( "This is the menu to compute different flows" );
-		menuBar.add( flowmenu );
-
-		menuItem = new JMenuItem( "Nearest Neighbor flow" );
-		menuItem.getAccessibleContext().setAccessibleDescription( "" );
-		menuItem.addActionListener( this );
-		flowmenu.add( menuItem );
-		menuItem = new JMenuItem( "k-Nearest Neighbor flow" );
-		menuItem.getAccessibleContext().setAccessibleDescription( "" );
-		menuItem.addActionListener( this );
-		flowmenu.add( menuItem );
-		menuItem = new JMenuItem( "Thin Plate Splines Flow" );
-		menuItem.getAccessibleContext().setAccessibleDescription( "" );
-		menuItem.addActionListener( this );
-		flowmenu.add( menuItem );
-
-		//Build the file menu.
+		//Build the help menu.
 		helpmenu = new JMenu( "Help" );
-		flowmenu.getAccessibleContext().setAccessibleDescription( "This is the menu for help about different key bindings" );
+		helpmenu.getAccessibleContext().setAccessibleDescription( "This is the menu for help about different key bindings" );
 		menuBar.add( helpmenu );
 
 		helpsubmenu = new JMenu( "Key bindings" );
 		helpsubmenu.getAccessibleContext().setAccessibleDescription( "" );
 		helpmenu.add( helpsubmenu );
 
-		menuItem = new JMenuItem( "Add puncta -> A" );
+		menuItem = new JMenuItem( "Add puncta -> Left mouse button" );
+		menuItem.getAccessibleContext().setAccessibleDescription( "" );
+		helpsubmenu.add( menuItem );
+		menuItem = new JMenuItem( "Preview puncta -> A" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		menuItem = new JMenuItem( "Select puncta/tracklet -> C" );
@@ -101,16 +87,25 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem = new JMenuItem( "Decrease radius of selected puncta -> Q" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
-		menuItem = new JMenuItem( "Move puncta -> SPACE" );
+		menuItem = new JMenuItem( "Move puncta/flow vector -> SPACE" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		menuItem = new JMenuItem( "Link punctas -> L" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
-		menuItem = new JMenuItem( "Delte selected puncta -> X" );
+		menuItem = new JMenuItem( "Delte selected puncta/edge -> D" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
-		menuItem = new JMenuItem( "Delete selected tracklet -> D" );
+		menuItem = new JMenuItem( "Delete selected tracklet -> X" );
+		menuItem.getAccessibleContext().setAccessibleDescription( "" );
+		helpsubmenu.add( menuItem );
+		menuItem = new JMenuItem( "Hide all but selected tracklet/Show all -> H" );
+		menuItem.getAccessibleContext().setAccessibleDescription( "" );
+		helpsubmenu.add( menuItem );
+		menuItem = new JMenuItem( "Show puncta marker from previous click -> Z" );
+		menuItem.getAccessibleContext().setAccessibleDescription( "" );
+		helpsubmenu.add( menuItem );
+		menuItem = new JMenuItem( "Select flow vector -> W" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
 		return menuBar;
@@ -158,23 +153,20 @@ public class SimpleMenu implements ActionListener, ItemListener {
 			final FileNameExtensionFilter filter = new FileNameExtensionFilter( "*.csv", "csv" );
 			jfc.setFileFilter( filter );
 			jfc.addChoosableFileFilter( filter );
-			final File[] selectedFiles = jfc.getSelectedFiles();
-			System.out.println( selectedFiles[ 0 ].getAbsolutePath() );
-			System.out.println( selectedFiles[ 1 ].getAbsolutePath() );
-				model.setGraph( CSVReader.loadOldCSVs( selectedFiles[ 0 ].getAbsolutePath(), selectedFiles[ 1 ].getAbsolutePath() ) );
+      
+			int returnValue = jfc.showOpenDialog( null );
+			if ( returnValue == JFileChooser.APPROVE_OPTION ) {
+				final File[] selectedFiles = jfc.getSelectedFiles();
+				System.out.println( selectedFiles[ 0 ].getAbsolutePath() );
+				System.out.println( selectedFiles[ 1 ].getAbsolutePath() );
+				model.setGraph( CSVReader.loadOldCSVs( selectedFiles[ 0 ].getAbsolutePath(), selectedFiles[ 1 ].getAbsolutePath() ) ); //How do Fiji coordinates transfer to bdv coordinates?
+				int size = model.getGraph().getPunctas().size();
+				model.getGraph().setLeadSelectedPuncta( model.getGraph().getPunctas().get( size - 1 ) );
+				model.getView().getBdv().getViewerPanel().requestRepaint();
+			}
+
 		}
-		if ( jmi.getText() == "Nearest Neighbor flow" ) {
-			flowMethod = FLOW_NN;
-			model.processFlow( flowMethod );
-		}
-		if ( jmi.getText() == "k-Nearest Neighbor flow" ) {
-			flowMethod = FLOW_kNN;
-			model.processFlow( flowMethod );
-		}
-		if ( jmi.getText() == "Thin Plate Splines Flow" ) {
-			flowMethod = FLOW_TPS;
-			model.processFlow( flowMethod );
-		}
+
 		if ( jmi.getText() == "Key bindings" ) {}
 	}
 
@@ -190,5 +182,6 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		}
 		CSVWriter.writeCsvFile( file, allPuncta, model.getGraph().getEdges() );
 	}
+	
 }
 

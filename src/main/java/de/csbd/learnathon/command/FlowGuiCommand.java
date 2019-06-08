@@ -1,11 +1,13 @@
 package de.csbd.learnathon.command;
 
-import java.awt.Dimension;
+import java.awt.BorderLayout;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
+import java.awt.Rectangle;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
-import javax.swing.JPanel;
 
 import org.scijava.Context;
 import org.scijava.command.Command;
@@ -16,12 +18,20 @@ import org.scijava.ui.UIService;
 import ij.IJ;
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
+import net.imagej.ops.OpService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.Converters;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.util.Util;
-import net.miginfocom.swing.MigLayout;
+
+/**
+ * This is an implementation of manual puncta picking.
+ *
+ * @param <T>
+ *            type
+ * @author Mangal Prakash MPI-CBG / CSBD, Dresden
+ */
 
 @Plugin( menuPath = "Plugins>Puncta Picker GUI", type = Command.class )
 public class FlowGuiCommand implements Command {
@@ -42,14 +52,14 @@ public class FlowGuiCommand implements Command {
 
 	@Override
 	public void run() {
+
 		model = new PunctaPickerModel( toDoubleType( image.getImgPlus().getImg() ) );
-		panel = new PunctaPickerView( model );
-		JPanel p = panel.getPanel();
-		p.setMinimumSize( new Dimension( 500, 500 ) );
-		frame = new JFrame( image.getImgPlus().getSource() );
-		frame.setLayout( new MigLayout( "", "[grow]", "[][]" ) );
+		panel = new PunctaPickerView( model, image, context.getService( OpService.class ) );
+
+		frame = new JFrame();
+		frame.setLayout( new BorderLayout() );
 		
-		frame.add( p, "h 100%, grow, wrap" );
+		frame.add( panel.getPanel(), BorderLayout.CENTER );
 		frame.addWindowListener( new WindowAdapter() {
 
 			@Override
@@ -57,10 +67,22 @@ public class FlowGuiCommand implements Command {
 				panel.close();
 			}
 		} );
+
 		SimpleMenu smenu = new SimpleMenu( model );
 		frame.setJMenuBar( smenu.createMenuBar() );
-		frame.pack();
+		frame.setBounds( getCenteredRectangle( 1200, 900 ) );
 		frame.setVisible( true );
+	}
+
+	public static Rectangle getCenteredRectangle( int w, int h ) {
+		final GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+		final int maxwidth = gd.getDisplayMode().getWidth();
+		final int maxheight = gd.getDisplayMode().getHeight();
+		w = Math.min( w, maxwidth );
+		h = Math.min( h, maxheight );
+		final int x = ( maxwidth - w ) / 2;
+		final int y = ( maxheight - h ) / 2;
+		return new Rectangle( x, y, w, h );
 	}
 
 	private RandomAccessibleInterval< DoubleType > toDoubleType( final RandomAccessibleInterval< ? extends RealType< ? > > image ) {
@@ -74,7 +96,7 @@ public class FlowGuiCommand implements Command {
 		final ImageJ imageJ = new ImageJ();
 		imageJ.ui().showUI();
 
-		IJ.openImage( "res/Stack.tif" ).show();
+		IJ.openImage( "res/Substack.tif" ).show();
 
 		imageJ.command().run( FlowGuiCommand.class, true );
 	}

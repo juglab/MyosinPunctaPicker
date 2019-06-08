@@ -7,6 +7,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import net.imglib2.util.Pair;
+import net.imglib2.util.ValuePair;
+
 public class Graph {
 
 	private List< Puncta > punctas;
@@ -16,11 +19,10 @@ public class Graph {
 	private Puncta punctaLeadSelected;
 	// Holds the latest puncta that was hovered over.
 	private Puncta punctaMouseSelected;
+	//Puncta corresponding to latest edited flow vectors
+	private Puncta punctaOfEditedFlow;
 	// Holds the latest edge that was hovered over.
 	private Edge edgeMouseSelected;
-
-	// Explain what the heck this is
-	private Puncta latest;
 
 	public Graph() {
 		this.punctas = new ArrayList<>();
@@ -64,6 +66,8 @@ public class Graph {
 	}
 
 	public void removeEdge( Edge e ) {
+		e.getA().setSelected( false );
+		e.getB().setSelected( false );
 		edges.remove( e );
 	}
 
@@ -73,7 +77,6 @@ public class Graph {
 
 	public void selectSubgraphContaining( Puncta queryPuncta ) {
 		unselectAll();
-
 		Set< Puncta > visited = new HashSet<>();
 		visited.add( queryPuncta );
 		queryPuncta.setSelected( true );
@@ -93,6 +96,23 @@ public class Graph {
 				visited.add( cIn.getB() );
 			}
 		}
+	}
+
+	public Pair< LinkedList< Puncta >, LinkedList< Edge > > getSelectedTracklet() {
+		LinkedList< Edge > edgeQueue = new LinkedList<>();
+		LinkedList< Puncta > punctaQueue = new LinkedList<>();
+		for ( Edge edge : edges ) {
+			if ( edge.isSelected() ) {
+				edgeQueue.add( edge );
+			}
+		}
+		for ( Puncta p : punctas ) {
+			if ( p.isSelected() ) {
+				punctaQueue.add( p );
+			}
+		}
+		return new ValuePair<>( punctaQueue, edgeQueue );
+
 	}
 
 	public void unselectAll() {
@@ -170,6 +190,10 @@ public class Graph {
 		return punctaMouseSelected;
 	}
 
+	public void getEditedFlowPuncta( Puncta p ) {
+		punctaOfEditedFlow = p;
+	}
+
 	public void setLeadSelectedPuncta( Puncta p ) {
 		punctaLeadSelected = p;
 	}
@@ -178,11 +202,24 @@ public class Graph {
 		punctaMouseSelected = p;
 	}
 
+	public void setEditedFlowPuncta( Puncta p ) {
+		punctaOfEditedFlow = p;
+	}
+
 	public void deleteSelectedPuncta() {
 		for ( Edge e : getAdjecentEdges( getLeadSelectedPuncta() ) ) {
 			edges.remove( e );
 		}
 		punctas.remove( getLeadSelectedPuncta() );
+		unselectAllPunctas();
+		unselectAll();
+
+	}
+
+	private void unselectAllPunctas() {
+		for ( Puncta p : punctas ) {
+			p.setSelected( false );
+		}
 		
 	}
 
@@ -200,6 +237,21 @@ public class Graph {
 		} else {
 			return false;
 		}
+	}
+
+	public boolean punctaInSelectedTracklet( Puncta p ) {
+		boolean state = false;
+		Pair< LinkedList< Puncta >, LinkedList< Edge > > tracklet = getSelectedTracklet();
+		for ( Puncta pun : tracklet.getA() ) {
+			if ( p.equals( pun ) ) {
+				state = true;
+				break;
+			}
+		}
+		if ( state )
+			return true;
+		else
+			return false;
 	}
 
 }

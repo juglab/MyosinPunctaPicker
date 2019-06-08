@@ -8,10 +8,10 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>22.3.0</version>
+		<version>24.0.0</version>
 		<relativePath />
 	</parent>
-
+	
 	<groupId>io.github.mangalp</groupId>
 	<artifactId>MyosinPunctaPicker</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
@@ -106,14 +106,15 @@
 			<artifactId>bigdataviewer-core</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.indago</groupId>
-			<artifactId>Indago</artifactId>
-			<version>0.1.7</version>
-		</dependency>
-		<dependency>
 			<groupId>jitk</groupId>
 			<artifactId>jitk-tps</artifactId>
-			<version>3.0.1-SNAPSHOT</version>
+			<version>3.0.0</version>
 		</dependency>
+		<dependency>
+			<groupId>net.imglib2</groupId>
+			<artifactId>imglib2-algorithm</artifactId>
+			<version> 0.11.1</version>
+		</dependency>
+
 	</dependencies>
 </project>
