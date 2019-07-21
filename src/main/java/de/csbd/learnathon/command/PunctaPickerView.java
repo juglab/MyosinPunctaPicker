@@ -96,6 +96,8 @@ public class PunctaPickerView {
 
 	private ButtonGroup thresholdingModeButtons;
 
+	private JTextField txtThreshold;
+
 	public PunctaPickerView( PunctaPickerModel m, Dataset image, OpService os ) {
 		this.model = m;
 		this.image = image;
@@ -132,7 +134,10 @@ public class PunctaPickerView {
 	}
 
 	public float getThreshold() {
-		return thresholdingSlider.getValue();
+		if ( txtThreshold.getText().isEmpty() )
+			return 20f;
+		else
+			return Float.valueOf( txtThreshold.getText().trim() ).floatValue();
 	}
 
 	public float getDefaultPunctaRadius() {
@@ -458,9 +463,8 @@ public class PunctaPickerView {
 		matchingModeButtons.add( bHungarian );
 
 		JLabel lThreshold = new JLabel( "threshold:" );
-		thresholdingSlider = new JSlider( 10, 180, 20 ); //Negative of threshold is made while running blob detection
-		thresholdingSlider.addChangeListener( e -> sliderChanged( thresholdingSlider ) );
-		thresholdingSlider.setVisible( true );
+		txtThreshold = new JTextField( 5 );
+		txtThreshold.setText( "20.0" );
 
 		thresholdingModeButtons = new ButtonGroup();
 		JRadioButton bCustom = new JRadioButton( "custom threshold" );
@@ -468,7 +472,7 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				thresholdingSlider.setEnabled( true );
+				txtThreshold.setEnabled( true );
 			}
 		} );
 
@@ -477,7 +481,7 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				thresholdingSlider.setEnabled( false );
+				txtThreshold.setEnabled( false );
 			}
 		} );
 
@@ -578,7 +582,7 @@ public class PunctaPickerView {
 		panelFlowProps.add( bCustom, "w 5%" );
 		panelFlowProps.add( bOtsu, "w 5%, growx, wrap" );
 		panelFlowProps.add( lThreshold, "" );
-		panelFlowProps.add( thresholdingSlider, "growx, wrap" );
+		panelFlowProps.add( txtThreshold, "growx, wrap" );
 		panelFlowProps.add( lWindowSize, "" );
 		panelFlowProps.add( windowSizeSlider, "growx, wrap" );
 		panelFlowProps.add( lRelativeWeight, "" );

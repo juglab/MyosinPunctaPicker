@@ -37,7 +37,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 
 		//create a menubar
 		JMenuBar menuBar;
-		JMenu filemenu, helpmenu;
+		JMenu filemenu, helpmenu, thresholdmenu;
 		JMenu helpsubmenu;
 		JMenuItem menuItem;
 
@@ -108,6 +108,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 		menuItem = new JMenuItem( "Select flow vector -> W" );
 		menuItem.getAccessibleContext().setAccessibleDescription( "" );
 		helpsubmenu.add( menuItem );
+
 		return menuBar;
 	
 	}

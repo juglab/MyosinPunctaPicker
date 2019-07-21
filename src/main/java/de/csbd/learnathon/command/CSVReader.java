@@ -22,20 +22,22 @@ public class CSVReader {
 			String headerLine = br.readLine();
 			boolean indicator = false;
 			while ( ( line = br.readLine() ) != null ) {
-				
+				line = line.trim().replaceAll( "^\"|\"$", "" );
 				if ( line.equals( "edgep1,edgep2" ) ) {
 					indicator = true;
 					line = br.readLine(); 
 				}
 				if(!indicator) {
 					String[] values = line.split( COMMA_DELIMITER );
+
 					Puncta p = new Puncta( Float.parseFloat( values[ 1 ] ), Float.parseFloat( values[ 2 ] ), Integer
 							.parseInt( values[ 3 ] ), defaultRadius );
 					loadedPunctas.add( p );
 					}
 				else {
 					String[] values = line.split( COMMA_DELIMITER );
-					Edge e = new Edge( loadedPunctas.get( Integer.parseInt( values[ 0 ] ) ), loadedPunctas.get( Integer.parseInt( values[ 1 ] ) ) );
+					Edge e = new Edge( loadedPunctas.get( Integer.parseInt( values[ 0 ].trim().replaceAll( "^\"|\"$", "" ) ) ), loadedPunctas
+							.get( Integer.parseInt( values[ 1 ].trim().replaceAll( "^\"|\"$", "" ) ) ) );
 					loadedEdges.add(e );
 				}
 				}
