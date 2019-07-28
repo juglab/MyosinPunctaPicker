@@ -72,6 +72,10 @@ public class PunctaPickerModel {
 		flowComputation.computeSemiAutoInterpolatedFlow( getRawData() );
 	}
 
+	public void processManuallyInterpolatedFlow() {
+		flowComputation.computeManuallyInterpolatedFlow( getRawData() );
+	}
+
 	public float getDefaultRadius() {
 		return view.getDefaultPunctaRadius();
 	}

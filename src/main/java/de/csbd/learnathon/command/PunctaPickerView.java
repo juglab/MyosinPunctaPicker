@@ -98,6 +98,10 @@ public class PunctaPickerView {
 
 	private JTextField txtThreshold;
 
+	private ButtonGroup Buttons;
+
+	private ButtonGroup flowModeButtons;
+
 	public PunctaPickerView( PunctaPickerModel m, Dataset image, OpService os ) {
 		this.model = m;
 		this.image = image;
@@ -132,6 +136,10 @@ public class PunctaPickerView {
 	public double getRelWeight() {
 		return relWeightSlider.getValue();
 	}
+
+//	public String getFlowMode() {
+//		return Utils.getSelectedButtonText( flowModeButtons );
+//	}
 
 	public float getThreshold() {
 		if ( txtThreshold.getText().isEmpty() )
@@ -400,10 +408,10 @@ public class PunctaPickerView {
 		panelPickingProps.add( lMaxDist, "" );
 		panelPickingProps.add( txtMaxDist, "growx, wrap" );
 
-		// FLOW PROPS
+		// SEMI-AUTO FLOW PROPS
 
 		JPanel panelFlowProps = new JPanel( new MigLayout() );
-		panelFlowProps.setBorder( BorderFactory.createTitledBorder( "flow" ) );
+		panelFlowProps.setBorder( BorderFactory.createTitledBorder( "manual/semi-auto flow" ) );
 
 		showFlowCheckBox = new JCheckBox( "show" );
 		showFlowCheckBox.addActionListener( new ActionListener() {
@@ -538,25 +546,73 @@ public class PunctaPickerView {
 		} );
 		densitySlider.setVisible( true );
 
+		flowModeButtons = new ButtonGroup();
+		JRadioButton bManualInterpFlowMode = new JRadioButton( "manual interp." );
+		bManualInterpFlowMode.setActionCommand( "manual interp." );
+		bManualInterpFlowMode.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				relWeightSlider.setEnabled( false );
+				windowSizeSlider.setEnabled( false );
+				txtThreshold.setEnabled( false );
+				bCustom.setEnabled( false );
+				bOtsu.setEnabled( false );
+				bGreedy.setEnabled( false );
+				bHungarian.setEnabled( false );
+				showAutoFlowOnlyCheckBox.setEnabled( false );
+			}
+		} );
+		JRadioButton bSemiAutoInterpFlowMode = new JRadioButton( "semi-auto interp." );
+		bSemiAutoInterpFlowMode.setActionCommand( "semi-auto interp." );
+		bSemiAutoInterpFlowMode.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				relWeightSlider.setEnabled( true );
+				windowSizeSlider.setEnabled( true );
+				txtThreshold.setEnabled( true );
+				bCustom.setEnabled( true );
+				bOtsu.setEnabled( true );
+				bGreedy.setEnabled( true );
+				bHungarian.setEnabled( true );
+				showAutoFlowOnlyCheckBox.setEnabled( true );
+			}
+		} );
+		flowModeButtons.add( bManualInterpFlowMode );
+		flowModeButtons.add( bSemiAutoInterpFlowMode );
+
 		JButton bComputeSemiAutoFlow = new JButton( "(re)compute" );
 		bComputeSemiAutoFlow.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-
-				model.extractAndInitializeControlVectorsFromHandPickedTracklets();
-				showFlowCheckBox.setSelected( true );
-				showAutoFlowOnlyFlag = false;
-				model.processSemiAutomatedFlow();
-				ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
-				ArrayList< FlowVector > autoFeatureFlow = model.getFlowVectorsCollection().getAutofeatureFlowVectors();
-				RandomAccessibleInterval< DoubleType > flowData = model.getFlowVectorsCollection().getDenseFlow();
-				flowOverlay.setHandPickedSparseFlow( handPickedSparseFlow );
-				flowOverlay.setAutoFeatureFlow( autoFeatureFlow );
-				flowOverlay.setDenseFlow( flowData );
-				flowOverlay.prepareSpacedFlow();
-				flowOverlay.setVisible( true );
-				flowOverlay.requestRepaint();
+				if ( flowModeButtons.getSelection().getActionCommand() == "manual interp." ) {
+					model.extractAndInitializeControlVectorsFromHandPickedTracklets(); //TODO Need to check from here
+					showFlowCheckBox.setSelected( true );
+					model.processManuallyInterpolatedFlow();
+					ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
+					RandomAccessibleInterval< DoubleType > flowData = model.getFlowVectorsCollection().getDenseFlow();
+					flowOverlay.setHandPickedSparseFlow( handPickedSparseFlow );
+					flowOverlay.setDenseFlow( flowData );
+					flowOverlay.prepareSpacedFlow();
+					flowOverlay.setVisible( true );
+					flowOverlay.requestRepaint();
+				} else {
+					model.extractAndInitializeControlVectorsFromHandPickedTracklets();
+					showFlowCheckBox.setSelected( true );
+					showAutoFlowOnlyFlag = false;
+					model.processSemiAutomatedFlow();
+					ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
+					ArrayList< FlowVector > autoFeatureFlow = model.getFlowVectorsCollection().getAutofeatureFlowVectors();
+					RandomAccessibleInterval< DoubleType > flowData = model.getFlowVectorsCollection().getDenseFlow();
+					flowOverlay.setHandPickedSparseFlow( handPickedSparseFlow );
+					flowOverlay.setAutoFeatureFlow( autoFeatureFlow );
+					flowOverlay.setDenseFlow( flowData );
+					flowOverlay.prepareSpacedFlow();
+					flowOverlay.setVisible( true );
+					flowOverlay.requestRepaint();
+				}
 
 			}
 		} );
@@ -575,6 +631,8 @@ public class PunctaPickerView {
 		txtNeighbors = new JTextField( 2 );
 		txtNeighbors.setText( "3" );
 
+		panelFlowProps.add( bManualInterpFlowMode, "w 5%" );
+		panelFlowProps.add( bSemiAutoInterpFlowMode, "w 5%, growx, wrap" );
 		panelFlowProps.add( showFlowCheckBox, " w 5%" );
 		panelFlowProps.add( showAutoFlowOnlyCheckBox, "w 5%, growx, wrap" );
 		panelFlowProps.add( bGreedy, "w 5%" );
@@ -599,11 +657,11 @@ public class PunctaPickerView {
 		helper.add( panelFlowProps, "growx, wrap" );
 
 		// make default selection such that action is thrown
+		bManualInterpFlowMode.doClick();
 		bAutomaticSize.doClick();
 		bHungarian.doClick();
 		bOtsu.doClick();
 		showTrackletsCheckBox.setSelected( true );
-
 		return helper;
 	}
 

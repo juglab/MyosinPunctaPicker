@@ -73,6 +73,20 @@ public class FlowComputation {
 		flowVecCol.setDenseFlow( denseFlow );
 	}
 
+	public < T extends RealType< T > & NativeType< T > > void computeManuallyInterpolatedFlow( RandomAccessibleInterval< T > im ) { //Experimental, may be deleted later
+
+		float sigma = 6;
+		RandomAccessibleInterval< T > smoothed_img = gaussian_smoothing2D( im, sigma );
+		ArrayList< FlowVector > handPicked = flowVecCol.getSparsehandPickedFlowVectors();
+		Img< T > img = model.getView().getImage();
+		if ( !( handPicked == null ) && !( handPicked.isEmpty() ) ) {
+			RandomAccessibleInterval< T > denseFlow =
+					interpolateFlowkNN( handPicked, smoothed_img, model.getView().getKNeighbors() );
+			flowVecCol.setDenseFlow( denseFlow );
+		}
+
+	}
+
 	private < T extends RealType< T > & NativeType< T > > ArrayList< FlowVector > computeBlobBasedAutoFlowVecs(
 			Img< T > img,
 			ArrayList< Puncta > allFlowBlobs ) {
