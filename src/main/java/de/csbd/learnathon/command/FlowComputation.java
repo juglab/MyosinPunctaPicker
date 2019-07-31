@@ -23,14 +23,17 @@ import net.imglib2.histogram.Histogram1d;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.neighborsearch.InverseDistanceWeightingInterpolatorFactory;
+import net.imglib2.loops.LoopBuilder;
 import net.imglib2.neighborsearch.KNearestNeighborSearch;
 import net.imglib2.neighborsearch.KNearestNeighborSearchOnKDTree;
 import net.imglib2.type.NativeType;
+import net.imglib2.type.Type;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.util.Pair;
+import net.imglib2.util.Util;
 import net.imglib2.util.ValuePair;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
@@ -38,20 +41,18 @@ import net.imglib2.view.Views;
 public class FlowComputation {
 
 	private PunctaPickerModel model;
-	private FlowVectorsCollection flowVecCol;
+	private FlowVectorsCollection flowVecCollection;
 	private OpService os;
 	private ArrayList< FlowVector > autoFeatures;
 
 	public FlowComputation( PunctaPickerModel model ) {
 		this.model = model;
-		this.flowVecCol = model.getFlowVectorsCollection();
+		this.flowVecCollection = model.getFlowVectorsCollection();
 	}
-
-	public FlowComputation() {}
 
 	public ArrayList< FlowVector > initializeControlVectorsForFlow() {
 		ArrayList< FlowVector > sparseHandPickedFlow = extractFlowVectorsFromClicks();
-		flowVecCol.setSparseHandPickedFlow( sparseHandPickedFlow );
+		flowVecCollection.setSparseHandPickedFlow( sparseHandPickedFlow );
 		return sparseHandPickedFlow;
 	}
 
@@ -59,7 +60,7 @@ public class FlowComputation {
 
 		float sigma = 6;
 		RandomAccessibleInterval< T > smoothed_img = gaussian_smoothing2D( im, sigma );
-		ArrayList< FlowVector > handPicked = flowVecCol.getSparsehandPickedFlowVectors();
+		ArrayList< FlowVector > handPicked = flowVecCollection.getSparsehandPickedFlowVectors();
 		Img< T > img = model.getView().getImage();
 		ArrayList< Puncta > allFlowBlobs = new ArrayList<>();
 		autoFeatures = computeBlobBasedAutoFlowVecs( img, allFlowBlobs );
@@ -69,20 +70,20 @@ public class FlowComputation {
 		concatenatedList.addAll( autoFeatures );
 		RandomAccessibleInterval< T > denseFlow =
 				interpolateFlowkNN( concatenatedList, smoothed_img, model.getView().getKNeighbors() );
-		flowVecCol.setAutoFeatureFlow( autoFeatures );
-		flowVecCol.setDenseFlow( denseFlow );
+		flowVecCollection.setAutoFeatureFlow( autoFeatures );
+		flowVecCollection.setDenseFlow( denseFlow );
 	}
 
 	public < T extends RealType< T > & NativeType< T > > void computeManuallyInterpolatedFlow( RandomAccessibleInterval< T > im ) { //Experimental, may be deleted later
 
 		float sigma = 6;
 		RandomAccessibleInterval< T > smoothed_img = gaussian_smoothing2D( im, sigma );
-		ArrayList< FlowVector > handPicked = flowVecCol.getSparsehandPickedFlowVectors();
+		ArrayList< FlowVector > handPicked = flowVecCollection.getSparsehandPickedFlowVectors();
 		Img< T > img = model.getView().getImage();
 		if ( !( handPicked == null ) && !( handPicked.isEmpty() ) ) {
 			RandomAccessibleInterval< T > denseFlow =
 					interpolateFlowkNN( handPicked, smoothed_img, model.getView().getKNeighbors() );
-			flowVecCol.setDenseFlow( denseFlow );
+			flowVecCollection.setDenseFlow( denseFlow );
 		}
 
 	}
@@ -351,5 +352,43 @@ public class FlowComputation {
 		}
 
 		return new SampleList<>( imageResponse );
+	}
+
+	public < T extends RealType< T > & NativeType< T > > void modifyOpticalFlow() {
+		ArrayList< FlowVector > handPickedVectors = flowVecCollection.getSparsehandPickedFlowVectors();
+		RandomAccessibleInterval< T > denseOpticalFlowOriginal = ( RandomAccessibleInterval< T > ) flowVecCollection.getDenseFlow();
+		RandomAccessibleInterval< T > denseFlowCopy =
+				Util.getSuitableImgFactory( denseOpticalFlowOriginal, Util.getTypeFromInterval( denseOpticalFlowOriginal ) ).create( denseOpticalFlowOriginal );
+		LoopBuilder.setImages( denseFlowCopy, denseOpticalFlowOriginal ).forEachPixel( Type::set );
+		double sigma = model.getView().getOpticalFlowModificationWindowSize(); //TODO change this default
+		for ( FlowVector flowVector : handPickedVectors ) {
+			float x = flowVector.getX();
+			float y = flowVector.getY();
+			int t = flowVector.getT();
+			for ( int i = 0; i < 2; i++ ) {
+				IntervalView< T > image = Views.hyperSlice( denseFlowCopy, 2, t + i );
+				RandomAccessible< T > infiniteImg = Views.extendMirrorSingle( image );
+				FinalInterval cropped = Intervals.createMinMax(
+						( long ) ( x - sigma / 2 ),
+						( long ) ( y - sigma / 2 ),
+						0,
+						( long ) ( x + sigma / 2 ),
+						( long ) ( y + sigma / 2 ),
+						0 );
+				RandomAccessibleInterval< T > region = Views.interval( image, cropped );
+				Gauss3.gauss( sigma, infiniteImg, region );
+				ImageJFunctions.show( image );
+			}
+
+		}
+		flowVecCollection.setDenseFlow( denseFlowCopy );
+
+	}
+
+	public void resetOpticalFlow() {
+//		if ( !( denseOpticalFlowOriginal == null ) ) {
+//			flowVecCollection.setDenseFlow( denseOpticalFlowOriginal );
+//		}
+
 	}
 }

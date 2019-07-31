@@ -80,6 +80,15 @@ public class PunctaPickerModel {
 		return view.getDefaultPunctaRadius();
 	}
 
+	public void modifyOpticalFlow() {
+		flowComputation.modifyOpticalFlow();
+	}
+
+	public void resetOpticalFlow() {
+		flowComputation.resetOpticalFlow();
+
+	}
+
 }
 
 
