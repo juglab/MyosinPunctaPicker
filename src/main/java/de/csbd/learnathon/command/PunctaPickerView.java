@@ -140,7 +140,7 @@ public class PunctaPickerView {
 		if ( txtWindowAroundNeighbor.getText().isEmpty() )
 			return 5d;
 		else
-			return Double.valueOf( txtThreshold.getText().trim() ).doubleValue();
+			return Double.valueOf( txtWindowAroundNeighbor.getText().trim() ).doubleValue();
 	}
 
 	public double getRelWeight() {
@@ -503,9 +503,9 @@ public class PunctaPickerView {
 				ArrayList< FlowVector > handPickedTracklets = model.extractAndInitializeControlVectorsFromHandPickedTracklets();
 				if ( !( handPickedTracklets == null ) && !( handPickedTracklets.isEmpty() ) ) {
 					model.modifyOpticalFlow();
-					ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
+//					ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
 					RandomAccessibleInterval< DoubleType > flowData = model.getFlowVectorsCollection().getDenseFlow();
-					flowOverlay.setHandPickedSparseFlow( handPickedSparseFlow );
+//					flowOverlay.setHandPickedSparseFlow( handPickedSparseFlow );
 					flowOverlay.setDenseFlow( flowData );
 					flowOverlay.prepareSpacedFlow();
 					flowOverlay.setVisible( true );

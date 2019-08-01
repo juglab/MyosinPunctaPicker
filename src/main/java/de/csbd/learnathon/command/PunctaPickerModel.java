@@ -81,7 +81,8 @@ public class PunctaPickerModel {
 	}
 
 	public void modifyOpticalFlow() {
-		flowComputation.modifyOpticalFlow();
+//		flowComputation.modifyOpticalFlow();
+		flowComputation.modifyOpticalFlowWIthInterpolation();
 	}
 
 	public void resetOpticalFlow() {

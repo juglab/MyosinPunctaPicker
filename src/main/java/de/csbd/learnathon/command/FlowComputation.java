@@ -11,8 +11,11 @@ import org.scijava.table.GenericTable;
 import circledetection.command.BlobDetectionCommand;
 import ij.ImagePlus;
 import net.imagej.ops.OpService;
+import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
+import net.imglib2.IterableInterval;
 import net.imglib2.KDTree;
+import net.imglib2.RandomAccess;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealPoint;
@@ -289,6 +292,53 @@ public class FlowComputation {
 		return stack;
 	}
 
+	public < T extends RealType< T > & NativeType< T > > void modifyOpticalFlowWIthInterpolation() {
+		ArrayList< FlowVector > handPickedVectors = flowVecCollection.getSparsehandPickedFlowVectors();
+		RandomAccessibleInterval< T > denseOpticalFlowOriginal = ( RandomAccessibleInterval< T > ) flowVecCollection.getDenseFlow();
+		RandomAccessibleInterval< T > denseFlowCopy =
+				Util.getSuitableImgFactory( denseOpticalFlowOriginal, Util.getTypeFromInterval( denseOpticalFlowOriginal ) ).create(
+						denseOpticalFlowOriginal );
+		LoopBuilder.setImages( denseFlowCopy, denseOpticalFlowOriginal ).forEachPixel( ( a, b ) -> a.setReal( b.getRealFloat() ) );
+		double windowSize = model.getView().getOpticalFlowModificationWindowSize();
+//		final BlendingFunctions.Blender blender = new BlendingFunctions.LinearlyBlendedFlow( ( float ) windowSize );
+		final BlendingFunctions.Blender blender = new BlendingFunctions.PreferGroundTruthFlow();
+//		final BlendingFunctions.Blender blender = new BlendingFunctions.GaussianBlendedFlow( ( float ) windowSize );
+//		final BlendingFunctions.Blender blender = new BlendingFunctions.GaussianSmoothedFlow( ( float ) windowSize );
+		for ( FlowVector gtFlowVector : handPickedVectors ) {
+
+			int x = ( int ) gtFlowVector.getX();
+			int y = ( int ) gtFlowVector.getY();
+			int t = gtFlowVector.getT();
+			double[] uv = new double[] { gtFlowVector.getU(), gtFlowVector.getV() };
+
+			final FinalInterval sweepingWindow = Intervals.createMinMax(
+					( long ) ( x - windowSize / 2 ),
+					( long ) ( y - windowSize / 2 ),
+					0,
+					( long ) ( x + windowSize / 2 ),
+					( long ) ( y + windowSize / 2 ),
+					0 );
+
+			for ( int i = 0; i < 2; i++ ) {
+				IntervalView< T > slice = Views.hyperSlice( denseFlowCopy, 2, 2 * t + i );
+				final IterableInterval< T > denseFlowCopyWindow = Views.iterable( Views.interval( slice, sweepingWindow ) );
+				final Cursor< T > c = denseFlowCopyWindow.localizingCursor();
+				while ( c.hasNext() ) {
+					c.next();
+					float r = ( float ) Math.sqrt(
+							( c.getFloatPosition( 0 ) - x ) * ( c.getFloatPosition( 0 ) - x ) + ( c.getFloatPosition( 1 ) - y ) * ( c
+									.getFloatPosition( 1 ) - y ) );
+					float alpha = blender.getAlpha( r );
+					float beta = blender.getBeta( r );
+					double flow = alpha * uv[ i ] + beta * c.get().getRealDouble();
+					c.get().setReal( flow );
+				}
+			}
+
+		}
+		flowVecCollection.setDenseFlow( denseFlowCopy );
+
+	}
 
 	public < T extends RealType< T > & NativeType< T > > List< Puncta > computeAllBlobs( Img< T > img, int t ) { //Just for experimental purpose, maybe deleted later
 		double minScale = 1;
@@ -360,14 +410,17 @@ public class FlowComputation {
 		RandomAccessibleInterval< T > denseFlowCopy =
 				Util.getSuitableImgFactory( denseOpticalFlowOriginal, Util.getTypeFromInterval( denseOpticalFlowOriginal ) ).create( denseOpticalFlowOriginal );
 		LoopBuilder.setImages( denseFlowCopy, denseOpticalFlowOriginal ).forEachPixel( Type::set );
-		double sigma = model.getView().getOpticalFlowModificationWindowSize(); //TODO change this default
+		double sigma = model.getView().getOpticalFlowModificationWindowSize();
 		for ( FlowVector flowVector : handPickedVectors ) {
 			float x = flowVector.getX();
 			float y = flowVector.getY();
 			int t = flowVector.getT();
+			double u = flowVector.getU();
+			double v = flowVector.getV();
 			for ( int i = 0; i < 2; i++ ) {
 				IntervalView< T > image = Views.hyperSlice( denseFlowCopy, 2, t + i );
 				RandomAccessible< T > infiniteImg = Views.extendMirrorSingle( image );
+				
 				FinalInterval cropped = Intervals.createMinMax(
 						( long ) ( x - sigma / 2 ),
 						( long ) ( y - sigma / 2 ),
@@ -375,9 +428,24 @@ public class FlowComputation {
 						( long ) ( x + sigma / 2 ),
 						( long ) ( y + sigma / 2 ),
 						0 );
+
+				LoopBuilder.setImages( Views.interval( infiniteImg, cropped ) ).forEachPixel( ( c ) -> c.setZero() );
+				RandomAccess< T > ra = infiniteImg.randomAccess();
+				ra.setPosition( ( int ) x, 0 );
+				ra.setPosition( ( int ) y, 1 );
+				double scaling_factor = 0;
+				if ( i == 0 ) {
+					ra.get().setReal( u );
+					scaling_factor = u;
+				} else {
+					ra.get().setReal( v );
+					scaling_factor = v;
+				}
 				RandomAccessibleInterval< T > region = Views.interval( image, cropped );
 				Gauss3.gauss( sigma, infiniteImg, region );
-				ImageJFunctions.show( image );
+				double actualEffect = ra.get().getRealDouble();
+				double scaledEffect = scaling_factor / actualEffect;
+				LoopBuilder.setImages( Views.interval( infiniteImg, cropped ) ).forEachPixel( ( c ) -> c.mul( scaledEffect ) );
 			}
 
 		}
