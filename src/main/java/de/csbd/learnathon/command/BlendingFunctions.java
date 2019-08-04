@@ -79,7 +79,7 @@ public class BlendingFunctions {
 
 		public GaussianSmoothedFlow( float windowSize ) {
 			this.windowSize = windowSize;
-			this.sigma = windowSize / 6; // The effect of gaussian is mostly within 3 sigma and the gaussian spreads half way across window size
+			this.sigma = windowSize; // The effect of gaussian is mostly within 3 sigma and the gaussian spreads half way across window size
 		}
 
 		@Override

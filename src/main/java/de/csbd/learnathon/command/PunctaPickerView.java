@@ -63,47 +63,31 @@ public class PunctaPickerView {
 	private Overlay overlay;
 	private GhostOverlay ghostOverlay;
 	private FlowOverlay flowOverlay;
-
 	private JCheckBox activeTrackletCheckBox;
 	private JSlider windowSizeSlider;
-
 	private ButtonGroup pickingModeButtons;
-
 	private JTextField txtDefaultPunctaRadius;
 	private JTextField txtMinScale;
 	private JTextField txtMaxScale;
 	private JTextField txtStepScale;
 	private JTextField txtMaxDist;
-
 	private JCheckBox showPreviousMarkerCheckBox;
-
 	private JCheckBox showFlowCheckBox;
-
 	private JTextField txtNeighbors;
-
 	private JCheckBox showTrackletsCheckBox;
-
 	private boolean showAutoFlowOnlyFlag;
-
 	private JSlider relWeightSlider;
-
 	private JSlider fadeOutSlider;
-
 	private JSlider densitySlider;
-
 	private JSlider thresholdingSlider;
-
 	private ButtonGroup matchingModeButtons;
-
 	private ButtonGroup thresholdingModeButtons;
-
 	private JTextField txtThreshold;
-
 	private ButtonGroup Buttons;
-
 	private ButtonGroup flowModeButtons;
-
 	private JTextField txtWindowAroundNeighbor;
+	private ButtonGroup opticalFlowMixingModeButtons;
+	private String opticalFlowMode;
 
 	public PunctaPickerView( PunctaPickerModel m, Dataset image, OpService os ) {
 		this.model = m;
@@ -484,12 +468,48 @@ public class PunctaPickerView {
 			public void actionPerformed( ActionEvent e ) {
 				RandomAccessibleInterval< DoubleType > denseFlow = TiffLoader.loadFlowFieldFromDirectory();
 				model.getFlowVectorsCollection().setDenseFlow( denseFlow );
+				model.getFlowVectorsCollection().setOriginalOpticalFlow( denseFlow );
 				flowOverlay.setDenseFlow( denseFlow );
 				flowOverlay.prepareSpacedFlow();
 				flowOverlay.setVisible( true );
 				flowOverlay.requestRepaint();
 			}
 		} );
+
+		opticalFlowMixingModeButtons = new ButtonGroup();
+		JRadioButton bGt = new JRadioButton( "prefer GT" );
+		bGt.addActionListener( new ActionListener() {
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				opticalFlowMode = "prefer GT";
+			}
+		} );
+		JRadioButton bLinearBlend = new JRadioButton( "linear blend" );
+		bLinearBlend.addActionListener( new ActionListener() {
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				opticalFlowMode = "linear blend";
+			}
+		} );
+		JRadioButton bGaussianBlend = new JRadioButton( "gaussian blend" );
+		bGaussianBlend.addActionListener( new ActionListener() {
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				opticalFlowMode = "gaussian blend";
+			}
+		} );
+		JRadioButton bGaussianSmoothed = new JRadioButton( "gaussian smoothed gt" );
+		bGaussianSmoothed.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				opticalFlowMode = "gaussian smoothed gt";
+			}
+		} );
+		opticalFlowMixingModeButtons.add( bGt );
+		opticalFlowMixingModeButtons.add( bLinearBlend );
+		opticalFlowMixingModeButtons.add( bGaussianBlend );
+		opticalFlowMixingModeButtons.add( bGaussianSmoothed );
 
 		JLabel lWindowAroundNeighor = new JLabel( "modfication window:" );
 		txtWindowAroundNeighbor = new JTextField( 2 );
@@ -502,7 +522,7 @@ public class PunctaPickerView {
 			public void actionPerformed( ActionEvent e ) {
 				ArrayList< FlowVector > handPickedTracklets = model.extractAndInitializeControlVectorsFromHandPickedTracklets();
 				if ( !( handPickedTracklets == null ) && !( handPickedTracklets.isEmpty() ) ) {
-					model.modifyOpticalFlow();
+					model.modifyOpticalFlow( opticalFlowMode );
 //					ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
 					RandomAccessibleInterval< DoubleType > flowData = model.getFlowVectorsCollection().getDenseFlow();
 //					flowOverlay.setHandPickedSparseFlow( handPickedSparseFlow );
@@ -519,11 +539,21 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				model.resetOpticalFlow();
+				if ( !( model.getFlowVectorsCollection().getOriginalOpticalFlow() == null ) ) {
+					model.resetOpticalFlow();
+					flowOverlay.setDenseFlow( model.getFlowVectorsCollection().getOriginalOpticalFlow() );
+					flowOverlay.prepareSpacedFlow();
+					flowOverlay.setVisible( true );
+					flowOverlay.requestRepaint();
+				}
 			}
 		} );
 
 		panelOpticalFlowProps.add( bLoadOpticalFlow, "w 5%, growx, wrap" );
+		panelOpticalFlowProps.add( bGt, "w 5%, growx, wrap" );
+		panelOpticalFlowProps.add( bLinearBlend, "w 5%, growx, wrap" );
+		panelOpticalFlowProps.add( bGaussianBlend, "w 5%, growx, wrap" );
+		panelOpticalFlowProps.add( bGaussianSmoothed, "w 5%, growx, wrap" );
 		panelOpticalFlowProps.add( lWindowAroundNeighor, "w 5%" );
 		panelOpticalFlowProps.add( txtWindowAroundNeighbor, "w 5%, growx, wrap" );
 		panelOpticalFlowProps.add( bModifyOpticalFlow, "w 5%" );

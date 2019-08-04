@@ -292,7 +292,7 @@ public class FlowComputation {
 		return stack;
 	}
 
-	public < T extends RealType< T > & NativeType< T > > void modifyOpticalFlowWIthInterpolation() {
+	public < T extends RealType< T > & NativeType< T > > void modifyOpticalFlowWIthInterpolation( String opticalFlowMode ) {
 		ArrayList< FlowVector > handPickedVectors = flowVecCollection.getSparsehandPickedFlowVectors();
 		RandomAccessibleInterval< T > denseOpticalFlowOriginal = ( RandomAccessibleInterval< T > ) flowVecCollection.getDenseFlow();
 		RandomAccessibleInterval< T > denseFlowCopy =
@@ -300,14 +300,21 @@ public class FlowComputation {
 						denseOpticalFlowOriginal );
 		LoopBuilder.setImages( denseFlowCopy, denseOpticalFlowOriginal ).forEachPixel( ( a, b ) -> a.setReal( b.getRealFloat() ) );
 		double windowSize = model.getView().getOpticalFlowModificationWindowSize();
-//		final BlendingFunctions.Blender blender = new BlendingFunctions.LinearlyBlendedFlow( ( float ) windowSize );
-		final BlendingFunctions.Blender blender = new BlendingFunctions.PreferGroundTruthFlow();
-//		final BlendingFunctions.Blender blender = new BlendingFunctions.GaussianBlendedFlow( ( float ) windowSize );
-//		final BlendingFunctions.Blender blender = new BlendingFunctions.GaussianSmoothedFlow( ( float ) windowSize );
+		BlendingFunctions.Blender blender = null;
+		if ( opticalFlowMode == "prefer GT" ) {
+			blender = new BlendingFunctions.GaussianBlendedFlow( ( float ) windowSize );
+		} else if ( opticalFlowMode == "linear blend" ) {
+			blender = new BlendingFunctions.LinearlyBlendedFlow( ( float ) windowSize );
+		} else if ( opticalFlowMode == "gaussian blend" ) {
+			blender = new BlendingFunctions.GaussianBlendedFlow( ( float ) windowSize );
+		} else if ( opticalFlowMode == "gaussian smoothed gt" ) {
+			blender = new BlendingFunctions.GaussianSmoothedFlow( ( float ) windowSize );
+		}
+
 		for ( FlowVector gtFlowVector : handPickedVectors ) {
 
-			int x = ( int ) gtFlowVector.getX();
-			int y = ( int ) gtFlowVector.getY();
+			int x = Math.round( gtFlowVector.getX() );
+			int y = Math.round( gtFlowVector.getY() );
 			int t = gtFlowVector.getT();
 			double[] uv = new double[] { gtFlowVector.getU(), gtFlowVector.getV() };
 
@@ -324,13 +331,14 @@ public class FlowComputation {
 				final IterableInterval< T > denseFlowCopyWindow = Views.iterable( Views.interval( slice, sweepingWindow ) );
 				final Cursor< T > c = denseFlowCopyWindow.localizingCursor();
 				while ( c.hasNext() ) {
-					c.next();
+					c.fwd();
 					float r = ( float ) Math.sqrt(
 							( c.getFloatPosition( 0 ) - x ) * ( c.getFloatPosition( 0 ) - x ) + ( c.getFloatPosition( 1 ) - y ) * ( c
 									.getFloatPosition( 1 ) - y ) );
 					float alpha = blender.getAlpha( r );
 					float beta = blender.getBeta( r );
 					double flow = alpha * uv[ i ] + beta * c.get().getRealDouble();
+
 					c.get().setReal( flow );
 				}
 			}
@@ -454,9 +462,9 @@ public class FlowComputation {
 	}
 
 	public void resetOpticalFlow() {
-//		if ( !( denseOpticalFlowOriginal == null ) ) {
-//			flowVecCollection.setDenseFlow( denseOpticalFlowOriginal );
-//		}
+		if ( !( flowVecCollection.getOriginalOpticalFlow() == null ) ) {
+			flowVecCollection.setDenseFlow( flowVecCollection.getOriginalOpticalFlow() );
+		}
 
 	}
 }

@@ -154,8 +154,8 @@ public class FlowOverlay extends BdvOverlay {
 		final Graphics2D g2 = g;
 		g2.setStroke( new BasicStroke( 1 ) );
 
-		int xto = ( int ) ( x + u );
-		int yto = ( int ) ( y + v );
+		int xto = ( int ) Math.round( x + u );
+		int yto = ( int ) Math.round( y + v );
 
 		final double[] from = new double[] { x, y };
 		final double[] to = new double[] { xto, yto };

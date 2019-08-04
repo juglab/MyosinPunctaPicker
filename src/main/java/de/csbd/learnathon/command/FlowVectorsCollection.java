@@ -15,6 +15,7 @@ public class FlowVectorsCollection {
 	private RandomAccessibleInterval denseFlow;
 	private ArrayList< FlowVector > spacedFlow;
 	private ArrayList< FlowVector > editedFlow = new ArrayList<>();
+	private RandomAccessibleInterval< DoubleType > originalOpticalFlow;
 
 	public FlowVectorsCollection() {
 	}
@@ -84,6 +85,14 @@ public class FlowVectorsCollection {
 		}
 		else
 			return null;
+	}
+
+	public void setOriginalOpticalFlow( RandomAccessibleInterval< DoubleType > denseFlow ) {
+		originalOpticalFlow = denseFlow;
+	}
+
+	public RandomAccessibleInterval< DoubleType > getOriginalOpticalFlow() {
+		return originalOpticalFlow;
 	}
 
 }
