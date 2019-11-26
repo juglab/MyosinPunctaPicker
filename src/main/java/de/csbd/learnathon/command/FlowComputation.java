@@ -292,7 +292,7 @@ public class FlowComputation {
 		return stack;
 	}
 
-	public < T extends RealType< T > & NativeType< T > > void modifyOpticalFlowWIthInterpolation( String opticalFlowMode ) {
+	public < T extends RealType< T > & NativeType< T > > void modifyOpticalFlowWithInterpolation( String opticalFlowMode ) {
 		ArrayList< FlowVector > handPickedVectors = flowVecCollection.getSparsehandPickedFlowVectors();
 		RandomAccessibleInterval< T > denseOpticalFlowOriginal = ( RandomAccessibleInterval< T > ) flowVecCollection.getDenseFlow();
 		RandomAccessibleInterval< T > denseFlowCopy =
@@ -301,7 +301,7 @@ public class FlowComputation {
 		LoopBuilder.setImages( denseFlowCopy, denseOpticalFlowOriginal ).forEachPixel( ( a, b ) -> a.setReal( b.getRealFloat() ) );
 		double windowSize = model.getView().getOpticalFlowModificationWindowSize();
 		BlendingFunctions.Blender blender = null;
-		if ( opticalFlowMode == "prefer GT" ) {
+		if ( opticalFlowMode == "prefer hand picked only" ) {
 			blender = new BlendingFunctions.GaussianBlendedFlow( ( float ) windowSize );
 		} else if ( opticalFlowMode == "linear blend" ) {
 			blender = new BlendingFunctions.LinearlyBlendedFlow( ( float ) windowSize );
@@ -310,6 +310,7 @@ public class FlowComputation {
 		} else if ( opticalFlowMode == "gaussian smoothed gt" ) {
 			blender = new BlendingFunctions.GaussianSmoothedFlow( ( float ) windowSize );
 		}
+		int count = 0;
 
 		for ( FlowVector gtFlowVector : handPickedVectors ) {
 
@@ -338,10 +339,11 @@ public class FlowComputation {
 					float alpha = blender.getAlpha( r );
 					float beta = blender.getBeta( r );
 					double flow = alpha * uv[ i ] + beta * c.get().getRealDouble();
-
 					c.get().setReal( flow );
+
 				}
 			}
+			count = count + 1;
 
 		}
 		flowVecCollection.setDenseFlow( denseFlowCopy );
@@ -375,7 +377,7 @@ public class FlowComputation {
 		Histogram1d< FloatType > hist = model.getView().getOs().image().histogram( localMinimaResponse );
 		String thresholdingMode = model.getView().getThresholdingMode();
 		float threshold;
-		if ( thresholdingMode == "custom threshold" ) {
+		if ( thresholdingMode == "manual threshold" ) {
 			threshold = -1f * ( model.getView().getThreshold() );
 		} else {
 			threshold = model.getView().getOs().threshold().otsu( hist ).getRealFloat();
@@ -465,6 +467,11 @@ public class FlowComputation {
 		if ( !( flowVecCollection.getOriginalOpticalFlow() == null ) ) {
 			flowVecCollection.setDenseFlow( flowVecCollection.getOriginalOpticalFlow() );
 		}
+
+	}
+
+	public void computeOpticalFlowFarneback( RandomAccessibleInterval< DoubleType > rawData ) {
+		// TODO Auto-generated method stub
 
 	}
 }

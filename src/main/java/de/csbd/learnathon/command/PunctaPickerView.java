@@ -64,7 +64,7 @@ public class PunctaPickerView {
 	private GhostOverlay ghostOverlay;
 	private FlowOverlay flowOverlay;
 	private JCheckBox activeTrackletCheckBox;
-	private JSlider windowSizeSlider;
+	private JSlider windowSizeSliderForFlowComputation;
 	private ButtonGroup pickingModeButtons;
 	private JTextField txtDefaultPunctaRadius;
 	private JTextField txtMinScale;
@@ -73,17 +73,15 @@ public class PunctaPickerView {
 	private JTextField txtMaxDist;
 	private JCheckBox showPreviousMarkerCheckBox;
 	private JCheckBox showFlowCheckBox;
-	private JTextField txtNeighbors;
+	private JTextField txtKnnNeighborsForInterpolatedFlowComputation;
 	private JCheckBox showTrackletsCheckBox;
 	private boolean showAutoFlowOnlyFlag;
-	private JSlider relWeightSlider;
+	private JSlider relWeightSliderForFlowComputation;
 	private JSlider fadeOutSlider;
 	private JSlider densitySlider;
-	private JSlider thresholdingSlider;
 	private ButtonGroup matchingModeButtons;
 	private ButtonGroup thresholdingModeButtons;
-	private JTextField txtThreshold;
-	private ButtonGroup Buttons;
+	private JTextField txtThresholdForAutoPunctaDetection;
 	private ButtonGroup flowModeButtons;
 	private JTextField txtWindowAroundNeighbor;
 	private ButtonGroup opticalFlowMixingModeButtons;
@@ -117,7 +115,7 @@ public class PunctaPickerView {
 	}
 
 	public int getAutoFlowMatchingWindowSize() {
-		return windowSizeSlider.getValue();
+		return windowSizeSliderForFlowComputation.getValue();
 	}
 
 	public double getOpticalFlowModificationWindowSize() {
@@ -128,14 +126,14 @@ public class PunctaPickerView {
 	}
 
 	public double getRelWeight() {
-		return relWeightSlider.getValue();
+		return relWeightSliderForFlowComputation.getValue();
 	}
 
 	public float getThreshold() {
-		if ( txtThreshold.getText().isEmpty() )
+		if ( txtThresholdForAutoPunctaDetection.getText().isEmpty() )
 			return 20f;
 		else
-			return Float.valueOf( txtThreshold.getText().trim() ).floatValue();
+			return Float.valueOf( txtThresholdForAutoPunctaDetection.getText().trim() ).floatValue();
 	}
 
 	public float getDefaultPunctaRadius() {
@@ -199,10 +197,10 @@ public class PunctaPickerView {
 	}
 
 	public int getKNeighbors() {
-		if ( txtNeighbors.getText().isEmpty() )
+		if ( txtKnnNeighborsForInterpolatedFlowComputation.getText().isEmpty() )
 			return 3;
 		else
-			return Double.valueOf( txtNeighbors.getText().trim() ).intValue();
+			return Double.valueOf( txtKnnNeighborsForInterpolatedFlowComputation.getText().trim() ).intValue();
 	}
 
 	private void sliderChanged( JSlider slider ) {
@@ -230,19 +228,12 @@ public class PunctaPickerView {
 			final T min,
 			final T max ) {
 		if ( iterableInterval == null ) { return; }
-
-		// create a cursor for the image (the order does not matter)
 		final Iterator< T > iterator = iterableInterval.iterator();
-
-		// initialize min and max with the first image value
 		T type = iterator.next();
 
 		min.set( type );
 		max.set( type );
-
-		// loop over the rest of the data and determine min and max value
 		while ( iterator.hasNext() ) {
-			// we need this type more than once
 			type = iterator.next();
 
 			if ( type.compareTo( min ) < 0 ) min.set( type );
@@ -256,7 +247,6 @@ public class PunctaPickerView {
 		final JPanel controls = initControlsPanel();
 		final JScrollPane scrollp = new JScrollPane( controls );
 		return wrapToJPanel( initSplitPane( scrollp, bdv.getViewerPanel() ) );
-//		return bdv.getViewerPanel();
 	}
 
 	private JPanel initControlsPanel() {
@@ -324,8 +314,8 @@ public class PunctaPickerView {
 		panelPickingProps.setBorder( BorderFactory.createTitledBorder( "picking" ) );
 
 		pickingModeButtons = new ButtonGroup();
-		JRadioButton bManual = new JRadioButton( "constant radius" );
-		bManual.addActionListener( new ActionListener() {
+		JRadioButton bConstantRadius = new JRadioButton( "constant radius" );
+		bConstantRadius.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
@@ -360,7 +350,7 @@ public class PunctaPickerView {
 				txtMaxDist.setEnabled( true );
 			}
 		} );
-		pickingModeButtons.add( bManual );
+		pickingModeButtons.add( bConstantRadius );
 		pickingModeButtons.add( bAutomaticSize );
 		pickingModeButtons.add( bAutomaticSizeAndPos );
 
@@ -384,7 +374,7 @@ public class PunctaPickerView {
 		txtMaxDist = new JTextField( 5 );
 		txtMaxDist.setText( "55" );
 
-		panelPickingProps.add( bManual, "span 2, growx, wrap" );
+		panelPickingProps.add( bConstantRadius, "span 2, growx, wrap" );
 		panelPickingProps.add( bAutomaticSize, "span 2, growx, wrap" );
 		panelPickingProps.add( bAutomaticSizeAndPos, "span 2, gapbottom 15, growx, wrap" );
 
@@ -401,8 +391,8 @@ public class PunctaPickerView {
 
 		// FLOW VISUALIZATION PROPS
 
-		JPanel panelFlowProps = new JPanel( new MigLayout( "gap rel 0", "[grow]", "" ) );
-		panelFlowProps.setBorder( BorderFactory.createTitledBorder( "flow visualization" ) );
+		JPanel panelFlowVisualizationProps = new JPanel( new MigLayout( "gap rel 0", "[grow]", "" ) );
+		panelFlowVisualizationProps.setBorder( BorderFactory.createTitledBorder( "flow visualization" ) );
 
 		showFlowCheckBox = new JCheckBox( "show" );
 		showFlowCheckBox.addActionListener( new ActionListener() {
@@ -452,71 +442,48 @@ public class PunctaPickerView {
 		} );
 		densitySlider.setVisible( true );
 
-		panelFlowProps.add( showFlowCheckBox, " w 5%" );
-		panelFlowProps.add( showAutoFlowOnlyCheckBox, "w 5%, growx, wrap" );
-		panelFlowProps.add( lDensity, "" );
-		panelFlowProps.add( densitySlider, "growx, wrap" );
+		panelFlowVisualizationProps.add( showFlowCheckBox, " w 5%" );
+		panelFlowVisualizationProps.add( showAutoFlowOnlyCheckBox, "w 5%, growx, wrap" );
+		panelFlowVisualizationProps.add( lDensity, "" );
+		panelFlowVisualizationProps.add( densitySlider, "growx, wrap" );
 
-		// OPTICAL FLOW + MANUAL FLOW PROPS
-		JPanel panelOpticalFlowProps = new JPanel( new MigLayout( "gap rel 0", "[grow]", "" ) );
-		panelOpticalFlowProps.setBorder( BorderFactory.createTitledBorder( "optical flow + manual" ) );
-
-		JButton bLoadOpticalFlow = new JButton( "Load OF" );
-		bLoadOpticalFlow.addActionListener( new ActionListener() {
-
-			@Override
-			public void actionPerformed( ActionEvent e ) {
-				RandomAccessibleInterval< DoubleType > denseFlow = TiffLoader.loadFlowFieldFromDirectory();
-				model.getFlowVectorsCollection().setDenseFlow( denseFlow );
-				model.getFlowVectorsCollection().setOriginalOpticalFlow( denseFlow );
-				flowOverlay.setDenseFlow( denseFlow );
-				flowOverlay.prepareSpacedFlow();
-				flowOverlay.setVisible( true );
-				flowOverlay.requestRepaint();
-			}
-		} );
+		// FLOW CURATION PROPS
+		JPanel panelFlowCurationProps = new JPanel( new MigLayout( "gap rel 0", "[grow]", "" ) );
+		panelFlowCurationProps.setBorder( BorderFactory.createTitledBorder( "flow curation" ) );
 
 		opticalFlowMixingModeButtons = new ButtonGroup();
-		JRadioButton bGt = new JRadioButton( "prefer GT" );
-		bGt.addActionListener( new ActionListener() {
+		JRadioButton bOnlyGtBasedCuration = new JRadioButton( "prefer hand picked only" );
+		bOnlyGtBasedCuration.addActionListener( new ActionListener() {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				opticalFlowMode = "prefer GT";
+				opticalFlowMode = "prefer hand picked only";
 			}
 		} );
-		JRadioButton bLinearBlend = new JRadioButton( "linear blend" );
-		bLinearBlend.addActionListener( new ActionListener() {
+		JRadioButton bLinearBlendBasedCuration = new JRadioButton( "linear blend" );
+		bLinearBlendBasedCuration.addActionListener( new ActionListener() {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
 				opticalFlowMode = "linear blend";
 			}
 		} );
-		JRadioButton bGaussianBlend = new JRadioButton( "gaussian blend" );
-		bGaussianBlend.addActionListener( new ActionListener() {
+		JRadioButton bGaussianBlendBasedCuration = new JRadioButton( "gaussian blend" );
+		bGaussianBlendBasedCuration.addActionListener( new ActionListener() {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
 				opticalFlowMode = "gaussian blend";
 			}
 		} );
-		JRadioButton bGaussianSmoothed = new JRadioButton( "gaussian smoothed gt" );
-		bGaussianSmoothed.addActionListener( new ActionListener() {
 
-			@Override
-			public void actionPerformed( ActionEvent e ) {
-				opticalFlowMode = "gaussian smoothed gt";
-			}
-		} );
-		opticalFlowMixingModeButtons.add( bGt );
-		opticalFlowMixingModeButtons.add( bLinearBlend );
-		opticalFlowMixingModeButtons.add( bGaussianBlend );
-		opticalFlowMixingModeButtons.add( bGaussianSmoothed );
+		opticalFlowMixingModeButtons.add( bOnlyGtBasedCuration );
+		opticalFlowMixingModeButtons.add( bLinearBlendBasedCuration );
+		opticalFlowMixingModeButtons.add( bGaussianBlendBasedCuration );
 
-		JLabel lWindowAroundNeighor = new JLabel( "modfication window:" );
+		JLabel lFlowCurationWindowAroundNeighor = new JLabel( "modfication window:" );
 		txtWindowAroundNeighbor = new JTextField( 2 );
 		txtWindowAroundNeighbor.setText( "3" );
 
-		JButton bModifyOpticalFlow = new JButton( "Modify OF" );
-		bModifyOpticalFlow.addActionListener( new ActionListener() {
+		JButton bModifyFlowBasedOnCuration = new JButton( "Modify" );
+		bModifyFlowBasedOnCuration.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
@@ -534,8 +501,8 @@ public class PunctaPickerView {
 			}
 		} );
 
-		JButton bResetOpticalFlow = new JButton( "Reset" );
-		bResetOpticalFlow.addActionListener( new ActionListener() {
+		JButton bResetCuratedOpticalFlow = new JButton( "Reset" );
+		bResetCuratedOpticalFlow.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
@@ -549,19 +516,24 @@ public class PunctaPickerView {
 			}
 		} );
 
-		panelOpticalFlowProps.add( bLoadOpticalFlow, "w 5%, growx, wrap" );
-		panelOpticalFlowProps.add( bGt, "w 5%, growx, wrap" );
-		panelOpticalFlowProps.add( bLinearBlend, "w 5%, growx, wrap" );
-		panelOpticalFlowProps.add( bGaussianBlend, "w 5%, growx, wrap" );
-		panelOpticalFlowProps.add( bGaussianSmoothed, "w 5%, growx, wrap" );
-		panelOpticalFlowProps.add( lWindowAroundNeighor, "w 5%" );
-		panelOpticalFlowProps.add( txtWindowAroundNeighbor, "w 5%, growx, wrap" );
-		panelOpticalFlowProps.add( bModifyOpticalFlow, "w 5%" );
-		panelOpticalFlowProps.add( bResetOpticalFlow, "w 5%, growx, wrap" );
+		panelFlowCurationProps.add( bOnlyGtBasedCuration, "w 5%, growx, wrap" );
+		panelFlowCurationProps.add( bLinearBlendBasedCuration, "w 5%, growx, wrap" );
+		panelFlowCurationProps.add( bGaussianBlendBasedCuration, "w 5%, growx, wrap" );
+		panelFlowCurationProps.add( lFlowCurationWindowAroundNeighor, "w 5%" );
+		panelFlowCurationProps.add( txtWindowAroundNeighbor, "w 5%, growx, wrap" );
+		panelFlowCurationProps.add( bModifyFlowBasedOnCuration, "w 5%" );
+		panelFlowCurationProps.add( bResetCuratedOpticalFlow, "w 5%, growx, wrap" );
 
-		// SEMI_AUTO/MANUAL FLOW PROPS
-		JPanel panelSemiAutoFlowProps = new JPanel( new MigLayout( "gap rel 0", "[grow]", "" ) );
-		panelSemiAutoFlowProps.setBorder( BorderFactory.createTitledBorder( "semi-auto/manual flow" ) );
+		// COMPUTE DENSE FLOW PROPS
+		JPanel panelFlowComputationProps = new JPanel( new MigLayout( "gap rel 0", "[grow]", "" ) );
+		panelFlowComputationProps.setBorder( BorderFactory.createTitledBorder( "compute dense flow" ) );
+
+		JLabel lBasedOn = new JLabel( "Based on:" );
+		JLabel lDetectionFilterForFullyAutoFlowComputation = new JLabel( "detection filter " );
+		JLabel lMatchingMethodForFullyAutoFlowComputation = new JLabel( "matching method " );
+		
+		JPanel panelSubPanelForFullyAutoFlowComputation = new JPanel( new MigLayout( "gap rel 0", "[grow]", "" ) );
+		panelSubPanelForFullyAutoFlowComputation.setBorder( BorderFactory.createTitledBorder( "auto augmentation options" )  );
 
 		matchingModeButtons = new ButtonGroup();
 		JRadioButton bGreedy = new JRadioButton( "greedy" );
@@ -569,7 +541,7 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				relWeightSlider.setEnabled( false );
+				relWeightSliderForFlowComputation.setEnabled( false );
 			}
 		} );
 
@@ -578,25 +550,24 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				windowSizeSlider.setEnabled( true );
-				relWeightSlider.setEnabled( true );
+				windowSizeSliderForFlowComputation.setEnabled( true );
+				relWeightSliderForFlowComputation.setEnabled( true );
 			}
 		} );
 
 		matchingModeButtons.add( bGreedy );
 		matchingModeButtons.add( bHungarian );
 
-		JLabel lThreshold = new JLabel( "threshold:" );
-		txtThreshold = new JTextField( 5 );
-		txtThreshold.setText( "20.0" );
+		txtThresholdForAutoPunctaDetection = new JTextField( 5 );
+		txtThresholdForAutoPunctaDetection.setText( "20.0" );
 
 		thresholdingModeButtons = new ButtonGroup();
-		JRadioButton bCustom = new JRadioButton( "custom threshold" );
-		bCustom.addActionListener( new ActionListener() {
+		JRadioButton bManualThreshold = new JRadioButton( "manual threshold" );
+		bManualThreshold.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				txtThreshold.setEnabled( true );
+				txtThresholdForAutoPunctaDetection.setEnabled( true );
 			}
 		} );
 
@@ -605,18 +576,18 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				txtThreshold.setEnabled( false );
+				txtThresholdForAutoPunctaDetection.setEnabled( false );
 			}
 		} );
 
-		thresholdingModeButtons.add( bCustom );
+		thresholdingModeButtons.add( bManualThreshold );
 		thresholdingModeButtons.add( bOtsu );
-
-		JLabel lWindowSize = new JLabel( "window:" );
-		windowSizeSlider = new JSlider( 1, 11, 5 );
-		windowSizeSlider.setMajorTickSpacing( 2 );
-		windowSizeSlider.setPaintTicks( true );
-		windowSizeSlider.setPaintLabels( true );
+		
+		JLabel lWindowSizeForFlowComputation = new JLabel( "window:" );
+		windowSizeSliderForFlowComputation = new JSlider( 1, 11, 5 );
+		windowSizeSliderForFlowComputation.setMajorTickSpacing( 2 );
+		windowSizeSliderForFlowComputation.setPaintTicks( true );
+		windowSizeSliderForFlowComputation.setPaintLabels( true );
 		Hashtable< Integer, JLabel > position = new Hashtable< Integer, JLabel >();
 		position.put( 1, new JLabel( "1" ) );
 		position.put( 3, new JLabel( "3" ) );
@@ -626,15 +597,15 @@ public class PunctaPickerView {
 		position.put( 11, new JLabel( "11" ) );
 
 		// Set the label to be drawn
-		windowSizeSlider.setLabelTable( position );
-		windowSizeSlider.addChangeListener( e -> sliderChanged( windowSizeSlider ) );
-		windowSizeSlider.setVisible( true );
+		windowSizeSliderForFlowComputation.setLabelTable( position );
+		windowSizeSliderForFlowComputation.addChangeListener( e -> sliderChanged( windowSizeSliderForFlowComputation ) );
+		windowSizeSliderForFlowComputation.setVisible( true );
 
 		JLabel lRelativeWeight = new JLabel( "rel. weight:" );
-		relWeightSlider = new JSlider( 0, 10, 8 );
-		relWeightSlider.setMajorTickSpacing( 2 );
-		relWeightSlider.setPaintTicks( true );
-		relWeightSlider.setPaintLabels( true );
+		relWeightSliderForFlowComputation = new JSlider( 0, 10, 8 );
+		relWeightSliderForFlowComputation.setMajorTickSpacing( 2 );
+		relWeightSliderForFlowComputation.setPaintTicks( true );
+		relWeightSliderForFlowComputation.setPaintLabels( true );
 		Hashtable< Integer, JLabel > positionWeight = new Hashtable< Integer, JLabel >();
 		positionWeight.put( 0, new JLabel( "0" ) );
 		positionWeight.put( 2, new JLabel( "0.2" ) );
@@ -644,60 +615,134 @@ public class PunctaPickerView {
 		positionWeight.put( 10, new JLabel( "1" ) );
 
 		// Set the label to be drawn
-		relWeightSlider.setLabelTable( positionWeight );
-		relWeightSlider.addChangeListener( e -> sliderChanged( relWeightSlider ) );
-		relWeightSlider.setVisible( true );
+		relWeightSliderForFlowComputation.setLabelTable( positionWeight );
+		relWeightSliderForFlowComputation.addChangeListener( e -> sliderChanged( relWeightSliderForFlowComputation ) );
+		relWeightSliderForFlowComputation.setVisible( true );
+		
+		panelSubPanelForFullyAutoFlowComputation.add( lDetectionFilterForFullyAutoFlowComputation, "w 5%, growx, wrap" );
+		panelSubPanelForFullyAutoFlowComputation.add( bOtsu, "w 5%, growx, wrap" );
+		panelSubPanelForFullyAutoFlowComputation.add( bManualThreshold, "w 5%" );
+		panelSubPanelForFullyAutoFlowComputation.add( txtThresholdForAutoPunctaDetection, "growx, wrap" );
+		panelSubPanelForFullyAutoFlowComputation.add( lMatchingMethodForFullyAutoFlowComputation, "w 5%, growx, wrap" );
+		panelSubPanelForFullyAutoFlowComputation.add( bHungarian, "w 5%, growx, wrap" );
+		panelSubPanelForFullyAutoFlowComputation.add( bGreedy, "w 5%, growx, wrap" );
+		panelSubPanelForFullyAutoFlowComputation.add( lWindowSizeForFlowComputation, "" );
+		panelSubPanelForFullyAutoFlowComputation.add( windowSizeSliderForFlowComputation, "growx, wrap" );
+		panelSubPanelForFullyAutoFlowComputation.add( lRelativeWeight, "" );
+		panelSubPanelForFullyAutoFlowComputation.add( relWeightSliderForFlowComputation, "growx, wrap" );
 
-		flowModeButtons = new ButtonGroup();
-		JRadioButton bManualInterpFlowMode = new JRadioButton( "manual interp." );
-		bManualInterpFlowMode.setActionCommand( "manual interp." );
-		bManualInterpFlowMode.addActionListener( new ActionListener() {
+		JLabel lKnnInterpolateForFlowComputation = new JLabel( "Neighbors kNN:" );
+		txtKnnNeighborsForInterpolatedFlowComputation = new JTextField( 2 );
+		txtKnnNeighborsForInterpolatedFlowComputation.setText( "3" );
+
+		JButton bActionImportOpticalFlow = new JButton( "Load" );
+		bActionImportOpticalFlow.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				relWeightSlider.setEnabled( false );
-				windowSizeSlider.setEnabled( false );
-				txtThreshold.setEnabled( false );
-				bCustom.setEnabled( false );
+				RandomAccessibleInterval< DoubleType > denseFlow = TiffLoader.loadFlowFieldFromDirectory();
+				model.getFlowVectorsCollection().setDenseFlow( denseFlow );
+				model.getFlowVectorsCollection().setOriginalOpticalFlow( denseFlow );
+				flowOverlay.setDenseFlow( denseFlow );
+				flowOverlay.prepareSpacedFlow();
+				flowOverlay.setVisible( true );
+				flowOverlay.requestRepaint();
+			}
+		} );
+
+		flowModeButtons = new ButtonGroup();
+
+		JRadioButton bLoadDenseFlowRadioButton = new JRadioButton( "load denseFlow" );
+		bLoadDenseFlowRadioButton.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				relWeightSliderForFlowComputation.setEnabled( false );
+				windowSizeSliderForFlowComputation.setEnabled( false );
+				txtThresholdForAutoPunctaDetection.setEnabled( false );
+				bManualThreshold.setEnabled( false );
 				bOtsu.setEnabled( false );
 				bGreedy.setEnabled( false );
 				bHungarian.setEnabled( false );
 				showAutoFlowOnlyCheckBox.setEnabled( false );
+				bActionImportOpticalFlow.setEnabled( true );
+				txtKnnNeighborsForInterpolatedFlowComputation.setEnabled( false );
 			}
 		} );
-		JRadioButton bSemiAutoInterpFlowMode = new JRadioButton( "semi-auto interp." );
-		bSemiAutoInterpFlowMode.setActionCommand( "semi-auto interp." );
-		bSemiAutoInterpFlowMode.addActionListener( new ActionListener() {
+
+		JRadioButton bManualInterpFlowModeRadioButton = new JRadioButton( "manually picked tracklets" );
+		bManualInterpFlowModeRadioButton.setActionCommand( "manually picked tracklets" );
+		bManualInterpFlowModeRadioButton.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				relWeightSlider.setEnabled( true );
-				windowSizeSlider.setEnabled( true );
-				txtThreshold.setEnabled( true );
-				bCustom.setEnabled( true );
+				relWeightSliderForFlowComputation.setEnabled( false );
+				windowSizeSliderForFlowComputation.setEnabled( false );
+				txtThresholdForAutoPunctaDetection.setEnabled( false );
+				bManualThreshold.setEnabled( false );
+				bOtsu.setEnabled( false );
+				bGreedy.setEnabled( false );
+				bHungarian.setEnabled( false );
+				bActionImportOpticalFlow.setEnabled( false );
+				txtKnnNeighborsForInterpolatedFlowComputation.setEnabled( true );
+				showAutoFlowOnlyCheckBox.setEnabled( false );
+			}
+		} );
+		JRadioButton bSemiAutoInterpFlowModeRadioButton = new JRadioButton( "manual + auto augmented" );
+		bSemiAutoInterpFlowModeRadioButton.setActionCommand( "manual + auto augmented" );
+		bSemiAutoInterpFlowModeRadioButton.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				relWeightSliderForFlowComputation.setEnabled( true );
+				windowSizeSliderForFlowComputation.setEnabled( true );
+				txtThresholdForAutoPunctaDetection.setEnabled( true );
+				bManualThreshold.setEnabled( true );
 				bOtsu.setEnabled( true );
 				bGreedy.setEnabled( true );
 				bHungarian.setEnabled( true );
+				bActionImportOpticalFlow.setEnabled( false );
+				txtKnnNeighborsForInterpolatedFlowComputation.setEnabled( true );
 				showAutoFlowOnlyCheckBox.setEnabled( true );
 			}
 		} );
 
-		flowModeButtons.add( bManualInterpFlowMode );
-		flowModeButtons.add( bSemiAutoInterpFlowMode );
-		
-		JLabel lInterpolate = new JLabel( "Neighbors kNN:" );
-		txtNeighbors = new JTextField( 2 );
-		txtNeighbors.setText( "3" );
-
-		JButton bComputeSemiAutoFlow = new JButton( "(re)compute" );
-		bComputeSemiAutoFlow.addActionListener( new ActionListener() {
+		JRadioButton bOpticalFlowFarnebackRadioButton = new JRadioButton( "Optical Flow Farneback" );
+		bOpticalFlowFarnebackRadioButton.setActionCommand( "Optical Flow Farneback" );
+		bOpticalFlowFarnebackRadioButton.addActionListener( new ActionListener() {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				if ( flowModeButtons.getSelection().getActionCommand() == "manual interp." ) {
+				relWeightSliderForFlowComputation.setEnabled( false );
+				windowSizeSliderForFlowComputation.setEnabled( false );
+				txtThresholdForAutoPunctaDetection.setEnabled( false );
+				bManualThreshold.setEnabled( false );
+				bOtsu.setEnabled( false );
+				bGreedy.setEnabled( false );
+				bHungarian.setEnabled( false );
+				bActionImportOpticalFlow.setEnabled( false );
+				txtKnnNeighborsForInterpolatedFlowComputation.setEnabled( false );
+				showAutoFlowOnlyCheckBox.setEnabled( false );
+			}
+		} );
+
+		flowModeButtons.add( bOpticalFlowFarnebackRadioButton );
+		flowModeButtons.add( bManualInterpFlowModeRadioButton );
+		flowModeButtons.add( bLoadDenseFlowRadioButton );
+		flowModeButtons.add( bSemiAutoInterpFlowModeRadioButton );
+
+		JButton bComputeFlowBasedOnSelectedMode = new JButton( "(re)compute" );
+		bComputeFlowBasedOnSelectedMode.addActionListener( new ActionListener() {
+
+			@Override
+			public void actionPerformed( ActionEvent e ) {
+				if ( flowModeButtons.getSelection().getActionCommand() == "manually picked tracklets" ) {
 					flowComputation( flowModeButtons.getSelection().getActionCommand() );
 					setFlowForVisulaization();
-				} else if ( flowModeButtons.getSelection().getActionCommand() == "semi-auto interp." ) {
+				} else if ( flowModeButtons.getSelection().getActionCommand() == "manual + auto augmented" ) {
+					flowComputation( flowModeButtons.getSelection().getActionCommand() );
+					setFlowForVisulaization();
+				} else if ( flowModeButtons.getSelection().getActionCommand() == "Optical Flow Farneback" ) {
 					flowComputation( flowModeButtons.getSelection().getActionCommand() );
 					setFlowForVisulaization();
 				}
@@ -707,13 +752,15 @@ public class PunctaPickerView {
 			private void flowComputation( String string ) {
 				model.extractAndInitializeControlVectorsFromHandPickedTracklets();
 				showFlowCheckBox.setSelected( true );
-				if ( string == "manual interp." ) {
+				if ( string == "manually picked tracklets" ) {
 					model.processManuallyInterpolatedFlow();
-				} else if ( string == "semi-auto interp." ) {
+				} else if ( string == "manual + auto augmented" ) {
 					showAutoFlowOnlyFlag = false;
 					model.processSemiAutomatedFlow();
 					ArrayList< FlowVector > autoFeatureFlow = model.getFlowVectorsCollection().getAutofeatureFlowVectors();
 					flowOverlay.setAutoFeatureFlow( autoFeatureFlow );
+				} else if ( string == "Optical Flow Farneback" ) {
+					model.processOpticalFlowFarneback();
 				}
 
 			}
@@ -739,31 +786,27 @@ public class PunctaPickerView {
 			}
 		} );
 
-		panelSemiAutoFlowProps.add( bManualInterpFlowMode, "w 5%" );
-		panelSemiAutoFlowProps.add( bSemiAutoInterpFlowMode, "w 5%, growx, wrap" );
-		panelSemiAutoFlowProps.add( bGreedy, "w 5%" );
-		panelSemiAutoFlowProps.add( bHungarian, "w 5%, growx, wrap" );
-		panelSemiAutoFlowProps.add( bCustom, "w 5%" );
-		panelSemiAutoFlowProps.add( bOtsu, "w 5%, growx, wrap" );
-		panelSemiAutoFlowProps.add( lThreshold, "" );
-		panelSemiAutoFlowProps.add( txtThreshold, "growx, wrap" );
-		panelSemiAutoFlowProps.add( lWindowSize, "" );
-		panelSemiAutoFlowProps.add( windowSizeSlider, "growx, wrap" );
-		panelSemiAutoFlowProps.add( lRelativeWeight, "" );
-		panelSemiAutoFlowProps.add( relWeightSlider, "growx, wrap" );
-		panelSemiAutoFlowProps.add( lInterpolate, "w 5%" );
-		panelSemiAutoFlowProps.add( txtNeighbors, "w 5%, growx, wrap" );
-		panelSemiAutoFlowProps.add( bComputeSemiAutoFlow, "w 5%" );
-		panelSemiAutoFlowProps.add( bSaveFlows, "w 5%, growx, wrap" );
+		panelFlowComputationProps.add( lBasedOn, "w 5%, growx, wrap" );
+		panelFlowComputationProps.add( bOpticalFlowFarnebackRadioButton, "w 5%, growx, wrap" );
+		panelFlowComputationProps.add( bManualInterpFlowModeRadioButton, "w 5%, growx, wrap" );
+		panelFlowComputationProps.add( bLoadDenseFlowRadioButton, "w 5%" );
+		panelFlowComputationProps.add( bActionImportOpticalFlow, "w 5%, growx, wrap" );
+		panelFlowComputationProps.add( bSemiAutoInterpFlowModeRadioButton, "w 5%, growx, wrap" );
+		panelFlowComputationProps.add( panelSubPanelForFullyAutoFlowComputation, "growx, wrap" );
+
+		panelFlowComputationProps.add( lKnnInterpolateForFlowComputation, "w 5%" );
+		panelFlowComputationProps.add( txtKnnNeighborsForInterpolatedFlowComputation, "w 5%, growx, wrap" );
+		panelFlowComputationProps.add( bComputeFlowBasedOnSelectedMode, "w 5%" );
+		panelFlowComputationProps.add( bSaveFlows, "w 5%, growx, wrap" );
 
 		helper.add( panelTrackletsProps, "growx, wrap" );
 		helper.add( panelPickingProps, "growx, wrap" );
-		helper.add( panelOpticalFlowProps, "growx, wrap" );
-		helper.add( panelSemiAutoFlowProps, "growx, wrap" );
-		helper.add( panelFlowProps, "growx, wrap" );
+		helper.add( panelFlowComputationProps, "growx, wrap" );
+		helper.add( panelFlowVisualizationProps, "growx, wrap" );
+		helper.add( panelFlowCurationProps, "growx, wrap" );
 
 		// make default selection such that action is thrown
-		bSemiAutoInterpFlowMode.doClick();
+		bSemiAutoInterpFlowModeRadioButton.doClick();
 		bAutomaticSize.doClick();
 		bHungarian.doClick();
 		bOtsu.doClick();
