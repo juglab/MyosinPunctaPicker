@@ -116,7 +116,7 @@ public class FlowOverlay extends BdvOverlay {
 				flowVectors.add( flowVector );
 		}
 		for ( FlowVector f : flowVectors ) {
-			drawVector( g, ( int ) f.getX(), ( int ) f.getY(), f.getU(), f.getV(), Color.GREEN );
+			drawVector( g, ( int ) f.getX(), ( int ) f.getY(), f.getU(), f.getV(), Color.BLUE.brighter().brighter() );
 		}
 
 	}
@@ -137,7 +137,7 @@ public class FlowOverlay extends BdvOverlay {
 			if ( flowVec.getT() == t ) {
 				float x = flowVec.getX();
 				float y = flowVec.getY();
-				Color color = flowVec.isSelected() ? Color.LIGHT_GRAY : Color.RED;
+				Color color = flowVec.isSelected() ? Color.LIGHT_GRAY : Color.GREEN;
 				drawVector( g, ( int ) x, ( int ) y, flowVec.getU(), flowVec.getV(), color );
 			}
 		}
