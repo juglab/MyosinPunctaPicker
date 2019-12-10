@@ -1,8 +1,11 @@
 package de.csbd.learnathon.command;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.img.Img;
+import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.real.DoubleType;
 
 public class PunctaPickerModel {
@@ -47,7 +50,7 @@ public class PunctaPickerModel {
 		this.flowController = flowController;
 	}
 
-	public RandomAccessibleInterval< DoubleType > getRawData() {
+	public RandomAccessibleInterval< ByteType > getRawData() {
 		return rawData;
 	}
 
@@ -81,7 +84,6 @@ public class PunctaPickerModel {
 	}
 
 	public void modifyOpticalFlow( String opticalFlowMode ) {
-//		flowComputation.modifyOpticalFlow();
 		flowComputation.modifyOpticalFlowWithInterpolation( opticalFlowMode );
 	}
 
@@ -90,18 +92,8 @@ public class PunctaPickerModel {
 
 	}
 
-	public void processOpticalFlowFarneback() {
-		flowComputation.computeOpticalFlowFarneback( getRawData() );
-
+	public List<Img<ByteType>> processOpticalFlowFernback( int numLevels, double pyrScale, boolean fastPyramids, int winSize, int numIters, int polyN, double polySigma, int flags ) {
+		return flowComputation.computeOpticalFlowFernback( getRawData(), numLevels, pyrScale, fastPyramids, winSize, numIters, polyN, polySigma, flags );
 	}
 
 }
-
-
-
-
-
-
-
-
-
