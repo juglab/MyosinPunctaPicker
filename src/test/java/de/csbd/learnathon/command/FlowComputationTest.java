@@ -13,6 +13,7 @@ import org.bytedeco.opencv.opencv_core.MatVector;
 import org.bytedeco.opencv.opencv_video.DenseOpticalFlow;
 import org.bytedeco.opencv.opencv_video.FarnebackOpticalFlow;
 import org.junit.jupiter.api.Test;
+import org.opencv.core.CvType;
 
 import ij.IJ;
 import io.scif.services.DatasetIOService;
@@ -26,6 +27,7 @@ import net.imglib2.img.ImgView;
 import net.imglib2.img.display.imagej.ImgToVirtualStack;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.ByteType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 
 public class FlowComputationTest {
@@ -52,7 +54,6 @@ public class FlowComputationTest {
 		List< Mat > dataSlices = new ArrayList< Mat >( dims[ 2 ] );
 		for ( int i = 0; i < dims[ 2 ]; i++ ) {
 			RandomAccessibleInterval< ByteType > ijSlice = Views.hyperSlice( image, 2, i );
-			IJ.save( ImgToVirtualStack.wrap( toImgPlus( ijSlice ) ), "/Users/turek/Desktop/test/ijslice" + i + ".tif" );
 			Mat slice = ImgToMatConverter.matByte( ijSlice );
 			dataSlices.add( slice );
 		}
@@ -68,24 +69,23 @@ public class FlowComputationTest {
 		}
 		assertEquals( 59, flows.size() );
 
-		List< RandomAccessibleInterval< ByteType > > flowsx = new ArrayList< RandomAccessibleInterval< ByteType > >();
-		List< RandomAccessibleInterval< ByteType > > flowsy = new ArrayList< RandomAccessibleInterval< ByteType > >();
+		List< RandomAccessibleInterval< FloatType > > flowsx = new ArrayList< RandomAccessibleInterval< FloatType > >();
+		List< RandomAccessibleInterval< FloatType > > flowsy = new ArrayList< RandomAccessibleInterval< FloatType > >();
 		for ( int i = 0; i < flows.size(); i++ ) {
 			MatVector splitflows = new MatVector();
 			opencv_core.split( flows.get( i ), splitflows );
-			flowsx.add( MatToImgConverter.imgByte( splitflows.get( 0 ) ) );
+			System.out.println( "X Type " + CvType.typeToString( splitflows.get( 0 ).type()) );
+			flowsx.add( MatToImgConverter.imgFloat( splitflows.get( 0 ) ) );
 			opencv_imgcodecs.imwrite( "/Users/turek/Desktop/test/flowx" + i + ".tif", splitflows.get( 0 ) );
-			//System.out.println( "X Type " + CvType.typeToString( splitflows.get( 0 ).type()) );
-			flowsy.add( MatToImgConverter.imgByte( splitflows.get( 1 ) ) );
+			flowsy.add( MatToImgConverter.imgFloat( splitflows.get( 1 ) ) );
 			opencv_imgcodecs.imwrite( "/Users/turek/Desktop/test/flowy" + i + ".tif", splitflows.get( 1 ) );
-			//System.out.println( "Y Type " + CvType.typeToString( splitflows.get( 1 ).type()) );
 		}
 		assertEquals( 59, flowsx.size() );
 		assertEquals( 59, flowsy.size() );
 
-		RandomAccessibleInterval< ByteType > xijFlowFinal = Views.stack( flowsx );
+		RandomAccessibleInterval< FloatType > xijFlowFinal = Views.stack( flowsx );
 		IJ.save( ImgToVirtualStack.wrap( toImgPlus( xijFlowFinal ) ), "/Users/turek/Desktop/test/JavaOutputX2.tif" );
-		RandomAccessibleInterval< ByteType > yijFlowFinal = Views.stack( flowsy );
+		RandomAccessibleInterval< FloatType > yijFlowFinal = Views.stack( flowsy );
 		IJ.save( ImgToVirtualStack.wrap( toImgPlus( yijFlowFinal ) ), "/Users/turek/Desktop/test/JavaOutputY2.tif" );
 
 	}

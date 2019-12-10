@@ -469,7 +469,7 @@ public class FlowComputation {
 	 * @see http://bytedeco.org/javacpp-presets/opencv/apidocs/org/opencv/imgcodecs/Imgcodecs.html
 	 * @see http://bytedeco.org/javacpp-presets/opencv/apidocs/index.html?org/bytedeco/opencv/opencv_video/FarnebackOpticalFlow.html
 	 */
-	public List< Img< ByteType > > computeOpticalFlowFernback(
+	public List< Img< FloatType > > computeOpticalFlowFernback(
 			RandomAccessibleInterval< ByteType > rawData,
 			int numLevels,
 			double pyrScale,
@@ -479,24 +479,24 @@ public class FlowComputation {
 			int polyN,
 			double polySigma,
 			int flags ) {
-		
-		ImagePlus image = ImageJFunctions.wrap(rawData, "");
+
+		ImagePlus image = ImageJFunctions.wrap( rawData, "" );
 		ImagePlusMatVectorConverter converter = new ImagePlusMatVectorConverter();
 		MatVector mats1 = converter.convert( image, MatVector.class );
-		
+
 		MatImagePlusConverter converter2 = new MatImagePlusConverter();
 		final DenseOpticalFlow opticalFlow = FarnebackOpticalFlow.create( numLevels, pyrScale, fastPyramids, winSize, numIters, polyN, polySigma, flags );
-		List<Img<ByteType>> flows2 = new ArrayList< Img<ByteType> >();
+		List< Img< FloatType > > flows2 = new ArrayList< Img< FloatType > >();
 		for ( int i = 1; i < mats1.size(); i++ ) {
 			Mat flow = new Mat();
 			opticalFlow.calc( mats1.get( i - 1 ), mats1.get( i ), flow );
 			ImagePlus ijflow = converter2.convert( flow, ImagePlus.class );
-			Img<ByteType> ij2flow = ImageJFunctions.wrap(ijflow);
+			Img< FloatType > ij2flow = ImageJFunctions.wrap( ijflow );
 			flows2.add( ij2flow );
 		}
-		
+
 		return flows2;
-		
+
 	}
 
 	public void computeOpticalFlowFernbackGPU(
@@ -511,7 +511,7 @@ public class FlowComputation {
 			int flags ) {
 
 	}
-	
+
 	@SuppressWarnings( { "unchecked", "rawtypes" } )
 	private ImgPlus< ? > toImgPlus( RandomAccessibleInterval< ? > image ) {
 		if ( image instanceof ImgPlus )
@@ -520,6 +520,5 @@ public class FlowComputation {
 			return new ImgPlus<>( ( Img< ? > ) image );
 		return new ImgPlus<>( ImgView.wrap( ( RandomAccessibleInterval ) image, null ) );
 	}
-
 
 }
