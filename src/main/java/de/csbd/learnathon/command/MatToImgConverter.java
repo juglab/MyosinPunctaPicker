@@ -157,7 +157,7 @@ public class MatToImgConverter extends AbstractConverter< Mat, Img > {
 
 	public static float[] getMatDataAsFloatArray( final Mat mat ) {
 		final byte[] bytes = getMatDataAsByteArray( mat );
-		FloatBuffer floatBuf = ByteBuffer.wrap( bytes ).order( ByteOrder.nativeOrder() ).asFloatBuffer();
+		FloatBuffer floatBuf = ByteBuffer.wrap( bytes ).order( ByteOrder.BIG_ENDIAN ).asFloatBuffer();
 		float[] out = new float[ floatBuf.remaining() ];
 		floatBuf.get( out );
 		return out;
