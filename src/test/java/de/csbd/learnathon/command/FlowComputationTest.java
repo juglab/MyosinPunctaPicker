@@ -63,7 +63,7 @@ public class FlowComputationTest {
 		Mat flow = null;
 		for ( int i = 1; i < dims[ 2 ]; i++ ) {
 			flow = new Mat();
-			//Note!!!! calc only takes 8 bit images!
+			//Note!!!! calc only takes 8 bit images, and returns 2 channel floats!
 			opticalFlow.calc( dataSlices.get( i - 1 ), dataSlices.get( i ), flow );
 			flows.add( flow );
 		}
