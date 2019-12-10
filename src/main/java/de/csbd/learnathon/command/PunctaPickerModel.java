@@ -7,6 +7,7 @@ import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.real.DoubleType;
+import net.imglib2.type.numeric.real.FloatType;
 
 public class PunctaPickerModel {
 
@@ -92,7 +93,7 @@ public class PunctaPickerModel {
 
 	}
 
-	public List<Img<ByteType>> processOpticalFlowFernback( int numLevels, double pyrScale, boolean fastPyramids, int winSize, int numIters, int polyN, double polySigma, int flags ) {
+	public List< Img< FloatType > > processOpticalFlowFernback( int numLevels, double pyrScale, boolean fastPyramids, int winSize, int numIters, int polyN, double polySigma, int flags ) {
 		return flowComputation.computeOpticalFlowFernback( getRawData(), numLevels, pyrScale, fastPyramids, winSize, numIters, polyN, polySigma, flags );
 	}
 
