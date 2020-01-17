@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.converter.RealTypeConverters;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.integer.ByteType;
 import net.imglib2.type.numeric.real.DoubleType;
@@ -51,7 +52,7 @@ public class PunctaPickerModel {
 		this.flowController = flowController;
 	}
 
-	public RandomAccessibleInterval< ByteType > getRawData() {
+	public RandomAccessibleInterval< DoubleType > getRawData() {
 		return rawData;
 	}
 
@@ -94,7 +95,9 @@ public class PunctaPickerModel {
 	}
 
 	public List< Img< FloatType > > processOpticalFlowFernback( int numLevels, double pyrScale, boolean fastPyramids, int winSize, int numIters, int polyN, double polySigma, int flags ) {
-		return flowComputation.computeOpticalFlowFernback( getRawData(), numLevels, pyrScale, fastPyramids, winSize, numIters, polyN, polySigma, flags );
+		RandomAccessibleInterval< ByteType > converted = RealTypeConverters.convert( getRawData(), new ByteType() );
+
+		return flowComputation.computeOpticalFlowFernback( converted, numLevels, pyrScale, fastPyramids, winSize, numIters, polyN, polySigma, flags );
 	}
 
 }
