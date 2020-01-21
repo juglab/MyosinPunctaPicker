@@ -14,9 +14,8 @@ import org.scijava.table.GenericTable;
 
 import circledetection.command.BlobDetectionCommand;
 import ij.ImagePlus;
-import ijopencv.ij.ImagePlusMatVectorConverter;
-import ijopencv.opencv.MatImagePlusConverter;
-import net.imagej.ImgPlus;
+import net.imagej.opencv.ImgToMatVectorConverter;
+import net.imagej.opencv.MatToImgConverter;
 import net.imglib2.Cursor;
 import net.imglib2.FinalInterval;
 import net.imglib2.IterableInterval;
@@ -30,7 +29,6 @@ import net.imglib2.RealRandomAccessible;
 import net.imglib2.algorithm.gauss3.Gauss3;
 import net.imglib2.histogram.Histogram1d;
 import net.imglib2.img.Img;
-import net.imglib2.img.ImgView;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.interpolation.neighborsearch.InverseDistanceWeightingInterpolatorFactory;
 import net.imglib2.loops.LoopBuilder;
@@ -466,10 +464,12 @@ public class FlowComputation {
 	}
 
 	/**
+	 * The optical flow routine only takes byte type data
 	 * @see http://bytedeco.org/javacpp-presets/opencv/apidocs/org/opencv/imgcodecs/Imgcodecs.html
 	 * @see http://bytedeco.org/javacpp-presets/opencv/apidocs/index.html?org/bytedeco/opencv/opencv_video/FarnebackOpticalFlow.html
 	 */
-	public List< Img< FloatType > > computeOpticalFlowFernback(
+	@SuppressWarnings( "unchecked" )
+	public List< RandomAccessibleInterval< ByteType > > computeOpticalFlowFernback(
 			RandomAccessibleInterval< ByteType > rawData,
 			int numLevels,
 			double pyrScale,
@@ -480,25 +480,22 @@ public class FlowComputation {
 			double polySigma,
 			int flags ) {
 
-		ImagePlus image = ImageJFunctions.wrap( rawData, "" );
-		ImagePlusMatVectorConverter converter = new ImagePlusMatVectorConverter();
-		MatVector mats1 = converter.convert( image, MatVector.class );
+		MatVector mats1 = new ImgToMatVectorConverter().convert( rawData, MatVector.class );
 
-		MatImagePlusConverter converter2 = new MatImagePlusConverter();
 		final DenseOpticalFlow opticalFlow = FarnebackOpticalFlow.create( numLevels, pyrScale, fastPyramids, winSize, numIters, polyN, polySigma, flags );
-		List< Img< FloatType > > flows2 = new ArrayList< Img< FloatType > >();
+		List< RandomAccessibleInterval< ByteType > > flows2 = new ArrayList< RandomAccessibleInterval< ByteType > >();
 		for ( int i = 1; i < mats1.size(); i++ ) {
 			Mat flow = new Mat();
 			opticalFlow.calc( mats1.get( i - 1 ), mats1.get( i ), flow );
-			ImagePlus ijflow = converter2.convert( flow, ImagePlus.class );
-			Img< FloatType > ij2flow = ImageJFunctions.wrap( ijflow );
-			flows2.add( ij2flow );
+			RandomAccessibleInterval< ByteType > ijflow = new MatToImgConverter().convert( flow, RandomAccessibleInterval.class );
+			flows2.add( ijflow );
 		}
 
 		return flows2;
 
 	}
 
+	//TODO
 	public void computeOpticalFlowFernbackGPU(
 			RandomAccessibleInterval< DoubleType > rawData,
 			int numLevels,
@@ -510,15 +507,6 @@ public class FlowComputation {
 			double polySigma,
 			int flags ) {
 
-	}
-
-	@SuppressWarnings( { "unchecked", "rawtypes" } )
-	private ImgPlus< ? > toImgPlus( RandomAccessibleInterval< ? > image ) {
-		if ( image instanceof ImgPlus )
-			return ( ImgPlus< ? > ) image;
-		if ( image instanceof Img )
-			return new ImgPlus<>( ( Img< ? > ) image );
-		return new ImgPlus<>( ImgView.wrap( ( RandomAccessibleInterval ) image, null ) );
 	}
 
 }

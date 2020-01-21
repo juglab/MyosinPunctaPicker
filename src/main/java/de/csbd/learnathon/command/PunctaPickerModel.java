@@ -94,7 +94,7 @@ public class PunctaPickerModel {
 
 	}
 
-	public List< Img< FloatType > > processOpticalFlowFernback( int numLevels, double pyrScale, boolean fastPyramids, int winSize, int numIters, int polyN, double polySigma, int flags ) {
+	public List< RandomAccessibleInterval< ByteType > > processOpticalFlowFernback( int numLevels, double pyrScale, boolean fastPyramids, int winSize, int numIters, int polyN, double polySigma, int flags ) {
 		RandomAccessibleInterval< ByteType > converted = RealTypeConverters.convert( getRawData(), new ByteType() );
 
 		return flowComputation.computeOpticalFlowFernback( converted, numLevels, pyrScale, fastPyramids, winSize, numIters, polyN, polySigma, flags );
