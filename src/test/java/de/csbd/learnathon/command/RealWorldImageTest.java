@@ -4,16 +4,21 @@ import static org.bytedeco.opencv.global.opencv_imgcodecs.imreadmulti;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileAttribute;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.bytedeco.opencv.global.opencv_core;
 import org.bytedeco.opencv.global.opencv_imgcodecs;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.MatVector;
 import org.bytedeco.opencv.opencv_video.DenseOpticalFlow;
 import org.bytedeco.opencv.opencv_video.FarnebackOpticalFlow;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.scif.SCIFIO;
@@ -25,8 +30,11 @@ import net.imagej.opencv.ImgToMatConverter;
 import net.imagej.opencv.MatToImgConverter;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.converter.RealTypeConverters;
+import net.imglib2.img.Img;
+import net.imglib2.test.ImgLib2Assert;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.ByteType;
+import net.imglib2.type.numeric.integer.IntType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
 import net.imglib2.view.Views;
@@ -43,8 +51,27 @@ public class RealWorldImageTest {
 	private final static int flags = 0;
 
 	//Update path for Mangal's environment.
-	private final static String input = "/Users/turek/Desktop/MAX_2018001_LP823_Control-03-02_Myosin_denoised.tif";
+	private final static String OUTPUT_DIR = "/Users/turek/Desktop/";
+	private final static String TEST_DIR = "/Users/turek/Desktop/test";
+	
+	private final static String input = OUTPUT_DIR + "MAX_2018001_LP823_Control-03-02_Myosin_denoised.tif";
 	private static SCIFIO scifio;
+
+	@BeforeClass
+	public static void setup() {
+
+		File testDir = new File( TEST_DIR );
+		
+		try {
+			//Cleanup before starting
+			if ( testDir.exists() ) {
+				FileUtils.forceDelete( new File( TEST_DIR ) );
+			}
+			Files.createDirectory( testDir.toPath(), new FileAttribute< ? >[ 0 ] );
+		} catch ( IOException e ) {
+			fail( e.getMessage() );
+		}
+	}
 
 	@Test
 	public void testMatAndImgArraysAreSameShape() throws IOException {
@@ -59,9 +86,9 @@ public class RealWorldImageTest {
 				RealTypeConverters.convert( ( RandomAccessibleInterval< ? extends RealType< ? > > ) dataset.getImgPlus().getImg(), new ByteType() );
 		for ( int i = 0; i < 5; i++ ) {
 			Mat matSlice = mats.get( i );
-			opencv_imgcodecs.imwrite( "/Users/turek/Desktop/test/matSlice" + i + ".tif", matSlice );
+			opencv_imgcodecs.imwrite( TEST_DIR + File.separator + "test/matSlice" + i + ".tif", matSlice );
 			RandomAccessibleInterval< ByteType > ijSlice = Views.hyperSlice( image, 2, i );
-			saveImg( ijSlice, "/Users/turek/Desktop/test/ijSlice" + i + ".tif" );
+			saveImg( ijSlice, "ijSlice" + i + ".tif" );
 			checkData( ijSlice, matSlice );
 		}
 
@@ -81,10 +108,10 @@ public class RealWorldImageTest {
 				RealTypeConverters.convert( ( RandomAccessibleInterval< ? extends RealType< ? > > ) dataset.getImgPlus().getImg(), new ByteType() );
 		for ( int i = 0; i < 5; i++ ) {
 			RandomAccessibleInterval< ByteType > ijSlice = Views.hyperSlice( image, 2, i );
-			saveImg( ijSlice, "/Users/turek/Desktop/test/ijSlice" + i + ".tif" );
+			saveImg( ijSlice, TEST_DIR + File.separator + "ijSlice" + i + ".tif" );
 			Mat mat = ImgToMatConverter.getByteMat( ijSlice );
 			RandomAccessibleInterval< ByteType > newijSlice = ( RandomAccessibleInterval< ByteType > ) MatToImgConverter.convert( mat );
-			saveImg( newijSlice, "/Users/turek/Desktop/test/newijSlice" + i + ".tif" );
+			saveImg( newijSlice, TEST_DIR + File.separator + "newijSlice" + i + ".tif" );
 			checkData( newijSlice, ijSlice );
 
 		}
@@ -100,10 +127,10 @@ public class RealWorldImageTest {
 			throw new IOException( "Couldn't load image: " + input );
 		for ( int i = 0; i < 5; i++ ) {
 			Mat matSlice = mats.get( i );
-			opencv_imgcodecs.imwrite( "/Users/turek/Desktop/test/matSlice" + i + ".tif", matSlice );
+			opencv_imgcodecs.imwrite( TEST_DIR + File.separator + "matSlice" + i + ".tif", matSlice );
 			RandomAccessibleInterval< ByteType > img = MatToImgConverter.toByteImg( matSlice );
 			Mat newMat = new ImgToMatConverter().convert( img, Mat.class );
-			opencv_imgcodecs.imwrite( "/Users/turek/Desktop/test/newMat" + i + ".tif", newMat );
+			opencv_imgcodecs.imwrite( TEST_DIR + File.separator + "newMat" + i + ".tif", newMat );
 			checkData( newMat, matSlice );
 		}
 
@@ -123,7 +150,7 @@ public class RealWorldImageTest {
 		for ( int i = 0; i < 5; i++ ) {
 			Mat matSlice = mats.get( i );
 			RandomAccessibleInterval< ByteType > cvMatSlice = ( RandomAccessibleInterval< ByteType > ) MatToImgConverter.convert( matSlice );
-			saveImg( cvMatSlice, "/Users/turek/Desktop/test/cvMatSlice" + i + ".tif" );
+			saveImg( cvMatSlice, TEST_DIR + File.separator + "cvMatSlice" + i + ".tif" );
 			RandomAccessibleInterval< ByteType > ijSlice = Views.hyperSlice( image, 2, i );
 			checkData( cvMatSlice, ijSlice );
 		}
@@ -143,7 +170,7 @@ public class RealWorldImageTest {
 		for ( int i = 0; i < 5; i++ ) {
 			RandomAccessibleInterval< ByteType > ijSlice = Views.hyperSlice( image, 2, i );
 			Mat cvImgSlice = new ImgToMatConverter().convert( ijSlice, Mat.class );
-			opencv_imgcodecs.imwrite( "/Users/turek/Desktop/test/cvImgSlice" + i + ".tif", cvImgSlice );
+			opencv_imgcodecs.imwrite( TEST_DIR + File.separator + "cvImgSlice" + i + ".tif", cvImgSlice );
 			checkData( cvImgSlice, mats.get( i ) );
 		}
 
@@ -153,8 +180,7 @@ public class RealWorldImageTest {
 	@Test
 	public void computeFernbackOpticalFlowTest() throws IOException {
 	
-		ImageJ ij = new ImageJ();
-		Dataset dataset = ij.get( DatasetIOService.class ).open( input );
+		Dataset dataset = new ImageJ().get( DatasetIOService.class ).open( input );
 		RandomAccessibleInterval< ByteType > image =
 				RealTypeConverters.convert( ( RandomAccessibleInterval< ? extends RealType< ? > > ) dataset.getImgPlus().getImg(), new ByteType() );
 		int[] dims = Intervals.dimensionsAsIntArray( image );	
@@ -176,25 +202,19 @@ public class RealWorldImageTest {
 		}
 		assertEquals( 59, flows.size() );
 	
-		List< RandomAccessibleInterval< FloatType > > flowsx = new ArrayList< RandomAccessibleInterval< FloatType > >();
-		List< RandomAccessibleInterval< FloatType > > flowsy = new ArrayList< RandomAccessibleInterval< FloatType > >();
+		List< RandomAccessibleInterval< FloatType > > ijflows = new ArrayList< RandomAccessibleInterval< FloatType > >();
 		for ( int i = 0; i < flows.size(); i++ ) {
 			MatVector splitflows = new MatVector();
 			opencv_core.split( flows.get( i ), splitflows );
-			//System.out.println( "X Type " + CvType.typeToString( splitflows.get( 0 ).type()) );
-			flowsx.add( ( RandomAccessibleInterval< FloatType > ) MatToImgConverter.convert( splitflows.get( 0 ) ) );
-			opencv_imgcodecs.imwrite( "/Users/turek/Desktop/test/flowx" + i + ".tif", splitflows.get( 0 ) );
-			flowsy.add( ( RandomAccessibleInterval< FloatType > ) MatToImgConverter.convert( splitflows.get( 1 ) ) );
-			opencv_imgcodecs.imwrite( "/Users/turek/Desktop/test/flowy" + i + ".tif", splitflows.get( 1 ) );
+			opencv_imgcodecs.imwrite( TEST_DIR + File.separator + "flowx" + i + ".tif", splitflows.get( 0 ) );
+			opencv_imgcodecs.imwrite( TEST_DIR + File.separator + "flowy" + i + ".tif", splitflows.get( 1 ) );
+			ijflows.add( ( RandomAccessibleInterval< FloatType> ) MatToImgConverter.convert( splitflows.get( 0 ) ) );
+			ijflows.add( ( RandomAccessibleInterval< FloatType > ) MatToImgConverter.convert( splitflows.get( 1 ) ) );
 		}
-		assertEquals( 59, flowsx.size() );
-		assertEquals( 59, flowsy.size() );
+		assertEquals( 118, ijflows.size() );
 	
-		RandomAccessibleInterval< FloatType > xijFlowFinal = Views.stack( flowsx );
-		saveImg( xijFlowFinal , "/Users/turek/Desktop/test/JavaOutputX2.tif" );
-		RandomAccessibleInterval< FloatType > yijFlowFinal = Views.stack( flowsy );
-		saveImg( yijFlowFinal , "/Users/turek/Desktop/test/JavaOutputY2.tif" );
-	
+		RandomAccessibleInterval< FloatType > ijFlowFinal = Views.stack( ijflows );
+		saveImg( ijFlowFinal , OUTPUT_DIR + File.separator + "JavaOutput.tif" );
 	}
 
 	private void checkData( RandomAccessibleInterval< ByteType > img, Mat mat ) {
