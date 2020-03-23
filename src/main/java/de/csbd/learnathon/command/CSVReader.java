@@ -36,9 +36,15 @@ public class CSVReader {
 					}
 				else {
 					String[] values = line.split( COMMA_DELIMITER );
-					Edge e = new Edge( loadedPunctas.get( Integer.parseInt( values[ 0 ].trim().replaceAll( "^\"|\"$", "" ) ) ), loadedPunctas
-							.get( Integer.parseInt( values[ 1 ].trim().replaceAll( "^\"|\"$", "" ) ) ) );
-					loadedEdges.add(e );
+					int node1 = Integer.parseInt( values[ 0 ].trim().replaceAll( "^\"|\"$", "" ) );
+					int node2 = Integer.parseInt( values[ 1 ].trim().replaceAll( "^\"|\"$", "" ) );
+					if ( node1 != node2 ) {
+						Edge e = new Edge( loadedPunctas.get( node1 ), loadedPunctas.get( node2 ) );
+						loadedEdges.add( e );
+					} else {
+						System.out.println( "Error in loaded csv file, cannot add edges between same puncta (puncta " + node1 + "), skipping it!" );
+					}
+
 				}
 				}
 				
