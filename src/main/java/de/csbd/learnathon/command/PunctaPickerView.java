@@ -759,7 +759,7 @@ public class PunctaPickerView {
 					model.processSemiAutomatedFlow();
 					ArrayList< FlowVector > autoFeatureFlow = model.getFlowVectorsCollection().getAutofeatureFlowVectors();
 					flowOverlay.setAutoFeatureFlow( autoFeatureFlow );
-				} else if ( string == "Optical Flow Fernback" ) {
+				} else if ( string == "Optical Flow Farneback" ) {
 					model.processOpticalFlowFernback(1, 0.5, showAutoFlowOnlyFlag, 5, 2, 5, 1.1, 0);
 				}
 
