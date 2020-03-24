@@ -53,7 +53,7 @@ public class FlowGuiCommand implements Command {
 	@Override
 	public void run() {
 
-		model = new PunctaPickerModel( toDoubleType( image.getImgPlus().getImg() ) );
+		model = new PunctaPickerModel( image.getImgPlus().getImg()) ;
 		panel = new PunctaPickerView( model, image, context.getService( OpService.class ) );
 
 		frame = new JFrame();

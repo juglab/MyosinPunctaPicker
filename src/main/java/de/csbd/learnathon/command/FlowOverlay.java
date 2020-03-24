@@ -1,10 +1,10 @@
 package de.csbd.learnathon.command;
 
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.util.ArrayList;
+import java.util.List;
 
 import bdv.util.BdvOverlay;
 import net.imglib2.RandomAccess;
@@ -15,18 +15,18 @@ import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.DoubleType;
 
 public class FlowOverlay extends BdvOverlay {
-	
-	private RandomAccessibleInterval< DoubleType > flowData;
 
-	private ArrayList< FlowVector > handPickedSparseFlowVectors;
+	private RandomAccessibleInterval flowData;
+
+	private List< FlowVector > handPickedSparseFlowVectors;
 
 	private PunctaPickerView view;
-	
+
 	private boolean visible = false;
 
-	private ArrayList< FlowVector > spacedFlowVectors;
+	private List< FlowVector > spacedFlowVectors;
 
-	private ArrayList< FlowVector > autoFeatureFlowVectors;
+	private List< FlowVector > autoFeatureFlowVectors;
 
 	public FlowOverlay( PunctaPickerView view ) {
 		this.view = view;
@@ -36,15 +36,15 @@ public class FlowOverlay extends BdvOverlay {
 		this.visible = visible;
 	}
 
-	public void setDenseFlow( RandomAccessibleInterval< DoubleType > flowData ) {
+	public <T> void setDenseFlow( RandomAccessibleInterval< T > flowData ) {
 		this.flowData = flowData;
 	}
 
-	public void setHandPickedSparseFlow(ArrayList< FlowVector > sparseFlow) {
+	public void setHandPickedSparseFlow( List< FlowVector > sparseFlow ) {
 		this.handPickedSparseFlowVectors = sparseFlow;
 	}
 
-	public void setAutoFeatureFlow( ArrayList< FlowVector > autoFeatureFlow ) {
+	public void setAutoFeatureFlow( List< FlowVector > autoFeatureFlow ) {
 		this.autoFeatureFlowVectors = autoFeatureFlow;
 	}
 
@@ -52,9 +52,9 @@ public class FlowOverlay extends BdvOverlay {
 		view.getBdv().getViewerPanel().requestRepaint();
 	}
 
-	public < T extends RealType< T > & NativeType< T > > ArrayList< FlowVector > prepareSpacedFlow() {
+	public < T extends RealType< T > & NativeType< T > > List< FlowVector > prepareSpacedFlow() {
 		spacedFlowVectors = new ArrayList<>();
-		if ( !( flowData == null ) ) {
+		if ( flowData != null ) {
 			final long sizeX = flowData.dimension( 0 );
 			final long sizeY = flowData.dimension( 1 );
 			int spacing = view.getDensity(); // spacing between pixels for flow display 
@@ -86,8 +86,7 @@ public class FlowOverlay extends BdvOverlay {
 		ra.setPosition( y, 1 );
 		ra.setPosition( 2 * t + 1, 2 );
 		Double v = ra.get().getRealDouble();
-		FlowVector flowVector = new FlowVector( x, y, t, u, v );
-		return flowVector;
+		return new FlowVector( x, y, t, u, v );
 	}
 
 	@Override
@@ -95,22 +94,23 @@ public class FlowOverlay extends BdvOverlay {
 		int t = info.getTimePointIndex();
 
 		if ( visible ) {
-			if ( view.getShowAutoFlowOnlyFlag() && !( autoFeatureFlowVectors == null ) ) {
+			if ( view.getShowAutoFlowOnlyFlag() && autoFeatureFlowVectors != null ) {
 				drawAutoFeatureFlow( g, t );
 				return;
-			} else if ( view.getShowAutoFlowOnlyFlag() == false )
-				if ( !( handPickedSparseFlowVectors == null ) )
-					drawSparseHandPickedFlow( g, t );
-			if ( !( spacedFlowVectors == null ) )
+			}
+
+			if ( !view.getShowAutoFlowOnlyFlag() && handPickedSparseFlowVectors != null )
+				drawSparseHandPickedFlow( g, t );
+			if ( spacedFlowVectors != null )
 				drawSpacedFlow( g, t );
-			if ( !( autoFeatureFlowVectors == null ) )
+			if ( autoFeatureFlowVectors != null )
 				drawAutoFeatureFlow( g, t );
 		}
 
 	}
 
 	private void drawAutoFeatureFlow( Graphics2D g, int t ) {
-		ArrayList< FlowVector > flowVectors = new ArrayList<>();
+		List< FlowVector > flowVectors = new ArrayList<>();
 		for ( FlowVector flowVector : autoFeatureFlowVectors ) {
 			if ( flowVector.getT() == t )
 				flowVectors.add( flowVector );
@@ -122,7 +122,7 @@ public class FlowOverlay extends BdvOverlay {
 	}
 
 	private void drawSparseHandPickedFlow( Graphics2D g, int t ) { //Can be simplified to only draw but stays here
-		ArrayList< FlowVector > sparseFlowVectors = new ArrayList<>();
+		List< FlowVector > sparseFlowVectors = new ArrayList<>();
 		for ( FlowVector flowVector : handPickedSparseFlowVectors ) {
 			if ( flowVector.getT() == t )
 				sparseFlowVectors.add( flowVector );
@@ -173,5 +173,5 @@ public class FlowOverlay extends BdvOverlay {
 		g2.drawRect( x - 1, y - 1, 2, 2 );
 
 	}
-		
+
 }

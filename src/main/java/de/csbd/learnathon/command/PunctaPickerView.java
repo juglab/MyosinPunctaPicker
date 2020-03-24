@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
@@ -53,7 +54,7 @@ public class PunctaPickerView {
 
 	private Dataset image;
 
-	private PunctaPickerModel model;
+	private PunctaPickerModel< ? > model;
 	private PunctaPickerController controller;
 	private FlowController flowController;
 
@@ -87,7 +88,8 @@ public class PunctaPickerView {
 	private ButtonGroup opticalFlowMixingModeButtons;
 	private String opticalFlowMode;
 
-	public PunctaPickerView( PunctaPickerModel m, Dataset image, OpService os ) {
+	@SuppressWarnings( "unchecked" )
+	public <T> PunctaPickerView( PunctaPickerModel<?> m, Dataset image, OpService os ) {
 		this.model = m;
 		this.image = image;
 		this.ghostOverlay = new GhostOverlay( this );
@@ -97,7 +99,7 @@ public class PunctaPickerView {
 		model.setView( this );
 		this.opService = os;
 		this.overlay = new Overlay( model );
-		bdv = initBdv( model.getRawData() );
+		bdv = initBdv(model.getRawData() );
 		this.flowController = new FlowController( m, this );
 		model.setFlowController( flowController );
 	}
@@ -209,8 +211,7 @@ public class PunctaPickerView {
 
 	}
 
-	private < T extends RealType< T > & NativeType< T > > BdvHandlePanel initBdv( final RandomAccessibleInterval< T > img ) {
-		final BdvHandlePanel bdv = getBdv();
+	private < T extends RealType< T >> BdvHandlePanel initBdv( final RandomAccessibleInterval< T > img ) {
 		final BdvSource source = BdvFunctions.show( img, "img", Bdv.options().addTo( bdv ) );
 		final T min = Util.getTypeFromInterval( img ).createVariable();
 		final T max = Util.getTypeFromInterval( img ).createVariable();
@@ -223,7 +224,7 @@ public class PunctaPickerView {
 		return bdv;
 	}
 
-	private < T extends RealType< T > & NativeType< T > > void computeMinMax(
+	private < T extends RealType< T > > void computeMinMax(
 			final IterableInterval< T > iterableInterval,
 			final T min,
 			final T max ) {
@@ -487,11 +488,11 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				ArrayList< FlowVector > handPickedTracklets = model.extractAndInitializeControlVectorsFromHandPickedTracklets();
-				if ( !( handPickedTracklets == null ) && !( handPickedTracklets.isEmpty() ) ) {
+				List< FlowVector > handPickedTracklets = model.extractAndInitializeControlVectorsFromHandPickedTracklets();
+				if ( handPickedTracklets != null && !handPickedTracklets.isEmpty()) {
 					model.modifyOpticalFlow( opticalFlowMode );
 //					ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
-					RandomAccessibleInterval< DoubleType > flowData = model.getFlowVectorsCollection().getDenseFlow();
+					RandomAccessibleInterval<?> flowData = model.getFlowVectorsCollection().getDenseFlow();
 //					flowOverlay.setHandPickedSparseFlow( handPickedSparseFlow );
 					flowOverlay.setDenseFlow( flowData );
 					flowOverlay.prepareSpacedFlow();
@@ -757,7 +758,7 @@ public class PunctaPickerView {
 				} else if ( string == "manual + auto augmented" ) {
 					showAutoFlowOnlyFlag = false;
 					model.processSemiAutomatedFlow();
-					ArrayList< FlowVector > autoFeatureFlow = model.getFlowVectorsCollection().getAutofeatureFlowVectors();
+					List< FlowVector > autoFeatureFlow = model.getFlowVectorsCollection().getAutofeatureFlowVectors();
 					flowOverlay.setAutoFeatureFlow( autoFeatureFlow );
 				} else if ( string == "Optical Flow Farneback" ) {
 					model.processOpticalFlowFernback(1, 0.5, showAutoFlowOnlyFlag, 5, 2, 5, 1.1, 0);
@@ -766,8 +767,8 @@ public class PunctaPickerView {
 			}
 
 			private void setFlowForVisulaization() {
-				ArrayList< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
-				RandomAccessibleInterval< DoubleType > flowData = model.getFlowVectorsCollection().getDenseFlow();
+				List< FlowVector > handPickedSparseFlow = model.getFlowVectorsCollection().getSparsehandPickedFlowVectors();
+				RandomAccessibleInterval< ? > flowData = model.getFlowVectorsCollection().getDenseFlow();
 				flowOverlay.setHandPickedSparseFlow( handPickedSparseFlow );
 				flowOverlay.setDenseFlow( flowData );
 				flowOverlay.prepareSpacedFlow();
@@ -781,8 +782,7 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				RandomAccessibleInterval< DoubleType > denseFlow = model.getFlowVectorsCollection().getDenseFlow();
-				TiffSaver.chooseFlowFieldSaveDirectory( denseFlow );
+				TiffSaver.chooseFlowFieldSaveDirectory( model.getFlowVectorsCollection().getDenseFlow());
 			}
 		} );
 
@@ -831,7 +831,7 @@ public class PunctaPickerView {
 		bdv.close();
 	}
 
-	public PunctaPickerModel getPunctaPickerModel() {
+	public PunctaPickerModel<?> getPunctaPickerModel() {
 		return model;
 	}
 
@@ -839,7 +839,7 @@ public class PunctaPickerView {
 		return controller;
 	}
 
-	public void setPunctaPickerModel( final PunctaPickerModel model ) {
+	public void setPunctaPickerModel( final PunctaPickerModel<?> model ) {
 		this.model = model;
 	}
 

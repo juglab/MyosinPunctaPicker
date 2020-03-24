@@ -1,18 +1,12 @@
 package de.csbd.learnathon.command;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.converter.RealTypeConverters;
-import net.imglib2.img.Img;
-import net.imglib2.type.numeric.integer.ByteType;
-import net.imglib2.type.numeric.real.DoubleType;
-import net.imglib2.type.numeric.real.FloatType;
 
-public class PunctaPickerModel {
+public class PunctaPickerModel<T> {
 
-	private RandomAccessibleInterval< DoubleType > rawData;
+	private RandomAccessibleInterval<T> rawData;
 
 	private Graph graph = new Graph();
 	private FlowVectorsCollection flowVectorsCol = new FlowVectorsCollection();
@@ -21,14 +15,14 @@ public class PunctaPickerModel {
 	private FlowComputation flowComputation;
 	private PunctaPickerView view;
 
-	private RandomAccessibleInterval< DoubleType > denseFlow;
+	private RandomAccessibleInterval< T > denseFlow;
 
-	private ArrayList< FlowVector > handPickedSparseFlow;
+	private List< FlowVector > handPickedSparseFlow;
 
-	private ArrayList< FlowVector > spacedFlow;
+	private List< FlowVector > spacedFlow;
 
-	PunctaPickerModel( RandomAccessibleInterval< DoubleType > image ) {
-		this.rawData = image;
+	PunctaPickerModel( RandomAccessibleInterval< T > img ) {
+		this.rawData = img;
 		flowComputation = new FlowComputation( this );
 	}
 
@@ -52,8 +46,8 @@ public class PunctaPickerModel {
 		this.flowController = flowController;
 	}
 
-	public RandomAccessibleInterval< DoubleType > getRawData() {
-		return rawData;
+	public <T> RandomAccessibleInterval<T> getRawData() {
+		return ( RandomAccessibleInterval< T > ) rawData;
 	}
 
 	public Graph getGraph() {
@@ -68,9 +62,8 @@ public class PunctaPickerModel {
 		return flowVectorsCol;
 	}
 
-	public ArrayList< FlowVector > extractAndInitializeControlVectorsFromHandPickedTracklets() {
-		ArrayList< FlowVector > controlVecs = flowComputation.initializeControlVectorsForFlow();
-		return controlVecs;
+	public List< FlowVector > extractAndInitializeControlVectorsFromHandPickedTracklets() {
+		return flowComputation.initializeControlVectorsForFlow();
 	}
 
 	public void processSemiAutomatedFlow() {
@@ -94,10 +87,10 @@ public class PunctaPickerModel {
 
 	}
 
-	public List< RandomAccessibleInterval< ByteType > > processOpticalFlowFernback( int numLevels, double pyrScale, boolean fastPyramids, int winSize, int numIters, int polyN, double polySigma, int flags ) {
-		RandomAccessibleInterval< ByteType > converted = RealTypeConverters.convert( getRawData(), new ByteType() );
+	@SuppressWarnings( "unchecked" )
+	public List< RandomAccessibleInterval< T > > processOpticalFlowFernback( int numLevels, double pyrScale, boolean fastPyramids, int winSize, int numIters, int polyN, double polySigma, int flags ) {
 
-		return flowComputation.computeOpticalFlowFernback( converted, numLevels, pyrScale, fastPyramids, winSize, numIters, polyN, polySigma, flags );
+		return flowComputation.computeOpticalFlowFernback( getRawData(), numLevels, pyrScale, fastPyramids, winSize, numIters, polyN, polySigma, flags );
 	}
 
 }

@@ -9,11 +9,11 @@ import ij.IJ;
 import ij.ImagePlus;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.display.imagej.ImageJFunctions;
-import net.imglib2.type.numeric.real.DoubleType;
+import net.imglib2.type.numeric.RealType;
 
 public class TiffSaver {
 	
-	public static void chooseFlowFieldSaveDirectory( RandomAccessibleInterval< DoubleType > denseFlow ) {
+	public static <T extends RealType<T>>void chooseFlowFieldSaveDirectory( RandomAccessibleInterval< T > denseFlow ) {
 		final JFileChooser chooser = new JFileChooser( FileSystemView.getFileSystemView().getHomeDirectory() );
 		chooser.setDialogTitle( "Choose a directory to save flow fields: " );
 		chooser.setFileSelectionMode( JFileChooser.FILES_ONLY );

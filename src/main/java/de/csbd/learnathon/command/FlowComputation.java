@@ -1,10 +1,13 @@
 package de.csbd.learnathon.command;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.bytedeco.opencv.global.opencv_core;
+import org.bytedeco.opencv.global.opencv_imgcodecs;
 import org.bytedeco.opencv.opencv_core.Mat;
 import org.bytedeco.opencv.opencv_core.MatVector;
 import org.bytedeco.opencv.opencv_video.DenseOpticalFlow;
@@ -27,6 +30,7 @@ import net.imglib2.RealPoint;
 import net.imglib2.RealPointSampleList;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.algorithm.gauss3.Gauss3;
+import net.imglib2.converter.RealTypeConverters;
 import net.imglib2.histogram.Histogram1d;
 import net.imglib2.img.Img;
 import net.imglib2.img.display.imagej.ImageJFunctions;
@@ -38,6 +42,8 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.ByteType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Intervals;
@@ -49,32 +55,32 @@ import net.imglib2.view.Views;
 
 public class FlowComputation {
 
-	private PunctaPickerModel model;
+	private PunctaPickerModel< ? > model;
 	private FlowVectorsCollection flowVecCollection;
-	private ArrayList< FlowVector > autoFeatures;
 
-	public FlowComputation( PunctaPickerModel model ) {
+	public FlowComputation( PunctaPickerModel< ? > model ) {
 		this.model = model;
 		this.flowVecCollection = model.getFlowVectorsCollection();
 	}
 
-	public ArrayList< FlowVector > initializeControlVectorsForFlow() {
-		ArrayList< FlowVector > sparseHandPickedFlow = extractFlowVectorsFromClicks();
+	public List< FlowVector > initializeControlVectorsForFlow() {
+		List< FlowVector > sparseHandPickedFlow = extractFlowVectorsFromClicks();
 		flowVecCollection.setSparseHandPickedFlow( sparseHandPickedFlow );
 		return sparseHandPickedFlow;
 	}
 
 	@SuppressWarnings( "unchecked" )
-	public < T extends RealType< T > & NativeType< T > > void computeSemiAutoInterpolatedFlow( RandomAccessibleInterval< T > im ) { //Experimental, may be deleted later
+	public < T extends RealType< T >> void computeSemiAutoInterpolatedFlow( RandomAccessibleInterval< T > randomAccessibleInterval ) { //Experimental, may be deleted later
 
 		float sigma = 6;
-		RandomAccessibleInterval< T > smoothed_img = gaussian_smoothing2D( im, sigma );
-		ArrayList< FlowVector > handPicked = flowVecCollection.getSparsehandPickedFlowVectors();
+		RandomAccessibleInterval< T > smoothed_img = gaussian_smoothing2D( randomAccessibleInterval, sigma );
+		List< FlowVector > handPicked = flowVecCollection.getSparsehandPickedFlowVectors();
 		Img< T > img = model.getView().getImage();
-		ArrayList< Puncta > allFlowBlobs = new ArrayList<>();
-		autoFeatures = computeBlobBasedAutoFlowVecs( img, allFlowBlobs );
-		ArrayList< FlowVector > concatenatedList = new ArrayList<>();
-		if ( !( handPicked == null ) && !( handPicked.isEmpty() ) )
+		List< Puncta > allFlowBlobs = new ArrayList<>();
+		
+		List< FlowVector > autoFeatures = computeBlobBasedAutoFlowVecs( img, allFlowBlobs );
+		List< FlowVector > concatenatedList = new ArrayList<>();
+		if ( handPicked != null && !handPicked.isEmpty() )
 			concatenatedList.addAll( handPicked );
 		concatenatedList.addAll( autoFeatures );
 		RandomAccessibleInterval< T > denseFlow =
@@ -83,12 +89,12 @@ public class FlowComputation {
 		flowVecCollection.setDenseFlow( denseFlow );
 	}
 
-	public < T extends RealType< T > & NativeType< T > > void computeManuallyInterpolatedFlow( RandomAccessibleInterval< T > im ) { //Experimental, may be deleted later
+	public < T extends RealType< T > > void computeManuallyInterpolatedFlow( RandomAccessibleInterval< T > im ) { //Experimental, may be deleted later
 
 		float sigma = 6;
 		RandomAccessibleInterval< T > smoothed_img = gaussian_smoothing2D( im, sigma );
-		ArrayList< FlowVector > handPicked = flowVecCollection.getSparsehandPickedFlowVectors();
-		if ( !( handPicked == null ) && !( handPicked.isEmpty() ) ) {
+		List< FlowVector > handPicked = flowVecCollection.getSparsehandPickedFlowVectors();
+		if ( handPicked != null && !handPicked.isEmpty() ) {
 			RandomAccessibleInterval< T > denseFlow =
 					interpolateFlowkNN( handPicked, smoothed_img, model.getView().getKNeighbors() );
 			flowVecCollection.setDenseFlow( denseFlow );
@@ -96,9 +102,10 @@ public class FlowComputation {
 
 	}
 
-	private < T extends RealType< T > & NativeType< T > > ArrayList< FlowVector > computeBlobBasedAutoFlowVecs(
+	@SuppressWarnings( "unchecked" )
+	private < T extends RealType< T > > List< FlowVector > computeBlobBasedAutoFlowVecs(
 			Img< T > img,
-			ArrayList< Puncta > allFlowBlobs ) {
+			List< Puncta > allFlowBlobs ) {
 		for ( int time = 0; time < img.dimension( 2 ); time++ ) {
 			IntervalView< T > image = Views.hyperSlice( img, 2, time );
 			Views.extendMirrorSingle( image );
@@ -111,13 +118,13 @@ public class FlowComputation {
 					0 );
 			RandomAccessibleInterval< T > croppedImage = Views.interval( image, cropped );
 			ImagePlus imgPlus = ImageJFunctions.wrap( croppedImage, "cropped" );
-			Img< T > newImage = ImageJFunctions.wrap( imgPlus );
+			Img< T > newImage = ( Img< T > ) ImageJFunctions.wrap( imgPlus );
 			List< Puncta > pun_per_frame = computeAllBlobs( newImage, time );
 			allFlowBlobs.addAll( pun_per_frame );
 		}
-		ArrayList< FlowVector > features;
+		List< FlowVector > features;
 		String matchingMode = model.getView().getMatchingMode();
-		if ( matchingMode == "greedy" ) {
+		if ( matchingMode.equals( "greedy" ) ) {
 			features = greedyMatching( img, allFlowBlobs );
 		} else {
 			features = hungarianMatching( img, allFlowBlobs );
@@ -125,8 +132,8 @@ public class FlowComputation {
 		return features;
 	}
 
-	private List< Puncta > getFlowBlobsAtTime( int t, ArrayList< Puncta > flowBlobs ) {
-		ArrayList< Puncta > ret = new ArrayList< Puncta >();
+	private List< Puncta > getFlowBlobsAtTime( int t, List< Puncta > flowBlobs ) {
+		List< Puncta > ret = new ArrayList<>();
 		for ( Puncta p : flowBlobs ) {
 			if ( p.getT() == t )
 				ret.add( p );
@@ -134,7 +141,7 @@ public class FlowComputation {
 		return ret;
 	}
 
-	private < T extends RealType< T > & NativeType< T > > ArrayList< FlowVector > hungarianMatching( Img< T > img, ArrayList< Puncta > allFlowBlobs ) {  //Experimental, may be deleted later, very simplistic only considers distance and can be one-to many matches
+	private < T extends RealType< T > > List< FlowVector > hungarianMatching( Img< T > img, List< Puncta > allFlowBlobs ) {  //Experimental, may be deleted later, very simplistic only considers distance and can be one-to many matches
 		ArrayList< FlowVector > flowVectorList = new ArrayList<>();
 
 		for ( int pos = 0; pos < img.dimension( 2 ) - 1; pos++ ) {
@@ -173,10 +180,10 @@ public class FlowComputation {
 		return costMatrix;
 	}
 
-	private < T extends RealType< T > & NativeType< T > > ArrayList< FlowVector > greedyMatching(
+	private < T extends RealType< T > > List< FlowVector > greedyMatching(
 			Img< T > img,
-			ArrayList< Puncta > flowBlobs ) {  //Experimental, may be deleted later, very simplistic only considers distance and can be one-to many matches
-		ArrayList< FlowVector > flowVectorList = new ArrayList<>();
+			List< Puncta > flowBlobs ) {  //Experimental, may be deleted later, very simplistic only considers distance and can be one-to many matches
+		List< FlowVector > flowVectorList = new ArrayList<>();
 		double window = ( model.getView().getAutoFlowMatchingWindowSize() * model.getView().getAutoFlowMatchingWindowSize() );
 
 		for ( int pos = 0; pos < img.dimension( 2 ) - 1; pos++ ) {
@@ -192,7 +199,7 @@ public class FlowComputation {
 						closest = p;
 					}
 				}
-				if ( !( closest == null ) )
+				if ( closest != null )
 					flowVectorList.add(
 							new FlowVector( blob.getX(), blob.getY(), blob.getT(), closest.getX() - blob.getX(), closest.getY() - blob.getY() ) );
 			}
@@ -204,8 +211,8 @@ public class FlowComputation {
 		return ( ( blob.getX() - p.getX() ) * ( blob.getX() - p.getX() ) + ( blob.getY() - p.getY() ) * ( blob.getY() - p.getY() ) );
 	}
 
-	private ArrayList< FlowVector > extractFlowVectorsFromClicks() {
-		ArrayList< FlowVector > featureFlowVectorList = new ArrayList<>();
+	private List< FlowVector > extractFlowVectorsFromClicks() {
+		List< FlowVector > featureFlowVectorList = new ArrayList<>();
 		if ( model.getGraph() != null ) {
 
 			List< Edge > edges = model.getGraph().getEdges();
@@ -218,7 +225,7 @@ public class FlowComputation {
 		return featureFlowVectorList;
 	}
 
-	private static < T extends RealType< T > & NativeType< T > > RandomAccessibleInterval< T > gaussian_smoothing2D(
+	private static < T extends RealType< T >> RandomAccessibleInterval< T > gaussian_smoothing2D(
 			RandomAccessibleInterval< T > img,
 			float sigma ) {
 
@@ -236,12 +243,12 @@ public class FlowComputation {
 	}
 
 	@SuppressWarnings( "unchecked" )
-	private static < T extends RealType< T > & NativeType< T > > RandomAccessibleInterval< T > interpolateFlowkNN(
-			ArrayList< FlowVector > sparseFlow,
+	private static < T extends RealType<T> > RandomAccessibleInterval< T > interpolateFlowkNN(
+			List< FlowVector > sparseFlow,
 			RandomAccessibleInterval< T > img,
 			int kNeighbors ) {
 
-		ArrayList< RandomAccessibleInterval< T > > slices = new ArrayList< RandomAccessibleInterval< T > >();
+		List< RandomAccessibleInterval< T > > slices = new ArrayList<>();
 
 		for ( long pos = 0; pos < img.dimension( 2 ) - 1; ++pos ) {
 			RandomAccessibleInterval< T > slice = Views.hyperSlice( img, 2, pos );
@@ -280,14 +287,12 @@ public class FlowComputation {
 
 		}
 
-		RandomAccessibleInterval< T > stack = Views.stack( slices );
-
-		return stack;
+		return Views.stack( slices );
 	}
 
 	@SuppressWarnings( "unchecked" )
 	public < T extends RealType< T > & NativeType< T > > void modifyOpticalFlowWithInterpolation( String opticalFlowMode ) {
-		ArrayList< FlowVector > handPickedVectors = flowVecCollection.getSparsehandPickedFlowVectors();
+		List< FlowVector > handPickedVectors = flowVecCollection.getSparsehandPickedFlowVectors();
 		RandomAccessibleInterval< T > denseOpticalFlowOriginal = ( RandomAccessibleInterval< T > ) flowVecCollection.getDenseFlow();
 		RandomAccessibleInterval< T > denseFlowCopy =
 				Util.getSuitableImgFactory( denseOpticalFlowOriginal, Util.getTypeFromInterval( denseOpticalFlowOriginal ) ).create(
@@ -295,13 +300,13 @@ public class FlowComputation {
 		LoopBuilder.setImages( denseFlowCopy, denseOpticalFlowOriginal ).forEachPixel( ( a, b ) -> a.setReal( b.getRealFloat() ) );
 		double windowSize = model.getView().getOpticalFlowModificationWindowSize();
 		BlendingFunctions.Blender blender = null;
-		if ( opticalFlowMode == "prefer hand picked only" ) {
+		if ( opticalFlowMode.equals("prefer hand picked only") ) {
 			blender = new BlendingFunctions.GaussianBlendedFlow( ( float ) windowSize );
-		} else if ( opticalFlowMode == "linear blend" ) {
+		} else if ( opticalFlowMode.equals("linear blend") ) {
 			blender = new BlendingFunctions.LinearlyBlendedFlow( ( float ) windowSize );
-		} else if ( opticalFlowMode == "gaussian blend" ) {
+		} else if ( opticalFlowMode.equals("gaussian blend") ) {
 			blender = new BlendingFunctions.GaussianBlendedFlow( ( float ) windowSize );
-		} else if ( opticalFlowMode == "gaussian smoothed gt" ) {
+		} else if ( opticalFlowMode.equals( "gaussian smoothed gt") ) {
 			blender = new BlendingFunctions.GaussianSmoothedFlow( ( float ) windowSize );
 		}
 		int count = 0;
@@ -343,7 +348,7 @@ public class FlowComputation {
 
 	}
 
-	public < T extends RealType< T > & NativeType< T > > List< Puncta > computeAllBlobs( Img< T > img, int t ) { //Just for experimental purpose, maybe deleted later
+	public < T extends RealType< T > > List< Puncta > computeAllBlobs( Img< T > img, int t ) { //Just for experimental purpose, maybe deleted later
 		double minScale = 1;
 		double stepScale = 1;
 		double maxScale = 15;
@@ -368,7 +373,7 @@ public class FlowComputation {
 		Histogram1d< FloatType > hist = model.getView().getOs().image().histogram( localMinimaResponse );
 		String thresholdingMode = model.getView().getThresholdingMode();
 		float threshold;
-		if ( thresholdingMode == "manual threshold" ) {
+		if ( thresholdingMode.equals( "manual threshold" ) ) {
 			threshold = -1f * ( model.getView().getThreshold() );
 		} else {
 			threshold = model.getView().getOs().threshold().otsu( hist ).getRealFloat();
@@ -408,7 +413,7 @@ public class FlowComputation {
 
 	@SuppressWarnings( "unchecked" )
 	public < T extends RealType< T > & NativeType< T > > void modifyOpticalFlow() {
-		ArrayList< FlowVector > handPickedVectors = flowVecCollection.getSparsehandPickedFlowVectors();
+		List< FlowVector > handPickedVectors = flowVecCollection.getSparsehandPickedFlowVectors();
 		RandomAccessibleInterval< T > denseOpticalFlowOriginal = ( RandomAccessibleInterval< T > ) flowVecCollection.getDenseFlow();
 		RandomAccessibleInterval< T > denseFlowCopy =
 				Util.getSuitableImgFactory( denseOpticalFlowOriginal, Util.getTypeFromInterval( denseOpticalFlowOriginal ) ).create( denseOpticalFlowOriginal );
@@ -432,23 +437,23 @@ public class FlowComputation {
 						( long ) ( y + sigma / 2 ),
 						0 );
 
-				LoopBuilder.setImages( Views.interval( infiniteImg, cropped ) ).forEachPixel( ( c ) -> c.setZero() );
+				LoopBuilder.setImages( Views.interval( infiniteImg, cropped ) ).forEachPixel( c -> c.setZero() );
 				RandomAccess< T > ra = infiniteImg.randomAccess();
 				ra.setPosition( ( int ) x, 0 );
 				ra.setPosition( ( int ) y, 1 );
-				double scaling_factor = 0;
+				double scalingFactor = 0;
 				if ( i == 0 ) {
 					ra.get().setReal( u );
-					scaling_factor = u;
+					scalingFactor = u;
 				} else {
 					ra.get().setReal( v );
-					scaling_factor = v;
+					scalingFactor = v;
 				}
 				RandomAccessibleInterval< T > region = Views.interval( image, cropped );
 				Gauss3.gauss( sigma, infiniteImg, region );
 				double actualEffect = ra.get().getRealDouble();
-				double scaledEffect = scaling_factor / actualEffect;
-				LoopBuilder.setImages( Views.interval( infiniteImg, cropped ) ).forEachPixel( ( c ) -> c.mul( scaledEffect ) );
+				double scaledEffect = scalingFactor / actualEffect;
+				LoopBuilder.setImages( Views.interval( infiniteImg, cropped ) ).forEachPixel( c -> c.mul( scaledEffect ) );
 			}
 
 		}
@@ -457,7 +462,7 @@ public class FlowComputation {
 	}
 
 	public void resetOpticalFlow() {
-		if ( !( flowVecCollection.getOriginalOpticalFlow() == null ) ) {
+		if ( flowVecCollection.getOriginalOpticalFlow() != null ) {
 			flowVecCollection.setDenseFlow( flowVecCollection.getOriginalOpticalFlow() );
 		}
 
@@ -465,12 +470,14 @@ public class FlowComputation {
 
 	/**
 	 * The optical flow routine only takes byte type data
+	 * 
+	 * @param <T>
 	 * @see http://bytedeco.org/javacpp-presets/opencv/apidocs/org/opencv/imgcodecs/Imgcodecs.html
 	 * @see http://bytedeco.org/javacpp-presets/opencv/apidocs/index.html?org/bytedeco/opencv/opencv_video/FarnebackOpticalFlow.html
 	 */
 	@SuppressWarnings( "unchecked" )
-	public List< RandomAccessibleInterval< ByteType > > computeOpticalFlowFernback(
-			RandomAccessibleInterval< ByteType > rawData,
+	public < T > List< RandomAccessibleInterval< T > > computeOpticalFlowFernback(
+			RandomAccessibleInterval< T > rawData,
 			int numLevels,
 			double pyrScale,
 			boolean fastPyramids,
@@ -480,18 +487,34 @@ public class FlowComputation {
 			double polySigma,
 			int flags ) {
 
-		MatVector mats1 = new ImgToMatVectorConverter().convert( rawData, MatVector.class );
+		
+		int[] dims = Intervals.dimensionsAsIntArray( rawData );
+		T type = Util.getTypeFromInterval( rawData );
+		MatVector mats1;
+		//May need to do this for other unsupported types!
+		if ( type instanceof UnsignedShortType )
+			mats1 = new ImgToMatVectorConverter().convert( RealTypeConverters.convert( ( RandomAccessibleInterval< ? extends RealType< ? > > ) rawData, new ByteType() ), MatVector.class );
+		else
+			mats1 = new ImgToMatVectorConverter().convert( rawData, MatVector.class );
 
 		final DenseOpticalFlow opticalFlow = FarnebackOpticalFlow.create( numLevels, pyrScale, fastPyramids, winSize, numIters, polyN, polySigma, flags );
-		List< RandomAccessibleInterval< ByteType > > flows2 = new ArrayList< RandomAccessibleInterval< ByteType > >();
+		List< Mat > flows = new ArrayList<>( dims[ 2 ] - 1 );
 		for ( int i = 1; i < mats1.size(); i++ ) {
 			Mat flow = new Mat();
+			//Note!!!! calc only takes 8 bit images, and returns 2 channel floats!
 			opticalFlow.calc( mats1.get( i - 1 ), mats1.get( i ), flow );
-			RandomAccessibleInterval< ByteType > ijflow = new MatToImgConverter().convert( flow, RandomAccessibleInterval.class );
-			flows2.add( ijflow );
+			flows.add( flow );
 		}
 
-		return flows2;
+		List< RandomAccessibleInterval<T>> ijflows = new ArrayList<>();
+		for ( int i = 0; i < flows.size(); i++ ) {
+			MatVector splitflows = new MatVector();
+			opencv_core.split( flows.get( i ), splitflows );
+			ijflows.add( ( RandomAccessibleInterval< T > ) MatToImgConverter.convert( splitflows.get( 0 ) ) );
+			ijflows.add( ( RandomAccessibleInterval< T > ) MatToImgConverter.convert( splitflows.get( 1 ) ) );
+		}
+	
+		return ijflows;
 
 	}
 

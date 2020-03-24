@@ -1,6 +1,6 @@
 package de.csbd.learnathon.command;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.scijava.ui.behaviour.ClickBehaviour;
 import org.scijava.ui.behaviour.DragBehaviour;
@@ -12,10 +12,9 @@ import net.imglib2.RealPoint;
 public class FlowController {
 
 	private PunctaPickerView view;
-	private RealPoint pos;
-	private PunctaPickerModel model;
+	private PunctaPickerModel<?> model;
 
-	public FlowController( PunctaPickerModel model, PunctaPickerView punctaPickerView ) {
+	public FlowController( PunctaPickerModel<?> model, PunctaPickerView punctaPickerView ) {
 		this.view = punctaPickerView;
 		this.model = model;
 		installBehaviour();
@@ -32,9 +31,10 @@ public class FlowController {
 	}
 
 	private void actionSelectFlowVector( int x, int y ) {
-		pos = new RealPoint( 3 );
+		
+		RealPoint pos = new RealPoint( 3 );
 		int time = view.getBdv().getViewerPanel().getState().getCurrentTimepoint();
-		ArrayList< FlowVector > availableFlowVectors = model.getFlowVectorsCollection().getSpacedFlowVectors();
+		List< FlowVector > availableFlowVectors = model.getFlowVectorsCollection().getSpacedFlowVectors();
 		if ( !availableFlowVectors.isEmpty() ) {
 			view.getBdv().getBdvHandle().getViewerPanel().displayToGlobalCoordinates( x, y, pos );
 
