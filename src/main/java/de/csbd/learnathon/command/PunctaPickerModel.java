@@ -87,7 +87,6 @@ public class PunctaPickerModel<T> {
 
 	}
 
-	@SuppressWarnings( "unchecked" )
 	public List< RandomAccessibleInterval< T > > processOpticalFlowFernback( int numLevels, double pyrScale, boolean fastPyramids, int winSize, int numIters, int polyN, double polySigma, int flags ) {
 
 		return flowComputation.computeOpticalFlowFernback( getRawData(), numLevels, pyrScale, fastPyramids, winSize, numIters, polyN, polySigma, flags );

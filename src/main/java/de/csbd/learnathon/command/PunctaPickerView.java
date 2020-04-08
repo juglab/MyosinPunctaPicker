@@ -3,7 +3,6 @@ package de.csbd.learnathon.command;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -88,7 +87,6 @@ public class PunctaPickerView {
 	private ButtonGroup opticalFlowMixingModeButtons;
 	private String opticalFlowMode;
 
-	@SuppressWarnings( "unchecked" )
 	public <T> PunctaPickerView( PunctaPickerModel<?> m, Dataset image, OpService os ) {
 		this.model = m;
 		this.image = image;
