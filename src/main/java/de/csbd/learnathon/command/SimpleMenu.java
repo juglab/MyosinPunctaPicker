@@ -120,7 +120,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 	public void actionPerformed( final ActionEvent e ) {
 		final JMenuItem jmi = ( JMenuItem ) e.getSource();
 		if ( jmi.getText() == "Load tracklets from CSV" ) {
-			final JFileChooser jfc = new JFileChooser( FileSystemView.getFileSystemView().getHomeDirectory() );
+			final JFileChooser jfc = new JFileChooser( model.getView().getImageDirectory() );
 			jfc.setDialogTitle( "Load tracklets csv file: " );
 			jfc.setAcceptAllFileFilterUsed( false );
 			final FileNameExtensionFilter filter = new FileNameExtensionFilter( "*.csv", "csv" );
@@ -172,7 +172,7 @@ public class SimpleMenu implements ActionListener, ItemListener {
 	}
 
 	private void writeToCSV( final List< Puncta > allPuncta ) {
-		final JFileChooser chooser = new JFileChooser( FileSystemView.getFileSystemView().getHomeDirectory() );
+		final JFileChooser chooser = new JFileChooser( model.getView().getImageDirectory() );
 		chooser.setDialogTitle( "Choose a directory to save your file: " );
 		chooser.setFileSelectionMode( JFileChooser.FILES_ONLY );
 		chooser.showSaveDialog( null );

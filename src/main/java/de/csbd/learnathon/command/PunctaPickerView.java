@@ -3,6 +3,7 @@ package de.csbd.learnathon.command;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -102,6 +103,9 @@ public class PunctaPickerView {
 		model.setFlowController( flowController );
 	}
 
+	public String getImageDirectory() {
+		return new File( image.getSource() ).getParentFile().getAbsolutePath();
+	}
 	public String getDetectionMode() {
 		return Utils.getSelectedButtonText( pickingModeButtons );
 	}
@@ -640,7 +644,8 @@ public class PunctaPickerView {
 
 			@Override
 			public void actionPerformed( ActionEvent e ) {
-				RandomAccessibleInterval< DoubleType > denseFlow = TiffLoader.loadFlowFieldFromDirectory();
+				RandomAccessibleInterval< DoubleType > denseFlow =
+						TiffLoader.loadFlowFieldFromDirectory( getImageDirectory() );
 				model.getFlowVectorsCollection().setDenseFlow( denseFlow );
 				model.getFlowVectorsCollection().setOriginalOpticalFlow( denseFlow );
 				flowOverlay.setDenseFlow( denseFlow );
@@ -782,7 +787,7 @@ public class PunctaPickerView {
 			@Override
 			public void actionPerformed( ActionEvent e ) {
 				RandomAccessibleInterval< DoubleType > denseFlow = model.getFlowVectorsCollection().getDenseFlow();
-				TiffSaver.chooseFlowFieldSaveDirectory( denseFlow );
+				TiffSaver.chooseFlowFieldSaveDirectory( denseFlow, getImageDirectory() );
 			}
 		} );
 

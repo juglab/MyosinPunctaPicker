@@ -96,7 +96,7 @@ public class FlowGuiCommand implements Command {
 		final ImageJ imageJ = new ImageJ();
 		imageJ.ui().showUI();
 
-		IJ.openImage( "res/Substack.tif" ).show();
+		IJ.openImage( "res/Stack.tif" ).show();
 
 		imageJ.command().run( FlowGuiCommand.class, true );
 	}
